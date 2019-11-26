@@ -1,0 +1,26 @@
+Metrics/LineLength:
+  Max: 150
+Metrics/ClassLength:
+  Max: 250
+Metrics/MethodLength:
+  Max: 75
+Metrics/AbcSize:
+  Max: 50
+Metrics/ParameterLists:
+  Max: 10
+Metrics/CyclomaticComplexity:
+  Max: 30
+Metrics/PerceivedComplexity:
+  Max: 30
+Documentation:
+  Enabled: false
+Naming/AccessorMethodName:
+  Enabled: false
+Style/NumericPredicate:
+  Enabled: false
+Style/ClassVars:
+  Enabled: false
+Style/PercentLiteralDelimiters:
+  Enabled: false
+Style/MutableConstant:
+  Enabled: false
