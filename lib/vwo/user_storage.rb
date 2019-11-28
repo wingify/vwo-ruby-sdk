@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# frozen_string_literal: true
-
 class VWO
   # UserStorage Class is used to store user-variation mapping.
   # Override this class to implement your own functionality.

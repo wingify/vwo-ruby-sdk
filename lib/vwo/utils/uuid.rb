@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# frozen_string_literal: true
-
 require 'digest'
 require_relative '../logger'
 require_relative '../enums'

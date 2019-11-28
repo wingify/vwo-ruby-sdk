@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# frozen_string_literal: true
-
 require_relative 'vwo/services/settings_file_manager'
 require_relative 'vwo/services/event_dispatcher'
 require_relative 'vwo/services/settings_file_processor'
@@ -23,7 +21,6 @@ require_relative 'vwo/utils/campaign'
 require_relative 'vwo/utils/impression'
 require_relative 'vwo/constants'
 require_relative 'vwo/core/variation_decider'
-
 
 # VWO main file
 class VWO

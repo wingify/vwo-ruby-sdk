@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# frozen_string_literal: true
-
 require_relative '../utils/function'
 require_relative '../utils/request'
 require_relative '../utils/validations'

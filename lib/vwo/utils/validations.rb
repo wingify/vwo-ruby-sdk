@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# frozen_string_literal: true
-
 require 'json'
 require 'json-schema'
 require_relative '../schemas/settings_file'
