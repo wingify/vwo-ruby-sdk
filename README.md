@@ -1,6 +1,6 @@
 # VWO Ruby SDK
 
-[![Gem version](https://badge.fury.io/rb/vwo-ruby-sdk.svg)](https://rubygems.org/gems/vwo-ruby-sdk)
+[![Gem version](https://badge.fury.io/rb/vwo-ruby-sdk.svg)](https://rubygems.org/gems/vwo-sdk)
 [![Build Status](http://img.shields.io/travis/wingify/vwo-ruby-sdk/master.svg?style=flat)](http://travis-ci.org/wingify/vwo-ruby-sdk)
 [![Coverage Status](https://coveralls.io/repos/github/wingify/vwo-ruby-sdk/badge.svg?branch=master)](https://coveralls.io/github/wingify/vwo-ruby-sdk?branch=master)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
@@ -14,7 +14,7 @@ This open source library allows you to A/B Test your Website at server-side.
 ## Installation
 
 ```bash
-gem install vwo-ruby-sdk
+gem install vwo-sdk
 ```
 
 ## Basic usage
@@ -37,7 +37,7 @@ vwo_client_instance.get_settings
 variation_name = vwo_client_instance.activate(campaign_key, user_id')
 
 # GetVariation API
-variation_name = vwo_client_instance.get_variation(campaign_key, user_id')
+variation_name = vwo_client_instance.get_variation_name(campaign_key, user_id')
 
 # Track API
 vwo_client_instance.track(campaign_key, user_id', goal_identified, revenue_value)
@@ -102,7 +102,7 @@ Use custom UserStorage
         # @param[String]        :user_id            ID for user that needs to be retrieved.
         # @return[Hash]         :user_storage_obj   Object representing the user.
         #
-        def get(user_id)
+        def get(user_id, campaign_key)
           # example code to fetch it from DB column
           JSON.parse(User.find_by(vwo_id: user_id).vwo_user)
         end
