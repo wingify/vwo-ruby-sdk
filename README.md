@@ -156,6 +156,10 @@ Refer [third-party-attributions.txt](https://github.com/wingify/vwo-ruby-sdk/blo
 * Main Contributor - [Sahil Batla](https://github.com/sahilbathla)
 * Repo health maintainer - [Varun Malhotra](https://github.com/softvar)([@s0ftvar](https://twitter.com/s0ftvar))
 
+## Changelog
+
+Refer [CHANGELOG.md](https://github.com/wingify/vwo-ruby-sdk/blob/master/CHANGELOG.md)
+
 ## Contributing
 
 Please go through our [contributing guidelines](https://github.com/wingify/vwo-ruby-sdk/blob/master/CONTRIBUTING.md)
