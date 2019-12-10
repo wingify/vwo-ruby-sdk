@@ -28,7 +28,7 @@ jobs:
       install:
         - bundle install
       script:
-        - ruby tests/test_vwo.rb
+        - ruby tests/test_all_tests.rb
       after_success: "coveralls"
 
     - stage: 'Ruby2.3.8'
@@ -42,7 +42,7 @@ jobs:
       install:
         - bundle install
       script:
-        - ruby tests/test_vwo.rb
+        - ruby tests/test_all_tests.rb
       # before_script: "rubocop lib/"
       after_success: "coveralls"
 
@@ -57,7 +57,7 @@ jobs:
       install:
         - bundle install
       script:
-        - ruby tests/test_vwo.rb
+        - ruby tests/test_all_tests.rb
       # before_script: "rubocop lib/"
       after_success: "coveralls"
 
@@ -72,7 +72,7 @@ jobs:
       install:
         - bundle install
       script:
-        - ruby tests/test_vwo.rb
+        - ruby tests/test_all_tests.rb
       # before_script: "rubocop lib/"
       after_success: "coveralls"
 
@@ -87,6 +87,6 @@ jobs:
       install:
         - bundle install
       script:
-        - ruby tests/test_vwo.rb
+        - ruby tests/test_all_tests.rb
       # before_script: "rubocop lib/"
       after_success: "coveralls"

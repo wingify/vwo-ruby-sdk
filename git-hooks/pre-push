@@ -283,7 +283,7 @@ try {
 console.log(`${AnsiColorEnum.CYAN}\nRunning Test cases${AnsiColorEnum.RESET}\n`);
 
 try {
-  _exec('ruby tests/all_tests.rb');
+  _exec('ruby tests/test_all_tests.rb');
   console.log(`${AnsiColorEnum.GREEN}\n\nTest cases passed${AnsiColorEnum.RESET}\n\n`);
 } catch (e) {
   console.log(`${AnsiColorEnum.RED}\n\nTest cases failed${AnsiColorEnum.RESET}\n\n`);

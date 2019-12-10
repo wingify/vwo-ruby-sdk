@@ -22,16 +22,20 @@ class UserStorageTest < Test::Unit::TestCase
 
   def test_check_get_is_present
     user_storage = VWO::UserStorage.new
-    assert_nil(user_storage.get('123', 'campaign_key'))
+    user_id = '123'
+    campaign_key = 'campaign_key'
+
+    assert_nil(user_storage.get(user_id, campaign_key))
   end
 
-  def test_check_save_is_present
+  def test_check_set_is_present
     user_storage = VWO::UserStorage.new
-    map = {
-      'user_id': '123',
-      'campaign_key': 'campaign_key',
-      'variation_name': 'Variation-1'
-    }
+    # map = {
+    #   'user_id': '123',
+    #   'campaign_key': 'campaign_key',
+    #   'variation_name': 'Variation-1'
+    # }
+    map = {}
     assert_nil(user_storage.set(map))
   end
 end

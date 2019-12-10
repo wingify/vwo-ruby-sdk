@@ -144,7 +144,7 @@ gem install
 ## Running Unit Tests
 
 ```bash
-ruby tests/all_tests.rb
+ruby tests/test_all_tests.rb
 ```
 
 ## Third-party Resources and Credits

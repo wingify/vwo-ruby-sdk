@@ -18,5 +18,5 @@ require 'simplecov'
 SimpleCov.command_name 'Unit Tests'
 
 SimpleCov.start
-# Coveralls.wear!
+Coveralls.wear!
 $LOAD_PATH.unshift File.expand_path('../lib', __FILE__)
