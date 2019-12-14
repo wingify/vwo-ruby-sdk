@@ -232,25 +232,25 @@ class VWO
       # @return[Object, nil]      if found then variation settings object otherwise None
 
       def get_stored_variation(user_id, campaign_key, user_campaign_map)
-        if user_campaign_map['campaign_key'] == campaign_key
-          variation_name = user_campaign_map['variation_name']
-          @logger.log(
-            LogLevelEnum::DEBUG,
-            format(
-              LogMessageEnum::DebugMessages::GETTING_STORED_VARIATION,
-              file: FILE,
-              campaign_key: campaign_key,
-              user_id: user_id,
-              variation_name: variation_name
-            )
-          )
+        return unless user_campaign_map['campaign_key'] == campaign_key
 
-          return get_campaign_variation(
-            @settings_file,
-            campaign_key,
-            variation_name
+        variation_name = user_campaign_map['variation_name']
+        @logger.log(
+          LogLevelEnum::DEBUG,
+          format(
+            LogMessageEnum::DebugMessages::GETTING_STORED_VARIATION,
+            file: FILE,
+            campaign_key: campaign_key,
+            user_id: user_id,
+            variation_name: variation_name
           )
-        end
+        )
+
+        get_campaign_variation(
+          @settings_file,
+          campaign_key,
+          variation_name
+        )
       end
 
       # If UserStorageService is provided, save the assigned variation

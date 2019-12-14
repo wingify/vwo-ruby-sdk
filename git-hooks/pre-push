@@ -269,7 +269,7 @@ function _exec(cmd) {
     .trim();
 }
 
-/* console.log(`${AnsiColorEnum.CYAN}\nRunning rubocop${AnsiColorEnum.RESET}\n`);
+console.log(`${AnsiColorEnum.CYAN}\nRunning rubocop${AnsiColorEnum.RESET}\n`);
 
 try {
   _exec('bundle exec rubocop lib');
@@ -278,7 +278,7 @@ try {
   console.log(`${AnsiColorEnum.RED}\n\nrubocop failed${AnsiColorEnum.RESET}\n\n`);
   process.exit(1);
 }
- */
+
 
 console.log(`${AnsiColorEnum.CYAN}\nRunning Test cases${AnsiColorEnum.RESET}\n`);
 

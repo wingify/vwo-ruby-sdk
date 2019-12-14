@@ -32,6 +32,6 @@ class LoggerTest < Test::Unit::TestCase
   def test_user_defined_log
     logger_instance = VWO::Logger.new(Logger.new($stdout))
     logger_instance.log(Logger::ERROR, 'Test')
-    assert_true($stdout.string.include?('Test'))
+    assert_equal($stdout.string.include?('Test'), true)
   end
 end

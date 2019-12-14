@@ -57,7 +57,7 @@ class EventDispatcherTest < Test::Unit::TestCase
     }
 
     result = @dispatcher.dispatch(properties)
-    assert_true(result)
+    assert_equal(result, true)
 
     properties['url']
     properties['url'] = nil
@@ -88,7 +88,7 @@ class EventDispatcherTest < Test::Unit::TestCase
     }
 
     result = @dispatcher.dispatch(properties)
-    assert_false(result)
+    assert_equal(result, false)
   end
 
   # Test that dispatch returns False if exception occurs.
@@ -116,6 +116,6 @@ class EventDispatcherTest < Test::Unit::TestCase
     }
 
     result = @dispatcher.dispatch(properties)
-    assert_false(result)
+    assert_equal(result, false)
   end
 end

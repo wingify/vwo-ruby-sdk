@@ -27,6 +27,8 @@ jobs:
         - rm -rf Gemfile.lock
       install:
         - bundle install
+        - yes n | gem install json -v 1.8.6
+        - yes n | gem uninstall json -v 2.3.0
       script:
         - ruby tests/test_all_tests.rb
       after_success: "coveralls"
@@ -39,11 +41,12 @@ jobs:
       before_install:
         - gem update --system
         - gem install bundler
+        - rm -rf Gemfile.lock
       install:
         - bundle install
       script:
         - ruby tests/test_all_tests.rb
-      # before_script: "rubocop lib/"
+      before_script: "rubocop lib/"
       after_success: "coveralls"
 
     - stage: 'Ruby2.4.5'
@@ -54,11 +57,12 @@ jobs:
       before_install:
         - gem update --system
         - gem install bundler
+        - rm -rf Gemfile.lock
       install:
         - bundle install
       script:
         - ruby tests/test_all_tests.rb
-      # before_script: "rubocop lib/"
+      before_script: "rubocop lib/"
       after_success: "coveralls"
 
     - stage: 'Ruby2.5.3'
@@ -69,11 +73,12 @@ jobs:
       before_install:
         - gem update --system
         - gem install bundler
+        - rm -rf Gemfile.lock
       install:
         - bundle install
       script:
         - ruby tests/test_all_tests.rb
-      # before_script: "rubocop lib/"
+      before_script: "rubocop lib/"
       after_success: "coveralls"
 
     - stage: 'Ruby2.6.2'
@@ -84,9 +89,10 @@ jobs:
       before_install:
         - gem update --system
         - gem install bundler
+        - rm -rf Gemfile.lock
       install:
         - bundle install
       script:
         - ruby tests/test_all_tests.rb
-      # before_script: "rubocop lib/"
+      before_script: "rubocop lib/"
       after_success: "coveralls"
