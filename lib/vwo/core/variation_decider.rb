@@ -36,8 +36,6 @@ class VWO
       def initialize(settings_file, user_storage_service = nil)
         @logger = VWO::Logger.get_instance
         @user_storage_service = user_storage_service
-        # Check if user_storage_service provided is valid or not
-        @user_storage_service = user_storage_service
         @bucketer = VWO::Core::Bucketer.new
         @settings_file = settings_file
       end
@@ -234,8 +232,8 @@ class VWO
       # @return[Object, nil]      if found then variation settings object otherwise None
 
       def get_stored_variation(user_id, campaign_key, user_campaign_map)
-        if user_campaign_map[campaign_key] == campaign_key
-          variation_name = user_campaign_map[:variationName]
+        if user_campaign_map['campaign_key'] == campaign_key
+          variation_name = user_campaign_map['variation_name']
           @logger.log(
             LogLevelEnum::DEBUG,
             format(
@@ -246,23 +244,13 @@ class VWO
               variation_name: variation_name
             )
           )
+
           return get_campaign_variation(
             @settings_file,
             campaign_key,
             variation_name
           )
         end
-
-        @logger.log(
-          LogLevelEnum::DEBUG,
-          format(
-            LogMessageEnum::DebugMessages::NO_STORED_VARIATION,
-            file: FILE,
-            campaign_key: campaign_key,
-            user_id: user_id
-          )
-        )
-        nil
       end
 
       # If UserStorageService is provided, save the assigned variation

@@ -21,20 +21,21 @@ require_relative '../lib/vwo/utils/campaign'
 SETTINGS_FILE = JSON.load(File.open(File.join(File.dirname(__FILE__), 'data/settings.json')))
 
 class UserStorage
-  def save(_user_id); end
+  def get(_user_id, _campaign_key); end
 
-  def get(_user_storage_obj); end
+  def set(_user_storage_obj); end
 end
 
 class CustomUserStorage
   @@client_db = {}
 
-  def get(user_id)
-    @@client_db[user_id]
+  def get(user_id, campaign_key)
+    @@client_db[user_id][campaign_key]
   end
 
-  def save(user_storage_obj)
-    @@client_db[user_storage_obj[:userId]] = user_storage_obj
+  def set(user_storage_obj)
+   @@client_db[user_storage_obj['user_id']] = {}
+   @@client_db[user_storage_obj['user_id']][user_storage_obj['campaign_key']] = user_storage_obj
   end
 
   def remove(user_id)
@@ -45,11 +46,11 @@ end
 class BrokenUserStorage
   @@client_db = {}
 
-  def get(user_id)
-    return @@client_db.get(user_id)
+  def get(user_id, campaign_key)
+    return @@client_db[user_id][campaign_key]
   end
 
-  def save(_user_storage_obj)
+  def set(_user_storage_obj)
     raise
   end
 end
@@ -209,7 +210,7 @@ class VariationDeciderTest < Test::Unit::TestCase
     assert_equal(variation_id, '1')
     assert_equal(variation_name, 'Control')
 
-    # Now delete the stored variaion from campaign_bucket_map
+    # Now delete the stored variation from campaign_bucket_map
     custom_user_storage.remove(user_id)
     # Now the variation_decider is not able to retrieve
     # variation from user_storage.
