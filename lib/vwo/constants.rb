@@ -20,7 +20,7 @@ class VWO
     MAX_TRAFFIC_PERCENT = 100
     MAX_TRAFFIC_VALUE = 10_000
     STATUS_RUNNING = 'RUNNING'
-    LIBRARY_PATH =  File.expand_path('../..', __FILE__)
+    LIBRARY_PATH =  File.expand_path('../..', __dir__)
     HTTP_PROTOCOL = 'http://'
     HTTPS_PROTOCOL = 'https://'
     URL_NAMESPACE = '6ba7b811-9dad-11d1-80b4-00c04fd430c8'

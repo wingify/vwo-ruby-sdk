@@ -53,9 +53,7 @@ class VWO
       #                                              variation_id and variation_name if variation allotted, else nil
 
       def get_variation(user_id, campaign)
-        if campaign
-          campaign_key = campaign['key']
-        end
+        campaign_key = campaign['key'] if campaign
 
         user_campaign_map = get_user_storage(user_id, campaign_key)
         variation = get_stored_variation(user_id, campaign_key, user_campaign_map) if valid_hash?(user_campaign_map)

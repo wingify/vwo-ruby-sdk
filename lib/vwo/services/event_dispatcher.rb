@@ -60,13 +60,13 @@ class VWO
               variation_id: impression[:combination]
             )
           )
-          return true
+          true
         else
           @logger.log(
             LogLevelEnum::ERROR,
             format(LogMessageEnum::ErrorMessages::IMPRESSION_FAILED, file: FileNameEnum::EventDispatcher, end_point: impression['url'])
           )
-          return false
+          false
         end
       rescue StandardError
         @logger.log(

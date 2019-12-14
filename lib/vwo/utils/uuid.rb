@@ -42,9 +42,9 @@ class VWO
         ary = hash.digest.unpack('NnnnnN')
         ary[2] = (ary[2] & 0x0FFF) | (version << 12)
         ary[3] = (ary[3] & 0x3FFF) | 0x8000
-        # rubocop:disable Lint/FormatString
+        # rubocop:disable Lint/FormatStringToken,Style/FormatString
         '%08x-%04x-%04x-%04x-%04x%08x' % ary
-        # rubocop:enable Lint/FormatString
+        # rubocop:enable Lint/FormatStringToken,Style/FormatString
       end
 
       VWO_NAMESPACE = uuid_v5(URL_NAMESPACE, 'https://vwo.com')

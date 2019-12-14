@@ -44,7 +44,7 @@ class VWO
         is_valid_key = valid_number?(@account_id) || valid_string?(@account_id)
 
         unless is_valid_key && valid_string?(@sdk_key)
-          STDERR.puts 'account_id and sdk_key are required for fetching account settings. Aborting!'
+          puts 'account_id and sdk_key are required for fetching account settings. Aborting!'
           return '{}'
         end
 
@@ -58,12 +58,12 @@ class VWO
             Got Status Code: #{settings_file_response.code}
             and message: #{settings_file_response.body}.
           DOC
-          STDERR.puts message
+          puts message
           return
         end
         settings_file_response.body
       rescue StandardError => e
-        STDERR.puts "Error fetching Settings File #{e}"
+        puts "Error fetching Settings File #{e}"
       end
 
       private
