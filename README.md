@@ -11,7 +11,7 @@ This open source library allows you to A/B Test your Website at server-side.
 
 * Works with 1.9.3+
 
-## q
+## Installation
 
 ```bash
 gem install vwo-sdk
@@ -34,16 +34,16 @@ vwo_client_instance = VWO.new(account_id, sdk_key, custom_logger, UserStorage.ne
 vwo_client_instance.get_settings
 
 # Activate API
-#With Custom Variables
+# With Custom Variables
 options = { "custom_variable" => { "a" => "x"}}
 variation_name = vwo_client_instance.activate(campaign_key, user_id, options)
 
-#Without Custom Variables
+# Without Custom Variables
 options = {}
 variation_name = vwo_client_instance.activate(campaign_key, user_id, options)
 
 # GetVariation
-#With Custom Variables
+# With Custom Variables
 options = { "custom_variable" => { "a" => "x"}}
 variation_name = vwo_client_instance.get_variation_name(campaign_key, user_id, options)
 
@@ -52,37 +52,37 @@ options = {}
 variation_name = vwo_client_instance.get_variation_name(campaign_key, user_id, options)
 
 # Track API
-#With Custom Variables
+# With Custom Variables
 options = { "custom_variable" => { "a" => "x"}}
 is_successful = vwo_client_instance.track(campaign_key, user_id, goal_identifier, options)
 
-#With Revenue Value
+# With Revenue Value
 options = { "revenue_value" => 10.23}
 is_successful = vwo_client_instance.track(campaign_key, user_id, goal_identifier, options)
 
-#With both Custom Variables and Revenue Value
+# With both Custom Variables and Revenue Value
 options = { "custom_variable" => { "a" => "x"}, "revenue_value" => 10.23}
 is_successful = vwo_client_instance.track(campaign_key, user_id, goal_identifier, options)
 
-#FeatureEnabled? API
-#With Custom Varibles
+# FeatureEnabled? API
+# With Custom Varibles
 options = { "custom_variable" => { "a" => "x"}}
 is_successful = vwo_client_instance.feature_enabled?(campaign_key, user_id, options)
 
-#Without Custom Variables
+# Without Custom Variables
 options = {}
 is_successful = vwo_client_instance.feature_enabled?(campaign_key, user_id, options)
 
-#GetFeatureVariableValue API
-#With Custom Variables
+# GetFeatureVariableValue API
+# With Custom Variables
 options = { "custom_variable" => { "a" => "x"}}
 variable_value = vwo_client_instance.get_feature_variable_value(campaign_key, variable_key, user_id, options)
 
-#Without Custom Variables
+# Without Custom Variables
 options = {}
 variable_value = vwo_client_instance.get_feature_variable_value(campaign_key, variable_key, user_id, options)
 
-#Push API
+# Push API
 is_successful = vwo_client_instance.push(tag_key, tag_value, user_id)
 ```
 
@@ -102,7 +102,7 @@ There are two ways you can use your own custom logging
 
 1. Override Existing Logging
 
-    ```
+    ```ruby
       class VWO::Logger
         def initialize(logger_instance)
           # Override this two create your own logging instance
@@ -130,7 +130,7 @@ There are two ways you can use your own custom logging
 
 Use custom UserStorage
 
-    ```
+    ```ruby
     class VWO
       # Abstract class encapsulating user storage service functionality.
       # Override with your own implementation for storing
@@ -171,7 +171,7 @@ Refer [Official VWO Documentation](https://developers.vwo.com/reference#server-s
 
 ## Code syntax check
 
-```
+```bash
 bundle exec rubocop lib
 ```
 
