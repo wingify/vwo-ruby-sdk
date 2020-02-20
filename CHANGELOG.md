@@ -6,10 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.5.0] - 2020-02-20
 ### Breaking Changes
-To prevent ordered arguments and increasing use-cases, we are moving all optional arguments to be passed via `kwargs`.
+To prevent ordered arguments and increasing use-cases, we are moving all optional arguments to be passed via `options`.
 
-- customVariables argument in APIs: `activate`, `get_variation`, `track`, `is_feature_enabled`, and `get_feature_variable_value` will now be passed via `kwargs`.
-- `revenueValue` parameter in `track` API via `kwargs`
+- customVariables argument in APIs: `activate`, `get_variation`, `track`, `is_feature_enabled`, and `get_feature_variable_value` will now be passed via `options`.
+- `revenueValue` parameter in `track` API via `options`
 
 #### Before
 ```ruby

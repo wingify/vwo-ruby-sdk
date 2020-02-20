@@ -1,6 +1,6 @@
 # VWO Ruby SDK
 
-[![Gem version](https://badge.fury.io/rb/vwo-ruby-sdk.svg)](https://rubygems.org/gems/vwo-sdk)
+[![Gem version](https://badge.fury.io/rb/vwo-sdk.svg)](https://rubygems.org/gems/vwo-sdk)
 [![Build Status](http://img.shields.io/travis/wingify/vwo-ruby-sdk/master.svg?style=flat)](http://travis-ci.org/wingify/vwo-ruby-sdk)
 [![Coverage Status](https://coveralls.io/repos/github/wingify/vwo-ruby-sdk/badge.svg?branch=master)](https://coveralls.io/github/wingify/vwo-ruby-sdk?branch=master)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
