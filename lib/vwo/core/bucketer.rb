@@ -1,4 +1,4 @@
-# Copyright 2019 Wingify Software Pvt. Ltd.
+# Copyright 2019-2020 Wingify Software Pvt. Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ class VWO
       # @param[String]         :user_id     The unique ID assigned to a user
       # @param[Dict]           :campaign    For getting traffic allotted to the campaign
       # @return[Boolean]                    If User is a part of Campaign or not
-      #
+
       def user_part_of_campaign?(user_id, campaign)
         unless valid_value?(user_id)
           @logger.log(
@@ -60,7 +60,6 @@ class VWO
         end
 
         traffic_allocation = campaign['percentTraffic']
-
         value_assigned_to_user = get_bucket_value_for_user(user_id)
         is_user_part = (value_assigned_to_user != 0) && value_assigned_to_user <= traffic_allocation
         @logger.log(
@@ -96,9 +95,9 @@ class VWO
         end
 
         hash_value = MurmurHash3::V32.str_hash(user_id, SEED_VALUE) & U_MAX_32_BIT
-        normalize = MAX_TRAFFIC_VALUE / campaign['percentTraffic']
+        normalize = MAX_TRAFFIC_VALUE.to_f / campaign['percentTraffic']
         multiplier = normalize / 100
-        bucket_value = generate_bucket_value(
+        bucket_value = get_bucket_value(
           hash_value,
           MAX_TRAFFIC_VALUE,
           multiplier
@@ -116,6 +115,7 @@ class VWO
             hash_value: hash_value
           )
         )
+
         get_variation(campaign, bucket_value)
       end
 
@@ -142,7 +142,7 @@ class VWO
       #                               (between 1 to $this->$MAX_TRAFFIC_PERCENT)
       def get_bucket_value_for_user(user_id)
         hash_value = MurmurHash3::V32.str_hash(user_id, SEED_VALUE) & U_MAX_32_BIT
-        bucket_value = generate_bucket_value(hash_value, MAX_TRAFFIC_PERCENT)
+        bucket_value = get_bucket_value(hash_value, MAX_TRAFFIC_PERCENT)
 
         @logger.log(
           LogLevelEnum::DEBUG,
@@ -165,7 +165,7 @@ class VWO
       # @param[Integer]             :multiplier
       # @return[Integer]                          Bucket Value of the User
       #
-      def generate_bucket_value(hash_value, max_value, multiplier = 1)
+      def get_bucket_value(hash_value, max_value, multiplier = 1)
         ratio = hash_value.to_f / MAX_HASH_VALUE
         multiplied_value = (max_value * ratio + 1) * multiplier
         multiplied_value.to_i

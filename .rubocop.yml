@@ -1,11 +1,11 @@
 Metrics/LineLength:
-  Max: 150
+  Max: 200
 Metrics/ClassLength:
-  Max: 250
+  Max: 2000
 Metrics/MethodLength:
-  Max: 75
+  Max: 200
 Metrics/AbcSize:
-  Max: 50
+  Max: 100
 Metrics/ParameterLists:
   Max: 10
 Metrics/CyclomaticComplexity:
@@ -25,4 +25,6 @@ Style/PercentLiteralDelimiters:
 Style/MutableConstant:
   Enabled: false
 Style/FrozenStringLiteralComment:
+  Enabled: false
+ZeroLengthPredicate:
   Enabled: false

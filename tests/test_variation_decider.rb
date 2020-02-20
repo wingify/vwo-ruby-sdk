@@ -1,4 +1,4 @@
-# Copyright 2019 Wingify Software Pvt. Ltd.
+# Copyright 2019-2020 Wingify Software Pvt. Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -60,7 +60,7 @@ class VariationDeciderTest < Test::Unit::TestCase
 
   def setup
     @user_id = rand.to_s
-    @settings_file = SETTINGS_FILE['7']
+    @settings_file = SETTINGS_FILE['DUMMY_SETTINGS_FILE']
     @dummy_campaign = @settings_file['campaigns'][0]
     @campaign_key = @dummy_campaign['key']
     set_variation_allocation(@dummy_campaign)
@@ -78,15 +78,13 @@ class VariationDeciderTest < Test::Unit::TestCase
   end
 
   def test_get_variation_allotted_none_campaign_passed
-    variation_id, variation_name = @variation_decider.get_variation_allotted(@user_id, nil)
-    assert_nil(variation_id)
-    assert_nil(variation_name)
+    variation = @variation_decider.get_variation_allotted(@user_id, nil)
+    assert_nil(variation)
   end
 
   def test_get_variation_allotted_none_userid_passed
-    variation_id, variation_name = @variation_decider.get_variation_allotted(nil, @dummy_campaign)
-    assert_nil(variation_id)
-    assert_nil(variation_name)
+    variation = @variation_decider.get_variation_allotted(nil, @dummy_campaign)
+    assert_nil(variation)
   end
 
   def test_get_variation_allotted_should_return_true
@@ -94,9 +92,9 @@ class VariationDeciderTest < Test::Unit::TestCase
     # Allie, with above campaign settings, will get hashValue:362121553
     # and bucketValue:1688. So, MUST be a part of campaign as per campaign
     # percentTraffic
-    variation_id, variation_name = @variation_decider.get_variation_allotted(user_id, @dummy_campaign)
-    assert_equal(variation_id, '1')
-    assert_equal(variation_name, 'Control')
+    variation = @variation_decider.get_variation_allotted(user_id, @dummy_campaign)
+    assert_equal(variation['id'], '1')
+    assert_equal(variation['name'], 'Control')
   end
 
   def test_get_variation_allotted_should_return_false
@@ -104,23 +102,20 @@ class VariationDeciderTest < Test::Unit::TestCase
     # Lucian, with above campaign settings, will get hashValue:2251780191
     # and bucketValue:53. So, MUST be a part of campaign as per campaign
     # percentTraffic
-    variation_id, variation_name = @variation_decider.get_variation_allotted(user_id, @dummy_campaign)
-    assert_nil(variation_id)
-    assert_nil(variation_name)
+    variation = @variation_decider.get_variation_allotted(user_id, @dummy_campaign)
+    assert_nil(variation)
   end
 
   def test_get_variation_of_campaign_for_user_none_userid_passed
-    variation_id, variation_name =
+    variation =
       @variation_decider.get_variation_of_campaign_for_user(nil, @dummy_campaign)
-    assert_nil(variation_id)
-    assert_nil(variation_name)
+    assert_nil(variation)
   end
 
   def test_get_variation_of_campaign_for_user_none_campaing_passed
-    variation_id, variation_name =
+    variation =
       @variation_decider.get_variation_of_campaign_for_user(@user_id, nil)
-    assert_nil(variation_id)
-    assert_nil(variation_name)
+    assert_nil(variation)
   end
 
   def test_get_variation_of_campaign_for_user_should_return_Control
@@ -128,9 +123,9 @@ class VariationDeciderTest < Test::Unit::TestCase
     # Sarah, with above campaign settings, will get hashValue:69650962
     # and bucketValue:326. So, MUST be a part of Control, as per campaign
     # settings
-    _variation_id, variation_name =
+    variation =
       @variation_decider.get_variation_of_campaign_for_user(user_id, @dummy_campaign)
-    assert_equal(variation_name, 'Control')
+    assert_equal(variation['name'], 'Control')
   end
 
   def test_get_variation_of_campaign_for_user_should_return_Variation
@@ -138,27 +133,25 @@ class VariationDeciderTest < Test::Unit::TestCase
     # Varun, with above campaign settings, will get hashValue:2025462540
     # and bucketValue:9433. So, MUST be a part of Variation, as per campaign
     # settings
-    _variation_id, variation_name = @variation_decider.get_variation_of_campaign_for_user(user_id, @dummy_campaign)
-    assert_equal(variation_name, 'Variation-1')
+    variation = @variation_decider.get_variation_of_campaign_for_user(user_id, @dummy_campaign)
+    assert_equal(variation['name'], 'Variation-1')
   end
 
   def test_get_none_userid_passed
-    variation_id, variation_name = @variation_decider.get_variation(nil, @dummy_campaign)
-    assert_nil(variation_id)
-    assert_nil(variation_name)
+    variation = @variation_decider.get_variation(nil, @dummy_campaign, @campaign_key)
+    assert_nil(variation)
   end
 
   def test_get_none_campaign_passed
-    variation_id, variation_name = @variation_decider.get_variation(@user_id, nil)
-    assert_nil(variation_id)
-    assert_nil(variation_name)
+    variation = @variation_decider.get_variation(@user_id, nil, @campaign_key)
+    assert_nil(variation)
   end
 
   def test_get_none_campaing_key_passed
     user_id = 'Sarah'
-    variation_id, variation_name = @variation_decider.get_variation(user_id, @dummy_campaign)
-    assert_equal(variation_id, '1')
-    assert_equal(variation_name, 'Control')
+    variation = @variation_decider.get_variation(user_id, @dummy_campaign, @campaign_key)
+    assert_equal(variation['id'], '1')
+    assert_equal(variation['name'], 'Control')
   end
 
   def test_get_with_user_storage
@@ -166,38 +159,38 @@ class VariationDeciderTest < Test::Unit::TestCase
 
     # First let variation_decider compute vairation, and store
     user_id = 'Sarah'
-    variation_id, variation_name = variation_decider.get_variation(user_id, @dummy_campaign)
-    assert_equal(variation_id, '1')
-    assert_equal(variation_name, 'Control')
+    variation = variation_decider.get_variation(user_id, @dummy_campaign, @campaign_key)
+    assert_equal(variation['id'], '1')
+    assert_equal(variation['name'], 'Control')
 
     # Now check whether the variation_decider is able to retrieve
     # variation for user_storage, no campaign is required
     # for this.
-    variation_id, variation_name = variation_decider.get_variation(user_id, @dummy_campaign)
-    assert_equal(variation_id, '1')
-    assert_equal(variation_name, 'Control')
+    variation = variation_decider.get_variation(user_id, @dummy_campaign, @campaign_key)
+    assert_equal(variation['id'], '1')
+    assert_equal(variation['name'], 'Control')
   end
 
   def test_get_with_broken_save_in_user_storage
     variation_decider = VWO::Core::VariationDecider.new(@settings_file, BrokenUserStorage.new)
 
     user_id = 'Sarah'
-    variation_id, variation_name = variation_decider.get_variation(user_id, @dummy_campaign)
-    assert_equal(variation_id, '1')
-    assert_equal(variation_name, 'Control')
+    variation = variation_decider.get_variation(user_id, @dummy_campaign, @campaign_key)
+    assert_equal(variation['id'], '1')
+    assert_equal(variation['name'], 'Control')
   end
 
   def test_get_with_broken_get_in_user_storage
     variation_decider = VWO::Core::VariationDecider.new(@settings_file, UserStorage.new)
 
     user_id = 'Sarah'
-    variation_id, variation_name = variation_decider.get_variation(user_id, @dummy_campaign)
-    assert_equal(variation_id, '1')
-    assert_equal(variation_name, 'Control')
+    variation = variation_decider.get_variation(user_id, @dummy_campaign, @campaign_key)
+    assert_equal(variation['id'], '1')
+    assert_equal(variation['name'], 'Control')
 
-    variation_id, variation_name = variation_decider.get_variation(user_id, @dummy_campaign)
-    assert_equal(variation_id, '1')
-    assert_equal(variation_name, 'Control')
+    variation = variation_decider.get_variation(user_id, @dummy_campaign, @campaign_key)
+    assert_equal(variation['id'], '1')
+    assert_equal(variation['name'], 'Control')
   end
 
   def test_get_with_user_storage_but_no_stored_variation
@@ -206,16 +199,16 @@ class VariationDeciderTest < Test::Unit::TestCase
 
     # First let variation_decider compute vairation, and store
     user_id = 'Sarah'
-    variation_id, variation_name = variation_decider.get_variation(user_id, @dummy_campaign)
-    assert_equal(variation_id, '1')
-    assert_equal(variation_name, 'Control')
+    variation = variation_decider.get_variation(user_id, @dummy_campaign, @campaign_key)
+    assert_equal(variation['id'], '1')
+    assert_equal(variation['name'], 'Control')
 
     # Now delete the stored variation from campaign_bucket_map
     custom_user_storage.remove(user_id)
     # Now the variation_decider is not able to retrieve
     # variation from user_storage.
-    variation_id, variation_name = variation_decider.get_variation(user_id, @dummy_campaign)
-    assert_equal(variation_id, '1')
-    assert_equal(variation_name, 'Control')
+    variation = variation_decider.get_variation(user_id, @dummy_campaign, @campaign_key)
+    assert_equal(variation['id'], '1')
+    assert_equal(variation['name'], 'Control')
   end
 end

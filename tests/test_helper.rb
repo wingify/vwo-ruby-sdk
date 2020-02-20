@@ -1,4 +1,4 @@
-# Copyright 2019 Wingify Software Pvt. Ltd.
+# Copyright 2019-2020 Wingify Software Pvt. Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require 'coveralls'
+# require 'coveralls'
+require 'test/unit'
 require 'simplecov'
 
 SimpleCov.command_name 'Unit Tests'
 
 SimpleCov.start
-Coveralls.wear!
+# Coveralls.wear!
 $LOAD_PATH.unshift File.expand_path('../lib', __FILE__)

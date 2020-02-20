@@ -12,30 +12,37 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+require 'json'
 require_relative '../logger'
 require_relative '../enums'
 require_relative '../constants'
+require_relative './impression'
 
 # Utility module for helper math and random functions
 class VWO
   module Utils
-    module Function
-      include VWO::Enums
+    module CustomDimensions
       include VWO::CONSTANTS
+      include VWO::Enums
+      include VWO::Utils::Impression
 
-      # @return[Float]
-      def get_random_number
-        rand
-      end
+      def get_url_params(settings_file, tag_key, tag_value, user_id)
+        url = HTTPS_PROTOCOL + ENDPOINTS::BASE_URL + ENDPOINTS::PUSH
+        tag = { 'u' => {} }
+        tag['u'][tag_key] = tag_value
 
-      # @return[Integer]
-      def get_current_unix_timestamp
-        Time.now.to_i
-      end
+        params = get_common_properties(user_id, settings_file)
+        params.merge!('url' => url, 'tags' => JSON.generate(tag))
 
-      # @return[any, any]
-      def get_key_value(obj)
-        [obj.keys[0], obj.values[0]]
+        VWO::Logger.get_instance.log(
+          LogLevelEnum::DEBUG,
+          format(
+            LogMessageEnum::DebugMessages::PARAMS_FOR_PUSH_CALL,
+            file: FileNameEnum::CustomDimensionsUtil,
+            properties: JSON.generate(params)
+          )
+        )
+        params
       end
     end
   end

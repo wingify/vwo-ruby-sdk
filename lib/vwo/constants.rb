@@ -1,4 +1,4 @@
-# Copyright 2019 Wingify Software Pvt. Ltd.
+# Copyright 2019-2020 Wingify Software Pvt. Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ class VWO
     HTTP_PROTOCOL = 'http://'
     HTTPS_PROTOCOL = 'https://'
     URL_NAMESPACE = '6ba7b811-9dad-11d1-80b4-00c04fd430c8'
-    SDK_VERSION = '1.3.0'
+    SDK_VERSION = '1.5.0'
     SDK_NAME = 'ruby'
 
     module ENDPOINTS
@@ -34,6 +34,7 @@ class VWO
       ACCOUNT_SETTINGS = '/server-side/settings'
       TRACK_USER = '/server-side/track-user'
       TRACK_GOAL = '/server-side/track-goal'
+      PUSH = '/server-side/push'
     end
 
     module EVENTS
@@ -48,16 +49,43 @@ class VWO
       BOOLEAN = 'boolean'
     end
 
-    module APIMETHODS
-      CREATE_INSTANCE = 'CREATE_INSTANCE'
-      ACTIVATE = 'ACTIVATE'
-      GET_VARIATION = 'GET_VARIATION'
-      TRACK = 'TRACK'
-    end
-
-    module GOALTYPES
+    module GoalTypes
       REVENUE = 'REVENUE_TRACKING'
       CUSTOM = 'CUSTOM_GOAL'
+    end
+
+    module VariableTypes
+      STRING = 'string'
+      INTEGER = 'integer'
+      DOUBLE = 'double'
+      BOOLEAN = 'boolean'
+    end
+
+    RUBY_VARIABLE_TYPES = {
+      'string' => [String],
+      'integer' => [Integer],
+      'double' => [Float],
+      'boolean' => [TrueClass, FalseClass]
+    }
+
+    module ApiMethods
+      ACTIVATE = 'activate'
+      GET_VARIATION_NAME = 'get_variation_name'
+      TRACK = 'track'
+      IS_FEATURE_ENABLED = 'is_feature_enabled'
+      GET_FEATURE_VARIABLE_VALUE = 'get_feature_variable_value'
+      PUSH = 'push'
+    end
+
+    module PushApi
+      TAG_VALUE_LENGTH = 255
+      TAG_KEY_LENGTH = 255
+    end
+
+    module CampaignTypes
+      VISUAL_AB = 'VISUAL_AB'
+      FEATURE_TEST = 'FEATURE_TEST'
+      FEATURE_ROLLOUT = 'FEATURE_ROLLOUT'
     end
   end
 end

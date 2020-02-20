@@ -1,4 +1,4 @@
-# Copyright 2019 Wingify Software Pvt. Ltd.
+# Copyright 2019-2020 Wingify Software Pvt. Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -30,6 +30,14 @@ class VWO
     # Override this method to handle logs in a custom manner
     def log(level, message)
       @@logger_instance.log(level, message)
+    end
+
+    def instance
+      @@logger_instance
+    end
+
+    def level
+      @@logger_instance.level
     end
   end
 end

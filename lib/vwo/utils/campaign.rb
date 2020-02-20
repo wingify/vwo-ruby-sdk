@@ -1,4 +1,4 @@
-# Copyright 2019 Wingify Software Pvt. Ltd.
+# Copyright 2019-2020 Wingify Software Pvt. Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,18 +22,6 @@ class VWO
     module Campaign
       include VWO::Enums
       include VWO::CONSTANTS
-
-      # Finds and Returns campaign from given campaign_key.
-      #
-      # @param[Hash]      :settings_file      Settings file
-      # @param[String]    :campaign_key      Campaign identifier key
-      # @return[Hash]     :campaign object
-
-      def get_campaign(settings_file, campaign_key)
-        (settings_file['campaigns'] || []).find do |campaign|
-          campaign['key'] == campaign_key
-        end
-      end
 
       # Sets variation allocation range in the provided campaign
       #
@@ -70,20 +58,45 @@ class VWO
       end
 
       # Returns goal from given campaign_key and gaol_identifier.
-      # @param[Hash]              :settings_file        Settings file
-      # @param[String]            :campaign_key        Campaign identifier key
+      # @param[String]            :campaign             Campaign object
       # @param[String]            :goal_identifier      Goal identifier
       #
       # @return[Hash]                                  Goal corresponding to Goal_identifier in respective campaign
 
-      def get_campaign_goal(settings_file, campaign_key, goal_identifier)
-        return unless settings_file && campaign_key && goal_identifier
-
-        campaign = get_campaign(settings_file, campaign_key)
-        return unless campaign
+      def get_campaign_goal(campaign, goal_identifier)
+        return unless campaign && goal_identifier
 
         campaign['goals'].find do |goal|
           goal['identifier'] == goal_identifier
+        end
+      end
+
+      # Returns segments from the campaign
+      # @param[Hash]          campaign      Running campaign
+      # @return[Hash]         A dsl of segments
+      #
+      def get_segments(campaign)
+        campaign['segments']
+      end
+
+      # Returns control variation from a given campaign
+      # @param[Hash]          campaign      Running campaign
+      # @return[Hash]         variation     Control variation from the campaign, ie having id = 1
+
+      def get_control_variation(campaign)
+        campaign['variations'].find do |variation|
+          variation['id'] == 1
+        end
+      end
+
+      # Returns variable from given variables list.
+      # @params[Array]          variables           List of variables, whether in campaigns or inside variation
+      # @param[String]          variable_key        Variable identifier
+      # @return[Hash]                               Variable corresponding to variable_key in given variable list
+
+      def get_variable(variables, variable_key)
+        variables.find do |variable|
+          variable['key'] == variable_key
         end
       end
 
@@ -116,6 +129,17 @@ class VWO
 
         campaign['variations'].find do |variation|
           variation['name'] == variation_name
+        end
+      end
+
+      # Finds and Returns campaign from given campaign_key.
+      # [Hash]                :settings_file          Settings file for the project
+      # [String]              :campaign_key           Campaign identifier key
+      # @return[Hash]                                 Campaign object
+
+      def get_campaign(settings_file, campaign_key)
+        settings_file['campaigns'].find do |campaign|
+          campaign['key'] == campaign_key
         end
       end
     end

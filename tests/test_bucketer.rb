@@ -1,4 +1,4 @@
-# Copyright 2019 Wingify Software Pvt. Ltd.
+# Copyright 2019-2020 Wingify Software Pvt. Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -111,7 +111,7 @@ class BucketerTest < Test::Unit::TestCase
   end
 
   def test_get_variation_return_none
-    campaign = ::SETTINGS_FILE['1']['campaigns'][0]
+    campaign = ::SETTINGS_FILE['AB_T_50_W_50_50']['campaigns'][0]
     set_variation_allocation(campaign)
     result = @bucketer.send(:get_variation, campaign, 10001)
     assert_equal(result, nil)

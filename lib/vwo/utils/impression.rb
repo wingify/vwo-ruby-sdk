@@ -1,4 +1,4 @@
-# Copyright 2019 Wingify Software Pvt. Ltd.
+# Copyright 2019-2020 Wingify Software Pvt. Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -90,6 +90,26 @@ class VWO
           )
         end
         impression
+      end
+
+      # Returns commonly used params for making requests to our servers.
+      #
+      # @param[String]                :user_id                Unique identification of user
+      # @param[String]                :settings_file          Settings file containing campaign data for extracting account_id
+      # @return[Hash]                                         Commonly used params for making call to our servers
+      #
+      def get_common_properties(user_id, settings_file)
+        account_id = settings_file['accountId']
+        {
+          'random' => get_random_number,
+          'sdk' => SDK_NAME,
+          'sdk-v' => SDK_VERSION,
+          'ap' => PLATFORM,
+          'sId' => get_current_unix_timestamp,
+          'u' => generator_for(user_id, account_id),
+          'account_id' => account_id,
+          'uId' => CGI.escape(user_id.encode('utf-8'))
+        }
       end
     end
   end

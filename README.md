@@ -11,7 +11,7 @@ This open source library allows you to A/B Test your Website at server-side.
 
 * Works with 1.9.3+
 
-## Installation
+## q
 
 ```bash
 gem install vwo-sdk
@@ -34,14 +34,56 @@ vwo_client_instance = VWO.new(account_id, sdk_key, custom_logger, UserStorage.ne
 vwo_client_instance.get_settings
 
 # Activate API
-variation_name = vwo_client_instance.activate(campaign_key, user_id')
+#With Custom Variables
+options = { "custom_variable" => { "a" => "x"}}
+variation_name = vwo_client_instance.activate(campaign_key, user_id, options)
 
-# GetVariation API
-variation_name = vwo_client_instance.get_variation_name(campaign_key, user_id')
+#Without Custom Variables
+options = {}
+variation_name = vwo_client_instance.activate(campaign_key, user_id, options)
+
+# GetVariation
+#With Custom Variables
+options = { "custom_variable" => { "a" => "x"}}
+variation_name = vwo_client_instance.get_variation_name(campaign_key, user_id, options)
+
+#Without Custom Variables
+options = {}
+variation_name = vwo_client_instance.get_variation_name(campaign_key, user_id, options)
 
 # Track API
-vwo_client_instance.track(campaign_key, user_id', goal_identified, revenue_value)
+#With Custom Variables
+options = { "custom_variable" => { "a" => "x"}}
+is_successful = vwo_client_instance.track(campaign_key, user_id, goal_identifier, options)
 
+#With Revenue Value
+options = { "revenue_value" => 10.23}
+is_successful = vwo_client_instance.track(campaign_key, user_id, goal_identifier, options)
+
+#With both Custom Variables and Revenue Value
+options = { "custom_variable" => { "a" => "x"}, "revenue_value" => 10.23}
+is_successful = vwo_client_instance.track(campaign_key, user_id, goal_identifier, options)
+
+#FeatureEnabled? API
+#With Custom Varibles
+options = { "custom_variable" => { "a" => "x"}}
+is_successful = vwo_client_instance.feature_enabled?(campaign_key, user_id, options)
+
+#Without Custom Variables
+options = {}
+is_successful = vwo_client_instance.feature_enabled?(campaign_key, user_id, options)
+
+#GetFeatureVariableValue API
+#With Custom Variables
+options = { "custom_variable" => { "a" => "x"}}
+variable_value = vwo_client_instance.get_feature_variable_value(campaign_key, variable_key, user_id, options)
+
+#Without Custom Variables
+options = {}
+variable_value = vwo_client_instance.get_feature_variable_value(campaign_key, variable_key, user_id, options)
+
+#Push API
+is_successful = vwo_client_instance.push(tag_key, tag_value, user_id)
 ```
 
 1. `account_id` - Account for which sdk needs to be initialized
@@ -172,4 +214,4 @@ Please go through our [contributing guidelines](https://github.com/wingify/vwo-r
 
 [Apache License, Version 2.0](https://github.com/wingify/vwo-ruby-sdk/blob/master/LICENSE)
 
-Copyright 2019 Wingify Software Pvt. Ltd.
+Copyright 2019-2020 Wingify Software Pvt. Ltd.
