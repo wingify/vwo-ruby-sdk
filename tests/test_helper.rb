@@ -13,11 +13,12 @@
 # limitations under the License.
 
 # require 'coveralls'
-require 'test/unit'
 require 'simplecov'
 
 SimpleCov.command_name 'Unit Tests'
 
 SimpleCov.start
+
+require 'test/unit'
 # Coveralls.wear!
 $LOAD_PATH.unshift File.expand_path('../lib', __FILE__)
