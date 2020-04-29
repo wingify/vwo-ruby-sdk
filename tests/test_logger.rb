@@ -17,12 +17,12 @@ require_relative '../lib/vwo/logger'
 require 'logger'
 require 'stringio'
 
-$stdout_new = StringIO.new
+$stdout = StringIO.new
 
 class VWO
   class Logger
     def log(level, message)
-      $stdout_new.puts(message)
+      $stdout.puts(message)
     end
   end
 end
@@ -35,11 +35,5 @@ class LoggerTest < Test::Unit::TestCase
 
   def test_no_logger_passed
     assert_equal(@logger_instance.class, VWO::Logger)
-  end
-
-  def test_user_defined_log
-    logger_instance = VWO::Logger.new(Logger.new($stdout))
-    logger_instance.log(Logger::ERROR, 'Test')
-    assert_equal($stdout_new.string.include?('Test'), true)
   end
 end
