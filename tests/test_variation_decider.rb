@@ -138,18 +138,18 @@ class VariationDeciderTest < Test::Unit::TestCase
   end
 
   def test_get_none_userid_passed
-    variation = @variation_decider.get_variation(nil, @dummy_campaign, @campaign_key)
+    variation = @variation_decider.get_variation(nil, @dummy_campaign, '', @campaign_key)
     assert_nil(variation)
   end
 
   def test_get_none_campaign_passed
-    variation = @variation_decider.get_variation(@user_id, nil, @campaign_key)
+    variation = @variation_decider.get_variation(@user_id, nil, '',  @campaign_key)
     assert_nil(variation)
   end
 
   def test_get_none_campaing_key_passed
     user_id = 'Sarah'
-    variation = @variation_decider.get_variation(user_id, @dummy_campaign, @campaign_key)
+    variation = @variation_decider.get_variation(user_id, @dummy_campaign, '', @campaign_key)
     assert_equal(variation['id'], '1')
     assert_equal(variation['name'], 'Control')
   end
@@ -159,14 +159,14 @@ class VariationDeciderTest < Test::Unit::TestCase
 
     # First let variation_decider compute vairation, and store
     user_id = 'Sarah'
-    variation = variation_decider.get_variation(user_id, @dummy_campaign, @campaign_key)
+    variation = variation_decider.get_variation(user_id, @dummy_campaign, '', @campaign_key)
     assert_equal(variation['id'], '1')
     assert_equal(variation['name'], 'Control')
 
     # Now check whether the variation_decider is able to retrieve
     # variation for user_storage, no campaign is required
     # for this.
-    variation = variation_decider.get_variation(user_id, @dummy_campaign, @campaign_key)
+    variation = variation_decider.get_variation(user_id, @dummy_campaign, '', @campaign_key)
     assert_equal(variation['id'], '1')
     assert_equal(variation['name'], 'Control')
   end
@@ -175,7 +175,7 @@ class VariationDeciderTest < Test::Unit::TestCase
     variation_decider = VWO::Core::VariationDecider.new(@settings_file, BrokenUserStorage.new)
 
     user_id = 'Sarah'
-    variation = variation_decider.get_variation(user_id, @dummy_campaign, @campaign_key)
+    variation = variation_decider.get_variation(user_id, @dummy_campaign, '', @campaign_key)
     assert_equal(variation['id'], '1')
     assert_equal(variation['name'], 'Control')
   end
@@ -184,11 +184,11 @@ class VariationDeciderTest < Test::Unit::TestCase
     variation_decider = VWO::Core::VariationDecider.new(@settings_file, UserStorage.new)
 
     user_id = 'Sarah'
-    variation = variation_decider.get_variation(user_id, @dummy_campaign, @campaign_key)
+    variation = variation_decider.get_variation(user_id, @dummy_campaign, '', @campaign_key)
     assert_equal(variation['id'], '1')
     assert_equal(variation['name'], 'Control')
 
-    variation = variation_decider.get_variation(user_id, @dummy_campaign, @campaign_key)
+    variation = variation_decider.get_variation(user_id, @dummy_campaign, '', @campaign_key)
     assert_equal(variation['id'], '1')
     assert_equal(variation['name'], 'Control')
   end
@@ -199,7 +199,7 @@ class VariationDeciderTest < Test::Unit::TestCase
 
     # First let variation_decider compute vairation, and store
     user_id = 'Sarah'
-    variation = variation_decider.get_variation(user_id, @dummy_campaign, @campaign_key)
+    variation = variation_decider.get_variation(user_id, @dummy_campaign, '', @campaign_key)
     assert_equal(variation['id'], '1')
     assert_equal(variation['name'], 'Control')
 
@@ -207,7 +207,7 @@ class VariationDeciderTest < Test::Unit::TestCase
     custom_user_storage.remove(user_id)
     # Now the variation_decider is not able to retrieve
     # variation from user_storage.
-    variation = variation_decider.get_variation(user_id, @dummy_campaign, @campaign_key)
+    variation = variation_decider.get_variation(user_id, @dummy_campaign, '', @campaign_key)
     assert_equal(variation['id'], '1')
     assert_equal(variation['name'], 'Control')
   end

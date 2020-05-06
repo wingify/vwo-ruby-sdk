@@ -228,6 +228,97 @@
     "version": 1
   },
 
+  "AB_T_100_W_25_25_25_25": {
+    "sdkKey": "someuniquestuff1234567",
+    "campaigns": [
+      {
+      "goals": [
+        {
+          "identifier": "CUSTOM",
+          "id": 213,
+          "type": "CUSTOM_GOAL"
+        }
+      ],
+      "variations": [
+        {
+          "id": 1,
+          "name": "Control",
+          "changes": {},
+          "weight": 25.0,
+          "isFeatureEnabled": false,
+          "variables": null,
+          "segments": {
+            "or": [
+              {
+                "user": " You, Faizan, "
+              }
+            ]
+          }
+        },
+        {
+          "id": 2,
+          "name": "Variation-1",
+          "changes": {},
+          "weight": 25.0,
+          "isFeatureEnabled": false,
+          "variables": null,
+          "segments": {
+            "or": [
+              {
+                "user": "Varun,  You, Rohit "
+              }
+            ]
+          }
+        },
+        {
+          "id": 3,
+          "name": "Variation-2",
+          "changes": {},
+          "weight": 25.0,
+          "isFeatureEnabled": false,
+          "variables": null,
+          "segments": {
+            "or": [
+              {
+                "custom_variable": {
+                  "abcd": "1"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": 4,
+          "name": "Variation-3",
+          "changes": {},
+          "weight": 25.0,
+          "isFeatureEnabled": false,
+          "variables": null,
+          "segments": {
+            "or": [
+              {
+                "custom_variable": {
+                  "abcd": "regex(1)"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "id": 300,
+      "percentTraffic": 100.0,
+      "key": "AB_T_100_W_25_25_25_25",
+      "status": "RUNNING",
+      "type": "VISUAL_AB",
+      "isForcedVariationEnabled": true,
+      "segments": {},
+      "variables": []
+      }
+    ],
+    "accountId": 88888888,
+    "version": 1
+  },
+
   "DUMMY_SETTINGS_FILE": {
     "sdkKey": "someuniquestuff1234567",
     "campaigns": [

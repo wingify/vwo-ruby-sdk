@@ -114,6 +114,13 @@ class VWOTest < Test::Unit::TestCase
     end
   end
 
+  def test_get_variation_against_campaign_traffic_100_and_split_25_25_25_25_with_forced_variaton
+    set_up('AB_T_100_W_25_25_25_25')
+    USER_EXPECTATIONS[@campaign_key].each do |test|
+      assert_equal(@vwo.get_variation_name(@campaign_key, test['user']), test['variation'])
+    end
+  end
+
   def test_get_variation_against_campaign_traffic_100_and_split_20_80
     set_up('AB_T_100_W_20_80')
     USER_EXPECTATIONS[@campaign_key].each do |test|
@@ -349,35 +356,35 @@ class VWOTest < Test::Unit::TestCase
       assert_equal(@vwo.feature_enabled?('FR_T_0_W_100', test['user']), !test['variation'].nil?)
     end
   end
-  
+
   def test_feature_enabled_FR_W_25
     set_up('FR_T_25_W_100')
     USER_EXPECTATIONS['T_25_W_10_20_30_40'].each do |test|
       assert_equal(@vwo.feature_enabled?('FR_T_25_W_100', test['user']), !test['variation'].nil?)
     end
   end
-  
+
   def test_feature_enabled_FR_W_50
     set_up('FR_T_50_W_100')
     USER_EXPECTATIONS['T_50_W_10_20_30_40'].each do |test|
       assert_equal(@vwo.feature_enabled?('FR_T_50_W_100', test['user']), !test['variation'].nil?)
     end
   end
-  
+
   def test_feature_enabled_FR_W_75
     set_up('FR_T_75_W_100')
     USER_EXPECTATIONS['T_75_W_10_20_30_40'].each do |test|
       assert_equal(@vwo.feature_enabled?('FR_T_75_W_100', test['user']), !test['variation'].nil?)
     end
   end
-  
+
   def test_feature_enabled_FR_W_100
     set_up('FR_T_100_W_100')
     USER_EXPECTATIONS['T_100_W_10_20_30_40'].each do |test|
       assert_equal(@vwo.feature_enabled?('FR_T_100_W_100', test['user']), !test['variation'].nil?)
     end
   end
-  
+
   def test_feature_enabled_FT_T_75_W_10_20_30_40
     set_up('FT_T_75_W_10_20_30_40')
     is_feature_not_enabled_variations = ['Control']
@@ -385,7 +392,7 @@ class VWOTest < Test::Unit::TestCase
       assert_equal(@vwo.feature_enabled?('FT_T_75_W_10_20_30_40', test['user']), !test['variation'].nil? && !is_feature_not_enabled_variations.include?(test['variation']))
     end
   end
-  
+
   # Test get_feature_variable_value from rollout
   def test_get_feature_variable_value_boolean_from_rollout
     set_up('FR_T_75_W_100')
@@ -400,7 +407,7 @@ class VWOTest < Test::Unit::TestCase
     end
     assert_equal(result, boolean_variable) if result
   end
-  
+
   # Test get_feature_variable_value from rollout
   def test_get_feature_variable_value_type_string_from_rollout
     set_up('FR_T_75_W_100')
@@ -414,7 +421,7 @@ class VWOTest < Test::Unit::TestCase
       assert_equal(result, string_variable) if result
     end
   end
-  
+
   # Test get_feature_variable_value from rollout
   def test_get_feature_variable_value_type_boolean_from_rollout
     set_up('FR_T_75_W_100')
@@ -428,7 +435,7 @@ class VWOTest < Test::Unit::TestCase
       assert_equal(result, double_variable) if result
     end
   end
-  
+
   # Test get_feature_variable_value from rollout
   def test_get_feature_variable_value_type_integer_from_rollout
     set_up('FR_T_75_W_100')
@@ -443,8 +450,8 @@ class VWOTest < Test::Unit::TestCase
     end
     assert_equal(result, integer_value) if result
   end
-  
-  
+
+
   # Test get_feature_variable_value from feature test from different feature splits
   def test_get_feature_variable_value_type_string_from_feature_test_t_0
     set_up('FT_T_0_W_10_20_30_40')
@@ -473,7 +480,7 @@ class VWOTest < Test::Unit::TestCase
     end
     assert_equal(result, string_variable[test['variation']]) if result
   end
-  
+
   def test_get_feature_variable_value_type_string_from_feature_test_t_50
     set_up('FT_T_50_W_10_20_30_40')
     string_variable = USER_EXPECTATIONS['STRING_VARIABLE']
@@ -486,7 +493,7 @@ class VWOTest < Test::Unit::TestCase
       assert_equal(result, string_variable[test['variation']]) if result
     end
   end
-  
+
   def test_get_feature_variable_value_type_string_from_feature_test_t_75
     set_up('FT_T_75_W_10_20_30_40')
     string_variable = USER_EXPECTATIONS['STRING_VARIABLE']
@@ -499,7 +506,7 @@ class VWOTest < Test::Unit::TestCase
       assert_equal(result, string_variable[test['variation']]) if result
     end
   end
-  
+
   def test_get_feature_variable_value_type_string_from_feature_test_t_100
     set_up('FT_T_100_W_10_20_30_40')
     string_variable = USER_EXPECTATIONS['STRING_VARIABLE']
@@ -512,7 +519,7 @@ class VWOTest < Test::Unit::TestCase
       assert_equal(result, string_variable[test['variation']]) if result
     end
   end
-  
+
   def test_get_feature_variable_value_type_string_from_feature_test_t_100_isFeatureEnalbed
     # isFeatureEnalbed is false for variation-1 and variation-3,
     # should return variable from Control
@@ -529,7 +536,7 @@ class VWOTest < Test::Unit::TestCase
       assert_equal(result, string_variable[variation_name]) if result
     end
   end
-  
+
   def test_get_feature_variable_wrong_variable_types
     set_up('FR_WRONG_VARIABLE_TYPE')
     tests = [
@@ -551,7 +558,7 @@ class VWOTest < Test::Unit::TestCase
       assert_equal(result.public_send(:is_a?, test[3]), true)
     end
   end
-  
+
   # Testing private method _get_feature_variable
 
   def test_get_feature_variable_wrong_variable_types_return_none
@@ -566,12 +573,12 @@ class VWOTest < Test::Unit::TestCase
       assert_equal(result, test[1])
     end
   end
-  
+
   def test_get_feature_variable_invalid_params
     set_up('FR_T_100_W_100')
     assert_equal(@vwo.get_feature_variable_value(123, 456, 789), nil)
   end
-  
+
   def test_get_feature_variable_invalid_config
     set_up('EMPTY_SETTINGS_FILE')
     assert_equal(
@@ -582,7 +589,7 @@ class VWOTest < Test::Unit::TestCase
       ), nil
     )
   end
-  
+
   def test_get_feature_variable_invalid_campaing_key
     set_up('FR_T_100_W_100')
     assert_equal(
@@ -593,7 +600,7 @@ class VWOTest < Test::Unit::TestCase
       ), nil
     )
   end
-  
+
   def test_get_feature_variable_invalid_campaing_type
     set_up('AB_T_50_W_50_50')
     assert_equal(
@@ -604,7 +611,7 @@ class VWOTest < Test::Unit::TestCase
       ), nil
     )
   end
-  
+
   # test each api raises exception
   def test_activate_raises_exception
     set_up()
@@ -651,7 +658,7 @@ class VWOTest < Test::Unit::TestCase
     vwo_instance = VWO.new(60781, 'ea87170ad94079aa190bc7c9b85d26fb', nil, nil, true, JSON.generate(SETTINGS_FILE['AB_T_50_W_50_50']), { log_level: Logger::WARN })
     assert_equal(vwo_instance.logger.level, Logger::WARN)
   end
-  
+
   # test activate with pre-segmentation
   def test_activate_with_no_custom_variables_fails
     vwo_instance = VWO.new(60781, 'ea87170ad94079aa190bc7c9b85d26fb', nil, nil, true, JSON.generate(SETTINGS_FILE['T_50_W_50_50_WS']), { log_level: Logger::DEBUG })
@@ -784,7 +791,7 @@ class VWOTest < Test::Unit::TestCase
   end
 
   def test_track_revenue_value_and_custom_variables_passed_in_args_as_hash
-  
+
     arguments_to_track = {
       'campaign_key' => 'TEST_TRACK',
       'user_id' => 'user_id',
@@ -817,7 +824,7 @@ class VWOTest < Test::Unit::TestCase
       assert_equal(vwo_instance.track('T_50_W_50_50_WS', test['user'], 'ddd', { custom_variables: true_custom_variables}), !test['variation'].nil?)
     end
   end
-  
+
   def test_track_with_presegmentation_false
     vwo_instance = VWO.new(60781, 'ea87170ad94079aa190bc7c9b85d26fb', nil, nil, true, JSON.generate(SETTINGS_FILE['T_50_W_50_50_WS']), { log_level: Logger::DEBUG })
     false_custom_variables = {
@@ -972,7 +979,7 @@ class VWOTest < Test::Unit::TestCase
     vwo_instance = VWO.new(60781, 'ea87170ad94079aa190bc7c9b85d26fb', nil, nil, true, JSON.generate(SETTINGS_FILE['DUMMY_SETTINGS_FILE']), { log_level: Logger::DEBUG })
     assert_equal(true, vwo_instance.push('a' * 255, 'browser', '12345'))
   end
-  
+
   def test_vwo_initialized_with_no_logger_no_log_level
     vwo_instance = VWO.new(60781, 'ea87170ad94079aa190bc7c9b85d26fb', nil, nil, true, JSON.generate(SETTINGS_FILE['AB_T_50_W_50_50']), { log_level: Logger::DEBUG })
     assert_equal(vwo_instance.logger.level, Logger::DEBUG)

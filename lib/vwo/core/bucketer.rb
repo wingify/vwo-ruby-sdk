@@ -116,10 +116,8 @@ class VWO
           )
         )
 
-        get_variation(campaign, bucket_value)
+        get_variation(campaign['variations'], bucket_value)
       end
-
-      private
 
       # Returns the Variation by checking the Start and End
       # Bucket Allocations of each Variation
@@ -128,8 +126,8 @@ class VWO
       # @param[Integer]     :bucket_value   The bucket Value of the user
       # @return[Hash|nil]                   Variation data allotted to the user or None if not
       #
-      def get_variation(campaign, bucket_value)
-        campaign['variations'].find do |variation|
+      def get_variation(variations, bucket_value)
+        variations.find do |variation|
           (variation['start_variation_allocation']..variation['end_variation_allocation']).cover?(bucket_value)
         end
       end

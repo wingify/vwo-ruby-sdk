@@ -143,9 +143,11 @@ class VWO
   def activate(campaign_key, user_id, options = {})
     # Retrieve custom variables
     custom_variables = options['custom_variables'] || options[:custom_variables]
+    variation_targeting_variables = options['variation_targeting_variables'] || options[:variation_targeting_variables]
 
     # Validate input parameters
-    unless valid_string?(campaign_key) && valid_string?(user_id) && (custom_variables.nil? || valid_hash?(custom_variables))
+    unless valid_string?(campaign_key) && valid_string?(user_id) && (custom_variables.nil? || valid_hash?(custom_variables)) &&
+           (variation_targeting_variables.nil? || valid_hash?(variation_targeting_variables))
       @logger.log(
         LogLevelEnum::ERROR,
         format(
@@ -208,11 +210,14 @@ class VWO
 
     # Once the matching RUNNING campaign is found, assign the
     # deterministic variation to the user_id provided
+
     variation = @variation_decider.get_variation(
       user_id,
       campaign,
+      ApiMethods::ACTIVATE,
       campaign_key,
-      custom_variables
+      custom_variables,
+      variation_targeting_variables
     )
 
     # Check if variation_name has been assigned
@@ -271,9 +276,11 @@ class VWO
   def get_variation_name(campaign_key, user_id, options = {})
     # Retrieve custom variables
     custom_variables = options['custom_variables'] || options[:custom_variables]
+    variation_targeting_variables = options['variation_targeting_variables'] || options[:variation_targeting_variables]
 
     # Validate input parameters
-    unless valid_string?(campaign_key) && valid_string?(user_id) && (custom_variables.nil? || valid_hash?(custom_variables))
+    unless valid_string?(campaign_key) && valid_string?(user_id) && (custom_variables.nil? || valid_hash?(custom_variables)) &&
+           (variation_targeting_variables.nil? || valid_hash?(variation_targeting_variables))
       @logger.log(
         LogLevelEnum::ERROR,
         format(
@@ -330,7 +337,7 @@ class VWO
       return
     end
 
-    variation = @variation_decider.get_variation(user_id, campaign, campaign_key, custom_variables)
+    variation = @variation_decider.get_variation(user_id, campaign, ApiMethods::GET_VARIATION_NAME, campaign_key, custom_variables, variation_targeting_variables)
 
     # Check if variation_name has been assigned
     unless valid_value?(variation)
@@ -379,14 +386,15 @@ class VWO
     if args[0].is_a?(Hash)
       revenue_value = args[0]['revenue_value'] || args[0][:revenue_value]
       custom_variables = args[0]['custom_variables'] || args[0][:custom_variables]
+      variation_targeting_variables = args[0]['variation_targeting_variables'] || args[0][:variation_targeting_variables]
     elsif args.is_a?(Array)
       revenue_value = args[0]
       custom_variables = nil
     end
 
     # Check for valid args
-    unless valid_string?(campaign_key) && valid_string?(user_id) && valid_string?(goal_identifier) &&
-           (custom_variables.nil? || valid_hash?(custom_variables)) || (revenue_value.nil? || valid_basic_data_type?(revenue_value))
+    unless valid_string?(campaign_key) && valid_string?(user_id) && (custom_variables.nil? || valid_hash?(custom_variables)) &&
+           (variation_targeting_variables.nil? || valid_hash?(variation_targeting_variables))
       # log invalid params
       @logger.log(
         LogLevelEnum::ERROR,
@@ -446,7 +454,7 @@ class VWO
       return false
     end
 
-    variation = @variation_decider.get_variation(user_id, campaign, campaign_key, custom_variables)
+    variation = @variation_decider.get_variation(user_id, campaign, ApiMethods::TRACK, campaign_key, custom_variables, variation_targeting_variables)
 
     if variation
       goal = get_campaign_goal(campaign, goal_identifier)
@@ -532,9 +540,11 @@ class VWO
   def feature_enabled?(campaign_key, user_id, options = {})
     # Retrieve custom variables
     custom_variables = options['custom_variables'] || options[:custom_variables]
+    variation_targeting_variables = options['variation_targeting_variables'] || options[:variation_targeting_variables]
 
     # Validate input parameters
-    unless valid_string?(campaign_key) && valid_string?(user_id) && (custom_variables.nil? || valid_hash?(custom_variables))
+    unless valid_string?(campaign_key) && valid_string?(user_id) && (custom_variables.nil? || valid_hash?(custom_variables)) &&
+           (variation_targeting_variables.nil? || valid_hash?(variation_targeting_variables))
       @logger.log(
         LogLevelEnum::ERROR,
         format(
@@ -594,7 +604,7 @@ class VWO
     end
 
     # Get variation
-    variation = @variation_decider.get_variation(user_id, campaign, campaign_key, custom_variables)
+    variation = @variation_decider.get_variation(user_id, campaign, ApiMethods::IS_FEATURE_ENABLED, campaign_key, custom_variables, variation_targeting_variables)
 
     # If no variation, did not become part of feature_test/rollout
     return false unless variation
@@ -682,9 +692,10 @@ class VWO
   def get_feature_variable_value(campaign_key, variable_key, user_id, options = {})
     # Retrieve custom variables
     custom_variables = options['custom_variables'] || options[:custom_variables]
+    variation_targeting_variables = options['variation_targeting_variables'] || options[:variation_targeting_variables]
 
     unless valid_string?(campaign_key) && valid_string?(variable_key) && valid_string?(user_id) &&
-           (custom_variables.nil? || valid_hash?(custom_variables))
+           (custom_variables.nil? || valid_hash?(custom_variables)) && (variation_targeting_variables.nil? || valid_hash?(variation_targeting_variables))
       @logger.log(
         LogLevelEnum::ERROR,
         format(
@@ -743,7 +754,7 @@ class VWO
       return
     end
 
-    variation = @variation_decider.get_variation(user_id, campaign, campaign_key, custom_variables)
+    variation = @variation_decider.get_variation(user_id, campaign, ApiMethods::GET_FEATURE_VARIABLE_VALUE, campaign_key, custom_variables, variation_targeting_variables)
 
     # Check if variation has been assigned to user
     return unless variation

@@ -167,6 +167,11 @@
     {"user": "You", "variation": "Variation-1"},
     {"user": "Zeba", "variation": "Variation-1"}
   ],
+  "AB_T_100_W_25_25_25_25": [
+    {"user": "Faizan", "variation": "Control"},
+    {"user": "You", "variation": "Control"},
+    {"user": "Varun", "variation": "Variation-1"}
+  ],
   "T_0_W_10_20_30_40": [
     {"user": "Ashley", "variation": null},
     {"user": "Bill", "variation": null},

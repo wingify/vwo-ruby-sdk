@@ -50,7 +50,9 @@ class VWO
         elsif operator == OperatorTypes::OR
           sub_dsl.any? { |y| evaluate_util(y, custom_variables) }
         elsif operator == OperandTypes::CUSTOM_VARIABLE
-          @operand_evaluator.evaluate_operand?(sub_dsl, custom_variables)
+          @operand_evaluator.evaluate_custom_variable?(sub_dsl, custom_variables)
+        elsif operator == OperandTypes::USER
+          @operand_evaluator.evaluate_user?(sub_dsl, custom_variables)
         end
       end
 
@@ -66,35 +68,12 @@ class VWO
       #
       def evaluate(campaign_key, user_id, dsl, custom_variables)
         result = evaluate_util(dsl, custom_variables) if valid_value?(dsl)
-        if result
-          @logger.log(
-            LogLevelEnum::INFO,
-            format(
-              LogMessageEnum::InfoMessages::USER_PASSED_PRE_SEGMENTATION,
-              file: FileNameEnum::SegmentEvaluator,
-              user_id: user_id,
-              campaign_key: campaign_key,
-              custom_variables: custom_variables
-            )
-          )
-        else
-          @logger.log(
-            LogLevelEnum::INFO,
-            format(
-              LogMessageEnum::InfoMessages::USER_FAILED_PRE_SEGMENTATION,
-              file: FileNameEnum::SegmentEvaluator,
-              user_id: user_id,
-              campaign_key: campaign_key,
-              custom_variables: custom_variables
-            )
-          )
-        end
         result
       rescue StandardError => e
         @logger.log(
           LogLevelEnum::ERROR,
           format(
-            LogMessageEnum::ErrorMessages::PRE_SEGMENTATION_ERROR,
+            LogMessageEnum::ErrorMessages::SEGMENTATION_ERROR,
             file: FileNameEnum::SegmentEvaluator,
             user_id: user_id,
             campaign_key: campaign_key,

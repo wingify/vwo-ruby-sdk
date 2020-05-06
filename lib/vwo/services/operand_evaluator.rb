@@ -89,7 +89,7 @@ class VWO
       # @param [String] :custom_variables_value   Value from the custom_variables
       #
       # @return [Boolean]
-      def evaluate_operand?(operand, custom_variables)
+      def evaluate_custom_variable?(operand, custom_variables)
         # Extract custom_variable_key and custom_variables_value from operand
 
         operand_key, operand = get_key_value(operand)
@@ -108,6 +108,14 @@ class VWO
 
         # Call the self method corresponding to operand_type to evaluate the result
         public_send("#{operand_type}?", operand_value, custom_variables_value)
+      end
+
+      def evaluate_user?(operand, custom_variables)
+        users = operand.split(',')
+        users.each do |user|
+          return true if user.strip == custom_variables['_vwo_user_id']
+        end
+        false
       end
     end
   end
