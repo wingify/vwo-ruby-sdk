@@ -11,7 +11,7 @@ Gem::Specification.new do |spec|
   spec.summary       = "Ruby SDK for VWO full-stack testing"
   spec.description   = "A Ruby SDK for VWO full-stack testing."
   spec.homepage      = 'https://vwo.com/fullstack/server-side-testing/'
-  spec.license       = 'Apache 2.0'
+  spec.license       = 'Apache-2.0'
 
   spec.files         = Dir['lib/**/*']
   spec.require_paths = ['lib']

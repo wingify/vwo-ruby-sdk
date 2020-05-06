@@ -4,11 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2020-05-06
+### Added
+Forced Variation capabilites
+- Introduced `Forced Variation` to force certain users into specific variation. Forcing can be based on User IDs or custom variables defined.
+### Changed
+- All existing APIs to handle variation-targeting-variables as an option for forcing variation
+- Code refactored to support Whitelisting.
+
 ## [1.5.0] - 2020-02-20
 ### Breaking Changes
 To prevent ordered arguments and increasing use-cases, we are moving all optional arguments to be passed via `options`.
 
-- customVariables argument in APIs: `activate`, `get_variation`, `track`, `is_feature_enabled`, and `get_feature_variable_value` will now be passed via `options`.
+- customVariables argument in APIs: `activate`, `get_variation_name`, `track`, `is_feature_enabled`, and `get_feature_variable_value` will now be passed via `options`.
 - `revenueValue` parameter in `track` API via `options`
 
 #### Before
