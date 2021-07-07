@@ -12,5 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require_relative './test_helper'
-Dir[File.dirname(File.absolute_path(__FILE__)) + '/**/test_*.rb'].each {|file| require file }
+class VWO
+  module Services
+    class UsageStats
+      attr_reader :usage_stats
+      # Initialize the UsageStats
+      def initialize(stats, is_development_mode = false)
+        @usage_stats = {}
+        unless is_development_mode
+          @usage_stats = stats
+          @usage_stats[:_l] = 1 if @usage_stats.length > 0
+        end
+      end
+    end
+  end
+end

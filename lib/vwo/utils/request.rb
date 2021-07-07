@@ -1,4 +1,4 @@
-# Copyright 2019-2020 Wingify Software Pvt. Ltd.
+# Copyright 2019-2021 Wingify Software Pvt. Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,6 +23,20 @@ class VWO
         http.use_ssl = true
         uri.query = URI.encode_www_form(params)
         Net::HTTP.get_response(uri)
+      end
+
+      def self.post(url, params, post_data)
+        uri = URI.parse(url)
+        http = Net::HTTP.new(uri.host, uri.port)
+        http.use_ssl = true
+        uri.query = URI.encode_www_form(params)
+        headers = {
+          'Authorization'=>params[:env],
+          'Content-Type' =>'application/json',
+          'Accept'=>'application/json'
+        }
+        response = http.post(uri, post_data.to_json, headers)
+        response
       end
     end
   end

@@ -1,4 +1,4 @@
-# Copyright 2019-2020 Wingify Software Pvt. Ltd.
+# Copyright 2019-2021 Wingify Software Pvt. Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,15 +18,20 @@ require_relative '../utils/campaign'
 require_relative '../services/segment_evaluator'
 require_relative '../utils/validations'
 require_relative 'bucketer'
+require_relative '../constants'
+require_relative '../services/hooks_manager'
+require_relative '../utils/uuid'
 
 class VWO
   module Core
     class VariationDecider
-      attr_reader :user_storage_service
+      attr_reader :user_storage_service, :has_stored_variation, :hooks_manager
 
       include VWO::Enums
       include VWO::Utils::Campaign
       include VWO::Utils::Validations
+      include VWO::CONSTANTS
+      include VWO::Utils::UUID
 
       FILE = FileNameEnum::VariationDecider
 
@@ -34,12 +39,13 @@ class VWO
       # @param[Hash] -   Settings file
       # @param[Class] -  Class instance having the capability of
       #                  get and save.
-      def initialize(settings_file, user_storage_service = nil)
+      def initialize(settings_file, user_storage_service = nil, options = {})
         @logger = VWO::Logger.get_instance
         @user_storage_service = user_storage_service
         @bucketer = VWO::Core::Bucketer.new
         @settings_file = settings_file
         @segment_evaluator = VWO::Services::SegmentEvaluator.new
+        @hooks_manager = VWO::Services::HooksManager.new(options)
       end
 
       # Returns variation for the user for the passed campaign-key
@@ -51,13 +57,41 @@ class VWO
       # @param[String]          :user_id             The unique ID assigned to User
       # @param[Hash]            :campaign            Campaign hash itself
       # @param[String]          :campaign_key        The unique ID of the campaign passed
+      # @param[String]          :goal_identifier     The unique campaign's goal identifier
       # @return[String,String]                       ({variation_id, variation_name}|Nil): Tuple of
       #                                              variation_id and variation_name if variation allotted, else nil
 
-      def get_variation(user_id, campaign, api_name, campaign_key, custom_variables = {}, variation_targeting_variables = {})
+      def get_variation(user_id, campaign, api_name, campaign_key, custom_variables = {}, variation_targeting_variables = {}, goal_identifier = '')
         campaign_key ||= campaign['key']
 
         return unless campaign
+
+        @has_stored_variation = false
+        decision = {
+          :campaign_id => campaign['id'],
+          :campaign_key => campaign_key,
+          :campaign_type => campaign['type'],
+        # campaign segmentation conditions
+          :custom_variables => custom_variables,
+        # event name
+          :event => Hooks::DECISION_TYPES['CAMPAIGN_DECISION'],
+        # goal tracked in case of track API
+          :goal_identifier => goal_identifier,
+        # campaign whitelisting flag
+          :is_forced_variation_enabled => campaign['isForcedVariationEnabled'] ? campaign['isForcedVariationEnabled'] : false,
+          :sdk_version => SDK_VERSION,
+        # API name which triggered the event
+          :source => api_name,
+        # Passed in API
+          :user_id => user_id,
+        # Campaign Whitelisting conditions
+          :variation_targeting_variables => variation_targeting_variables,
+          :is_user_whitelisted => false,
+          :from_user_storage_service => false,
+          :is_feature_enabled => true,
+        # VWO generated UUID based on passed UserId and Account ID
+          :vwo_user_id => generator_for(user_id, @settings_file['accountId'])
+        }
 
         if campaign['isForcedVariationEnabled']
           variation = evaluate_whitelisting(
@@ -88,6 +122,19 @@ class VWO
             )
           )
 
+          if variation
+            if campaign['type'] == CampaignTypes::VISUAL_AB || campaign['type'] == CampaignTypes::FEATURE_TEST
+              decision[:variation_name] = variation['name']
+              decision[:variation_id] = variation['id']
+              if campaign['type'] == CampaignTypes::FEATURE_TEST
+                decision[:is_feature_enabled] = variation['isFeatureEnabled']
+              elsif campaign['type'] == CampaignTypes::VISUAL_AB
+                decision[:is_user_whitelisted] = !!variation['name']
+              end
+            end
+            @hooks_manager.execute(decision)
+          end
+
           return variation if variation && variation['name']
         else
           @logger.log(
@@ -104,8 +151,13 @@ class VWO
 
         user_campaign_map = get_user_storage(user_id, campaign_key)
         variation = get_stored_variation(user_id, campaign_key, user_campaign_map) if valid_hash?(user_campaign_map)
+        variation = variation.dup  # deep copy
 
         if variation
+          if valid_string?(user_campaign_map['goal_identifier']) && api_name == ApiMethods::TRACK
+            variation['goal_identifier'] = user_campaign_map['goal_identifier']
+          end
+          @has_stored_variation = true
           @logger.log(
             LogLevelEnum::INFO,
             format(
@@ -116,7 +168,55 @@ class VWO
               variation_name: variation['name']
             )
           )
+          decision[:from_user_storage_service] = !!variation['name']
+          if variation
+            if campaign['type'] == CampaignTypes::VISUAL_AB || campaign['type'] == CampaignTypes::FEATURE_TEST
+              decision[:variation_name] = variation['name']
+              decision[:variation_id] = variation['id']
+              if campaign['type'] == CampaignTypes::FEATURE_TEST
+                decision[:is_feature_enabled] = variation['isFeatureEnabled']
+              end
+            end
+            @hooks_manager.execute(decision)
+          end
           return variation
+        else
+          @logger.log(
+            LogLevelEnum::DEBUG,
+            format(
+              LogMessageEnum::DebugMessages::NO_STORED_VARIATION,
+              file: FILE,
+              campaign_key: campaign_key,
+              user_id: user_id
+            )
+          )
+
+          if ([ApiMethods::TRACK, ApiMethods::GET_VARIATION_NAME, ApiMethods::GET_FEATURE_VARIABLE_VALUE].include? api_name) &&
+            @user_storage_service && campaign['type'] != CampaignTypes::FEATURE_ROLLOUT
+            @logger.log(
+              LogLevelEnum::DEBUG,
+              format(
+                LogMessageEnum::DebugMessages::CAMPAIGN_NOT_ACTIVATED,
+                file: FILE,
+                campaign_key: campaign_key,
+                user_id: user_id,
+                api_name: api_name
+              )
+            )
+
+            @logger.log(
+              LogLevelEnum::INFO,
+              format(
+                LogMessageEnum::InfoMessages::CAMPAIGN_NOT_ACTIVATED,
+                file: FILE,
+                campaign_key: campaign_key,
+                user_id: user_id,
+                api_name: api_name,
+                reason: api_name == ApiMethods::TRACK ? 'track it' : 'get the decision/value'
+              )
+            )
+            return
+          end
         end
 
         # Pre-segmentation
@@ -178,7 +278,7 @@ class VWO
         variation = get_variation_allotted(user_id, campaign)
 
         if variation && variation['name']
-          save_user_storage(user_id, campaign_key, variation['name']) if variation['name']
+          save_user_storage(user_id, campaign_key, variation['name'], goal_identifier) if variation['name']
 
           @logger.log(
             LogLevelEnum::INFO,
@@ -196,6 +296,17 @@ class VWO
             LogLevelEnum::INFO,
             format(LogMessageEnum::InfoMessages::NO_VARIATION_ALLOCATED, file: FILE, campaign_key: campaign_key, user_id: user_id)
           )
+        end
+
+        if variation
+          if campaign['type'] == CampaignTypes::VISUAL_AB || campaign['type'] == CampaignTypes::FEATURE_TEST
+            decision[:variation_name] = variation['name']
+            decision[:variation_id] = variation['id']
+            if campaign['type'] == CampaignTypes::FEATURE_TEST
+              decision[:is_feature_enabled] = variation['isFeatureEnabled']
+            end
+          end
+          @hooks_manager.execute(decision)
         end
         variation
       end
@@ -291,6 +402,45 @@ class VWO
           )
         )
         nil
+      end
+
+      # If UserStorageService is provided, save the assigned variation
+      #
+      # @param[String]              :user_id            Unique user identifier
+      # @param[String]              :campaign_key       Unique campaign identifier
+      # @param[String]              :variation_name     Variation identifier
+      # @param[String]              :goal_identifier    The unique campaign's goal identifier
+      # @return[Boolean]                                true if found otherwise false
+
+      def save_user_storage(user_id, campaign_key, variation_name, goal_identifier)
+        unless @user_storage_service
+          @logger.log(
+            LogLevelEnum::DEBUG,
+            format(LogMessageEnum::DebugMessages::NO_USER_STORAGE_SERVICE_SAVE, file: FILE)
+          )
+          return false
+        end
+        new_campaign_user_mapping = {}
+        new_campaign_user_mapping['campaign_key'] = campaign_key
+        new_campaign_user_mapping['user_id'] = user_id
+        new_campaign_user_mapping['variation_name'] = variation_name
+        if !goal_identifier.empty?
+          new_campaign_user_mapping['goal_identifier'] = goal_identifier
+        end
+
+        @user_storage_service.set(new_campaign_user_mapping)
+
+        @logger.log(
+          LogLevelEnum::INFO,
+          format(LogMessageEnum::InfoMessages::SAVING_DATA_USER_STORAGE_SERVICE, file: FILE, user_id: user_id)
+        )
+        true
+      rescue StandardError
+        @logger.log(
+          LogLevelEnum::ERROR,
+          format(LogMessageEnum::ErrorMessages::SAVE_USER_STORAGE_SERVICE_FAILED, file: FILE, user_id: user_id)
+        )
+        false
       end
 
       private
@@ -463,41 +613,6 @@ class VWO
           campaign_key,
           variation_name
         )
-      end
-
-      # If UserStorageService is provided, save the assigned variation
-      #
-      # @param[String]              :user_id            Unique user identifier
-      # @param[String]              :campaign_key       Unique campaign identifier
-      # @param[String]              :variation_name     Variation identifier
-      # @return[Boolean]                                true if found otherwise false
-
-      def save_user_storage(user_id, campaign_key, variation_name)
-        unless @user_storage_service
-          @logger.log(
-            LogLevelEnum::DEBUG,
-            format(LogMessageEnum::DebugMessages::NO_USER_STORAGE_SERVICE_SAVE, file: FILE)
-          )
-          return false
-        end
-        new_campaign_user_mapping = {}
-        new_campaign_user_mapping['campaign_key'] = campaign_key
-        new_campaign_user_mapping['user_id'] = user_id
-        new_campaign_user_mapping['variation_name'] = variation_name
-
-        @user_storage_service.set(new_campaign_user_mapping)
-
-        @logger.log(
-          LogLevelEnum::INFO,
-          format(LogMessageEnum::InfoMessages::SAVING_DATA_USER_STORAGE_SERVICE, file: FILE, user_id: user_id)
-        )
-        true
-      rescue StandardError
-        @logger.log(
-          LogLevelEnum::ERROR,
-          format(LogMessageEnum::ErrorMessages::SAVE_USER_STORAGE_SERVICE_FAILED, file: FILE, user_id: user_id)
-        )
-        false
       end
     end
   end

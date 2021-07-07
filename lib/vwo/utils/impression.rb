@@ -1,4 +1,4 @@
-# Copyright 2019-2020 Wingify Software Pvt. Ltd.
+# Copyright 2019-2021 Wingify Software Pvt. Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -31,16 +31,17 @@ class VWO
 
       # Creates the impression from the arguments passed
       #
-      # @param[Hash]                        :settings_file           Settings file object
+      # @param[Hash]                        :settings_file          Settings file object
       # @param[String]                      :campaign_id            Campaign identifier
       # @param[String]                      :variation_id           Variation identifier
       # @param[String]                      :user_id                User identifier
+      # @param[String]                      :sdk_key                SDK Key
       # @param[String]                      :goal_id                Goal identifier, if building track impression
       # @param[String|Float|Integer|nil)    :revenue                Number value, in any representation, if building track impression
       #
       # @return[nil|Hash]                                           None if campaign ID or variation ID is invalid,
       #                                                             Else Properties(dict)
-      def create_impression(settings_file, campaign_id, variation_id, user_id, goal_id = nil, revenue = nil)
+      def create_impression(settings_file, campaign_id, variation_id, user_id, sdk_key, goal_id = nil, revenue = nil, usage_stats = {})
         return unless valid_number?(campaign_id) && valid_string?(user_id)
 
         is_track_user_api = true
@@ -51,16 +52,18 @@ class VWO
           account_id: account_id,
           experiment_id: campaign_id,
           ap: PLATFORM,
-          uId: CGI.escape(user_id.encode('utf-8')),
           combination: variation_id,
           random: get_random_number,
           sId: get_current_unix_timestamp,
-          u: generator_for(user_id, account_id)
+          u: generator_for(user_id, account_id),
+          env: sdk_key
         }
         # Version and SDK constants
         sdk_version = Gem.loaded_specs['vwo_sdk'] ? Gem.loaded_specs['vwo_sdk'].version : VWO::SDK_VERSION
         impression['sdk'] = 'ruby'
         impression['sdk-v'] = sdk_version
+
+        impression = usage_stats.merge(impression)
 
         url = HTTPS_PROTOCOL + ENDPOINTS::BASE_URL
         logger = VWO::Logger.get_instance
@@ -107,9 +110,57 @@ class VWO
           'ap' => PLATFORM,
           'sId' => get_current_unix_timestamp,
           'u' => generator_for(user_id, account_id),
-          'account_id' => account_id,
-          'uId' => CGI.escape(user_id.encode('utf-8'))
+          'account_id' => account_id
         }
+      end
+
+      # Creates properties for the bulk impression event
+      #
+      # @param[Hash]                        :settings_file          Settings file object
+      # @param[String]                      :campaign_id            Campaign identifier
+      # @param[String]                      :variation_id           Variation identifier
+      # @param[String]                      :user_id                User identifier
+      # @param[String]                      :sdk_key                SDK Key
+      # @param[String]                      :goal_id                Goal identifier, if building track impression
+      # @param[String|Float|Integer|nil)    :revenue                Number value, in any representation, if building track impression
+      #
+      # @return[nil|Hash]                                           None if campaign ID or variation ID is invalid,
+      #                                                             Else Properties(dict)
+      def create_bulk_event_impression(settings_file, campaign_id, variation_id, user_id, goal_id = nil, revenue = nil)
+        return unless valid_number?(campaign_id) && valid_string?(user_id)
+        is_track_user_api = true
+        is_track_user_api = false unless goal_id.nil?
+        account_id = settings_file['accountId']
+        impression = {
+          eT: is_track_user_api ? 1 : 2,
+          e: campaign_id,
+          c: variation_id,
+          u: generator_for(user_id, account_id),
+          sId: get_current_unix_timestamp
+        }
+        logger = VWO::Logger.get_instance
+        if is_track_user_api
+          logger.log(
+            LogLevelEnum::DEBUG,
+            format(
+              LogMessageEnum::DebugMessages::IMPRESSION_FOR_TRACK_USER,
+              file: FileNameEnum::ImpressionUtil,
+              properties: JSON.generate(impression)
+            )
+          )
+        else
+          impression['g'] = goal_id
+          impression['r'] = revenue if revenue
+          logger.log(
+            LogLevelEnum::DEBUG,
+            format(
+              LogMessageEnum::DebugMessages::IMPRESSION_FOR_TRACK_GOAL,
+              file: FileNameEnum::ImpressionUtil,
+              properties: JSON.generate(impression)
+            )
+          )
+        end
+        impression
       end
     end
   end

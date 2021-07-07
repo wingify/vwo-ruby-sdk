@@ -1,4 +1,4 @@
-# Copyright 2019-2020 Wingify Software Pvt. Ltd.
+# Copyright 2019-2021 Wingify Software Pvt. Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -142,6 +142,113 @@ class VWO
           campaign['key'] == campaign_key
         end
       end
+
+      #  fetch campaigns from settings
+      #
+      #  [string|array|nil] :campaign_key
+      #  [Hash]             :settings_file
+      #  [string]           :goal_identifier
+      #  [string]           :goal_type_to_track
+      #  @return[Hash]
+      def get_campaigns(settings_file, campaign_key, goal_identifier, goal_type_to_track = 'ALL')
+        campaigns = []
+        if campaign_key.nil?
+          campaigns = get_campaigns_for_goal(settings_file, goal_identifier, goal_type_to_track)
+        elsif campaign_key.is_a?(Array)
+          campaigns = get_campaigns_from_campaign_keys(campaign_key, settings_file, goal_identifier, goal_type_to_track)
+        elsif campaign_key.is_a?(String)
+          campaign = get_campaign_for_campaign_key_and_goal(campaign_key, settings_file, goal_identifier, goal_type_to_track)
+          if campaign
+            campaigns = [campaign]
+          end
+        end
+        if campaigns.length() == 0
+          VWO::Logger.get_instance.log(
+            LogLevelEnum::ERROR,
+            format(
+              LogMessageEnum::ErrorMessages::NO_CAMPAIGN_FOUND,
+              file: FileNameEnum::CampaignUtil,
+              goal_identifier: goal_identifier
+            )
+          )
+        end
+        return campaigns
+      end
+
+      # fetch all running campaigns (having goal identifier goal_type_to_track and goal type CUSTOM|REVENUE|ALL) from settings
+      #
+      #  [Hash]             :settings_file
+      #  [string]           :goal_identifier
+      #  [string]           :goal_type_to_track
+      #  @return[Hash]
+      def get_campaigns_for_goal(settings_file, goal_identifier, goal_type_to_track = 'ALL')
+        campaigns = []
+        if settings_file
+          settings_file['campaigns'].each do |campaign|
+            if campaign.key?(:status) && campaign[:status] != 'RUNNING'
+              next
+            end
+            goal = get_campaign_goal(campaign, goal_identifier)
+            if validate_goal(goal, goal_type_to_track)
+              campaigns.append(campaign)
+            end
+          end
+        end
+        campaigns
+      end
+
+      def validate_goal(goal, goal_type_to_track)
+        result = goal && (
+          goal_type_to_track == 'ALL' ||
+            (
+              GOAL_TYPES.has_value?(goal['type']) &&
+                (GOAL_TYPES.key? goal_type_to_track) &&
+                goal['type'] == GOAL_TYPES[goal_type_to_track]
+            )
+        )
+        return result
+      end
+
+      def get_campaigns_from_campaign_keys(campaign_keys, settings_file, goal_identifier, goal_type_to_track = 'ALL')
+        campaigns = []
+        campaign_keys.each do |campaign_key|
+
+          campaign = get_campaign_for_campaign_key_and_goal(campaign_key, settings_file, goal_identifier, goal_type_to_track)
+          if campaign
+            campaigns.append(campaign)
+          end
+        end
+        campaigns
+      end
+
+      def get_campaign_for_campaign_key_and_goal(campaign_key, settings_file, goal_identifier, goal_type_to_track)
+        campaign = get_running_campaign(campaign_key, settings_file)
+        if campaign
+          goal = get_campaign_goal(campaign, goal_identifier)
+          if validate_goal(goal, goal_type_to_track)
+            return campaign
+          end
+        end
+        nil
+      end
+
+      def get_running_campaign(campaign_key, settings_file)
+        campaign = get_campaign(settings_file, campaign_key)
+        if campaign.nil? || (campaign['status'] != 'RUNNING')
+          @logger.log(
+            LogLevelEnum::ERROR,
+            format(
+              LogMessageEnum::ErrorMessages::CAMPAIGN_NOT_RUNNING,
+              file: FILE,
+              campaign_key: campaign_key,
+              api_name: ApiMethods::TRACK
+            )
+          )
+          nil
+        end
+        return campaign
+      end
+
     end
   end
 end

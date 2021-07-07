@@ -1,4 +1,4 @@
-# Copyright 2019-2020 Wingify Software Pvt. Ltd.
+# Copyright 2019-2021 Wingify Software Pvt. Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -71,6 +71,8 @@ class VWO
       SegmentEvaluator = VWO_PATH + '/services/segment_evaluator'
       Logger = VWO_PATH + '/logger'
       SettingsFileProcessor = VWO_PATH + '/services/settings_file_processor'
+      BatchEventsQueue = VWO_PATH + '/services/batch_events_queue'
+      BatchEventsDispatcher = VWO_PATH + '/services/batch_events_dispatcher'
 
       CampaignUtil = UTIL_PATH + '/campaign'
       FunctionUtil = UTIL_PATH + '/function'
@@ -106,6 +108,11 @@ class VWO
         GOT_VARIATION_FOR_USER = '(%<file>s): userId:%<user_id>s for campaign:%<campaign_key>s got variationName:%<variation_name>s'
         SEGMENTATION_STATUS = '(%<file>s): In API: %<api_name>s, for UserId:%<user_id>s of campaign:%<campaign_key>s  with variables:%<custom_variables>s %<status>s %<segmentation_type>s for %<variation_name>s'
         PARAMS_FOR_PUSH_CALL = '(%<file>s): Params for push call - %<properties>s'
+        CAMPAIGN_NOT_ACTIVATED = '(%<file>s): Campaign:%<campaign_key>s for User ID:%<user_id>s is not yet activated for API:%<api_name>s. Use activate API to activate A/B test or isFeatureEnabled API to activate Feature Test.'
+        BATCH_EVENT_LIMIT_EXCEEDED = '(%<file>s): Impression event - %<end_point>s failed due to exceeding payload size. Parameter eventsPerRequest in batchEvents config in launch API has value:%<eventsPerRequest>s for accountId:%<accountId>s. Please read the official documentation for knowing the size limits.'
+        BULK_NOT_PROCESSED = "(%<file>s): Batch events couldn't be received by VWO. Calling Flush Callback with error and data."
+        BEFORE_FLUSHING = '(%<file>s): Flushing events queue %<manually>s having %<length>s events %<timer>s queue summary: %<queue_metadata>s'
+        EVENT_BATCHING_INSUFFICIENT = '(%<file>s): %<key>s not provided, assigning default value'
       end
 
       # Info Messages
@@ -120,9 +127,9 @@ class VWO
         AUDIENCE_CONDITION_NOT_MET = '(%<file>s): userId:%<user_id>s does not become part of campaign because of not meeting audience conditions'
         GOT_VARIATION_FOR_USER = '(%<file>s): userId:%<user_id>s for campaign:%<campaign_key>s got variationName:%<variation_name>s'
         USER_GOT_NO_VARIATION = '(%<file>s): userId:%<user_id>s for campaign:%<campaign_key>s did not allot any variation'
-        IMPRESSION_SUCCESS = '(%<file>s): Impression event - %<end_point>s was successfully received by VWO having main keys: accountId:%<account_id>s userId:%<user_id>s campaignId:%<campaign_id>s and variationId:%<variation_id>s'
-        MAIN_KEYS_FOR_IMPRESSION = '(%<file>s): Having main keys: accountId:%<account_id>s} userId:%<user_id>s campaignId:%<campaign_id>s and variationId:%<variation_id>s'
-        MAIN_KEYS_FOR_PUSH_API = '(%<file>s): Having main keys: accountId:%<account_id>s} userId:%<user_id>s u:%<u>s and tags:%<tags>s}'
+        IMPRESSION_SUCCESS = '(%<file>s): Impression event - %<end_point>s was successfully received by VWO having main keys: sdkKey:%<sdk_key>s accountId:%<account_id>s campaignId:%<campaign_id>s and variationId:%<variation_id>s'
+        MAIN_KEYS_FOR_IMPRESSION = '(%<file>s): Having main keys: {sdkKey:%<sdk_key>s accountId:%<account_id>s campaignId:%<campaign_id>s and variationId:%<variation_id>s}'
+        MAIN_KEYS_FOR_PUSH_API = '(%<file>s): Having main keys: {sdkKey:%<sdk_key>s accountId:%<account_id>s u:%<u>s and tags:%<tags>s}'
         INVALID_VARIATION_KEY = '(%<file>s): Variation was not assigned to userId:%<user_id>s for campaign:%<campaign_key>s'
 
         USER_IN_FEATURE_ROLLOUT = '(%<file>s): User ID:%<user_id>s is in feature rollout:%<campaign_key>s'
@@ -140,6 +147,14 @@ class VWO
 
         SEGMENTATION_STATUS = '(%<file>s): In API: %<api_name>s, for UserId:%<user_id>s of campaign:%<campaign_key>s  with variables:%<custom_variables>s %<status>s %<segmentation_type>s %<variation_name>s'
         WHITELISTING_SKIPPED = '(%<file>s): In API: %<api_name>s, Skipping whitelisting for UserId:%<user_id>s of campaign:%<campaign_key>s'
+        SETTINGS_NOT_UPDATED = '(%<file>s): Settings-file fetched are same as earlier fetched settings'
+        SETTINGS_FILE_UPDATED = '(%<file>s): %<api_name>s vwo_sdk_instance is updated with the latest settings_file'
+        CAMPAIGN_NOT_ACTIVATED = '(%<file>s): Activate the campaign:%<campaign_key>s for User ID:%<user_id>s to %<reason>s.'
+        GOAL_ALREADY_TRACKED = '(%<file>s): Goal:%<goal_identifier>s of Campaign:%<campaign_key>s for User ID:%<user_id>s has already been tracked earlier. Skipping now'
+        USER_ALREADY_TRACKED = '(%<file>s): User ID:%<user_id>s for Campaign:%<campaign_key>s has already been tracked earlier for "%<api_name>s" API. Skipping now'
+        API_CALLED = '(%<file>s): API: {api_name} called for UserId:%<user_id>s'
+        BULK_IMPRESSION_SUCCESS = '(%<file>s): Impression event - %<end_point>s was successfully received by VWO having accountId:%<a>s'
+        AFTER_FLUSHING = '(%<file>s): Events queue having %<length>s events has been flushed %<manually>s queue summary: %<queue_metadata>s'
       end
 
       # Warning Messages
@@ -152,7 +167,7 @@ class VWO
         API_CONFIG_CORRUPTED = '(%<file>s): %<api_name>s API has corrupted configuration'
         GET_VARIATION_NAME_API_INVALID_PARAMS = '(%<file>s): %<api_name>s API got bad parameters. It expects campaignTestKey(String) as first and userId(String) as second argument, customVariables(Hash) can be passed via options for pre-segmentation'
         GET_VARIATION_API_CONFIG_CORRUPTED = '(%<file>s): "getVariation" API has corrupted configuration'
-        TRACK_API_INVALID_PARAMS = '(%<file>s): %<api_name>s API got bad parameters. It expects campaignTestKey(String) as first userId(String) as second and goalIdentifier(String/Number) as third argument. Fourth is revenueValue(Float/Number/String) and is required for revenue goal only. customVariables(Hash) can be passed via options for pre-segmentation'
+        TRACK_API_INVALID_PARAMS = '(%<file>s): %<api_name>s API got bad parameters. It expects campaignTestKey(Nil/String/Array) as first userId(String) as second and goalIdentifier(String/Number) as third argument. Fourth is revenueValue(Float/Number/String) and is required for revenue goal only. customVariables(Hash) can be passed via options for pre-segmentation'
         TRACK_API_CONFIG_CORRUPTED = '(%<file>s): "track" API has corrupted configuration'
         TRACK_API_GOAL_NOT_FOUND = '(%<file>s): Goal:%<goal_identifier>s not found for campaign:%<campaign_key>s and userId:%<user_id>s'
         TRACK_API_REVENUE_NOT_PASSED_FOR_REVENUE_GOAL = '(%<file>s): Revenue value should be passed for revenue goal:%<goal_identifier>s for campaign:%<campaign_key>s and userId:%<user_id>s'
@@ -179,6 +194,16 @@ class VWO
         PUSH_API_INVALID_PARAMS = '(%<file>s): %<api_name>s API got bad parameters. It expects tag_key(String) as first and tag_value(String) as second argument and user_id(String) as third argument'
         TAG_VALUE_LENGTH_EXCEEDED = '(%<file>s): In API: %<api_name>s, the length of tag_value:%<tag_value>s and userID: %<user_id>s can not be greater than 255'
         TAG_KEY_LENGTH_EXCEEDED = '(%<file>s): In API: %<api_name>s, the length of tag_key:%<tag_key>s and userID: %<user_id>s can not be greater than 255'
+        TRACK_API_MISSING_PARAMS = '(%<file>s): "track" API got bad parameters. It expects campaignKey(null/String/array) as first, userId(String/Number) as second and goalIdentifier (string) as third argument. options is revenueValue(Float/Number/String) and is required for revenue goal only.'
+        NO_CAMPAIGN_FOUND = '(%<file>s): No campaign found for goal_identifier:%<goal_identifier>s. Please verify from VWO app.'
+        INVALID_TRACK_RETURNING_USER_VALUE  = '(%<file>s): should_track_returning_user should be boolean'
+        INVALID_GOAL_TYPE = '(%<file>s): goal_type_to_track should be certain strings'
+        EVENT_BATCHING_NOT_OBJECT = '(%<file>s): Batch events settings are not of type object.'
+        EVENTS_PER_REQUEST_INVALID = '(%<file>s): events_per_request should be an integer'
+        REQUEST_TIME_INTERVAL_INVALID = '(%<file>s): request_time_interval should be a number'
+        EVENTS_PER_REQUEST_OUT_OF_BOUNDS = '(%<file>s): events_per_request should be >= %<min_value>s and <= %<max_value>s'
+        REQUEST_TIME_INTERVAL_OUT_OF_BOUNDS = '(%<file>s): request_time_interval should be >= %<min_value>s'
+        FLUSH_CALLBACK_INVALID = '(%<file>s): flush_callback is not callable'
       end
     end
 

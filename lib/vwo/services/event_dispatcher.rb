@@ -1,4 +1,4 @@
-# Copyright 2019-2020 Wingify Software Pvt. Ltd.
+# Copyright 2019-2021 Wingify Software Pvt. Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -48,18 +48,6 @@ class VWO
 
         resp = VWO::Utils::Request.get(impression['url'], modified_event)
         if resp.code == '200'
-          @logger.log(
-            LogLevelEnum::INFO,
-            format(
-              LogMessageEnum::InfoMessages::IMPRESSION_SUCCESS,
-              file: FileNameEnum::EventDispatcher,
-              end_point: impression[:url],
-              campaign_id: impression[:experiment_id],
-              user_id: impression[:uId],
-              account_id: impression[:account_id],
-              variation_id: impression[:combination]
-            )
-          )
           true
         else
           @logger.log(

@@ -1,4 +1,4 @@
-# Copyright 2019-2020 Wingify Software Pvt. Ltd.
+# Copyright 2019-2021 Wingify Software Pvt. Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@ require 'json'
 require_relative '../lib/vwo'
 require 'logger'
 require 'test/unit'
+require 'mocha/test_unit'
 
 class Object
   def stub_and_raise(fn_name, raise_error)
@@ -230,27 +231,27 @@ class VWOTest < Test::Unit::TestCase
   def test_track_with_no_campaign_key_found
     set_up('AB_T_50_W_50_50')
     USER_EXPECTATIONS[@campaign_key].each do |test|
-      assert_equal(@vwo.track('NO_SUCH_CAMPAIGN_KEY', test['user'], @goal_identifier), false)
+      assert_equal(@vwo.track('NO_SUCH_CAMPAIGN_KEY', test['user'], @goal_identifier), nil)
     end
   end
 
   def test_track_with_no_goal_identifier_found
     set_up('AB_T_50_W_50_50')
     USER_EXPECTATIONS[@campaign_key].each do |test|
-      assert_equal(@vwo.track(@campaign_key, test['user'], 'NO_SUCH_GOAL_IDENTIFIER'), false)
+      assert_equal(@vwo.track(@campaign_key, test['user'], 'NO_SUCH_GOAL_IDENTIFIER'), nil)
     end
   end
 
   def test_track_wrong_campaign_type_passed
     set_up('FR_T_0_W_100')
     result = @vwo.track('FR_T_0_W_100', 'user', 'some_goal_identifier')
-    assert_equal(result, false)
+    assert_equal(result, nil)
   end
 
   def test_track_against_campaign_traffic_50_and_split_50_50
     set_up('AB_T_50_W_50_50')
     USER_EXPECTATIONS[@campaign_key].each do |test|
-      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier), !test['variation'].nil?)
+      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier)[@campaign_key], !test['variation'].nil?)
     end
   end
 
@@ -258,7 +259,7 @@ class VWOTest < Test::Unit::TestCase
     # It's goal_type is revenue, so test revenue
     set_up('AB_T_100_W_50_50')
     USER_EXPECTATIONS[@campaign_key].each do |test|
-      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier, 23), !test['variation'].nil?)
+      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier, 23)[@campaign_key], !test['variation'].nil?)
     end
   end
 
@@ -266,7 +267,7 @@ class VWOTest < Test::Unit::TestCase
     # It's goal_type is revenue, so test revenue
     set_up('AB_T_100_W_50_50')
     USER_EXPECTATIONS[@campaign_key].each do |test|
-      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier, 23.3), !test['variation'].nil?)
+      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier, 23.3)[@campaign_key], !test['variation'].nil?)
     end
   end
 
@@ -274,7 +275,7 @@ class VWOTest < Test::Unit::TestCase
     # It's goal_type is revenue, so test revenue
     set_up('AB_T_100_W_50_50')
     USER_EXPECTATIONS[@campaign_key].each do |test|
-      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier, '23.3'), !test['variation'].nil?)
+      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier, '23.3')[@campaign_key], !test['variation'].nil?)
     end
   end
 
@@ -282,7 +283,7 @@ class VWOTest < Test::Unit::TestCase
     # It's goal_type is revenue, so test revenue
     set_up('AB_T_100_W_50_50')
     USER_EXPECTATIONS[@campaign_key].each do |test|
-      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier), false)
+      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier)[@campaign_key], false)
     end
   end
 
@@ -290,35 +291,49 @@ class VWOTest < Test::Unit::TestCase
     # It's goal_type is revenue, so test revenue
     set_up('AB_T_100_W_50_50')
     USER_EXPECTATIONS[@campaign_key].each do |test|
-      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier, { 'revenue_value' => 23 }), !test['variation'].nil?)
+      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier, { 'revenue_value' => 23 })[@campaign_key], !test['variation'].nil?)
     end
   end
 
   def test_track_against_campaign_traffic_100_and_split_20_80
     set_up('AB_T_100_W_20_80')
     USER_EXPECTATIONS[@campaign_key].each do |test|
-      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier), !test['variation'].nil?)
+      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier)[@campaign_key], !test['variation'].nil?)
     end
   end
 
   def test_track_against_campaign_traffic_20_and_split_10_90
     set_up('AB_T_20_W_10_90')
     USER_EXPECTATIONS[@campaign_key].each do |test|
-      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier), !test['variation'].nil?)
+      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier)[@campaign_key], !test['variation'].nil?)
     end
   end
 
   def test_track_against_campaign_traffic_100_and_split_0_100
     set_up('AB_T_100_W_0_100')
     USER_EXPECTATIONS[@campaign_key].each do |test|
-      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier), !test['variation'].nil?)
+      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier)[@campaign_key], !test['variation'].nil?)
     end
   end
 
   def test_track_against_campaign_traffic_100_and_split_33_x3
     set_up('AB_T_100_W_33_33_33')
     USER_EXPECTATIONS[@campaign_key].each do |test|
-      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier), !test['variation'].nil?)
+      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier)[@campaign_key], !test['variation'].nil?)
+    end
+  end
+
+  def test_track_custom_goal
+    set_up('AB_T_100_W_0_100')
+    USER_EXPECTATIONS[@campaign_key].each do |test|
+      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier, {goal_type_to_track: 'CUSTOM'})[@campaign_key], !test['variation'].nil?)
+    end
+  end
+
+  def test_track_for_invalid_goal_type_to_track
+    set_up('AB_T_100_W_0_100')
+    USER_EXPECTATIONS[@campaign_key].each do |test|
+      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier, {goal_type_to_track: 'fs'}), false)
     end
   end
 
@@ -765,7 +780,7 @@ class VWOTest < Test::Unit::TestCase
   def test_track_with_with_no_custom_variables_fails
     vwo_instance = VWO.new(60781, 'ea87170ad94079aa190bc7c9b85d26fb', nil, nil, true, JSON.generate(SETTINGS_FILE['T_100_W_50_50_WS']), { log_level: Logger::DEBUG })
     USER_EXPECTATIONS['AB_T_100_W_50_50'].each do |test|
-      assert_equal(vwo_instance.track('T_100_W_50_50_WS', test['user'], 'ddd'), false)
+      assert_equal(vwo_instance.track('T_100_W_50_50_WS', test['user'], 'ddd')["T_100_W_50_50_WS"], false)
     end
   end
 
@@ -821,7 +836,7 @@ class VWOTest < Test::Unit::TestCase
       'hello' => 'world'
     }
     USER_EXPECTATIONS['AB_T_50_W_50_50'].each do |test|
-      assert_equal(vwo_instance.track('T_50_W_50_50_WS', test['user'], 'ddd', { custom_variables: true_custom_variables}), !test['variation'].nil?)
+      assert_equal(vwo_instance.track('T_50_W_50_50_WS', test['user'], 'ddd', { custom_variables: true_custom_variables})["T_50_W_50_50_WS"], !test['variation'].nil?)
     end
   end
 
@@ -832,7 +847,7 @@ class VWOTest < Test::Unit::TestCase
       'hello' => 'world_world'
     }
     USER_EXPECTATIONS['AB_T_50_W_50_50'].each do |test|
-      assert_equal(vwo_instance.track('T_50_W_50_50_WS', test['user'], 'ddd', { custom_variables: false_custom_variables }), false)
+      assert_equal(vwo_instance.track('T_50_W_50_50_WS', test['user'], 'ddd', { custom_variables: false_custom_variables })['T_50_W_50_50_WS'], false)
     end
   end
 
@@ -843,14 +858,14 @@ class VWOTest < Test::Unit::TestCase
       'hello' => 'world'
     }
     USER_EXPECTATIONS['AB_T_50_W_50_50'].each do |test|
-      assert_equal(vwo_instance.track('AB_T_50_W_50_50', test['user'], 'CUSTOM', { custom_variables: true_custom_variables }), !test['variation'].nil?)
+      assert_equal(vwo_instance.track('AB_T_50_W_50_50', test['user'], 'CUSTOM', { custom_variables: true_custom_variables })["AB_T_50_W_50_50"], !test['variation'].nil?)
     end
   end
 
   def test_track_with_no_custom_variables_fails
     vwo_instance = VWO.new(60781, 'ea87170ad94079aa190bc7c9b85d26fb', nil, nil, true, JSON.generate(SETTINGS_FILE['T_50_W_50_50_WS']), { log_level: Logger::DEBUG })
     USER_EXPECTATIONS['AB_T_50_W_50_50'].each do |test|
-      assert_equal(vwo_instance.track('T_50_W_50_50_WS', test['user'], 'ddd'), false)
+      assert_equal(vwo_instance.track('T_50_W_50_50_WS', test['user'], 'ddd')['T_50_W_50_50_WS'], false)
     end
   end
 
@@ -863,7 +878,7 @@ class VWOTest < Test::Unit::TestCase
     }
     USER_EXPECTATIONS['T_75_W_10_20_30_40'].each do |test|
       assert_equal(@vwo.feature_enabled?('FT_T_75_W_10_20_30_40_WS', test['user'], { custom_variables: true_custom_variables }),
-        !test['variation'].nil? && !is_feature_not_enabled_variations.include?(test['variation'])
+                   !test['variation'].nil? && !is_feature_not_enabled_variations.include?(test['variation'])
       )
     end
   end
@@ -999,4 +1014,387 @@ class VWOTest < Test::Unit::TestCase
     vwo_instance = VWO.new(60781, 'ea87170ad94079aa190bc7c9b85d26fb', nil, nil, true, JSON.generate(SETTINGS_FILE['AB_T_50_W_50_50']), { log_level: 'bad' })
     assert_equal(vwo_instance.logger.level, Logger::DEBUG)
   end
+
+  def test_update_settings_file_for_invalid_sdk_key
+    vwo_instance = VWO.new(88888888, 1, nil, nil, true, JSON.generate(SETTINGS_FILE['AB_T_50_W_50_50']))
+    latest_settings = vwo_instance.get_and_update_settings_file
+    assert_equal({}, latest_settings)
+  end
+
+  def test_update_settings_file
+    vwo_instance = VWO.new(88888888, 'someuniquestuff1234567', nil, nil, true, JSON.generate(SETTINGS_FILE['AB_T_50_W_50_50']))
+    old_settings = vwo_instance.get_settings
+    manager = mock()
+    manager.stubs(:get_settings_file).with(true).returns(JSON.generate(SETTINGS_FILE['AB_T_50_W_50_50']))
+    vwo_instance.settings_file_manager = manager
+    latest_settings = vwo_instance.get_and_update_settings_file
+    assert_not_equal(old_settings, latest_settings.to_json)
+
+    old_settings = vwo_instance.get_settings
+    manager = mock()
+    manager.stubs(:get_settings_file).with(true).returns(JSON.generate(old_settings))
+    vwo_instance.settings_file_manager = manager
+    latest_settings = vwo_instance.get_and_update_settings_file
+    assert_equal(old_settings, latest_settings)
+  end
+
+    def initialize_vwo_with_should_track_returning_user_true
+      return VWO.new(88888888, 'someuniquestuff1234567', nil, nil, true, JSON.generate(SETTINGS_FILE['AB_T_50_W_50_50']), {should_track_returning_user: true})
+    end
+
+    def test_activate_without_should_track_returning_user
+      vwo_instance = initialize_vwo_with_should_track_returning_user_true
+      assert_equal(vwo_instance.activate("AB_T_50_W_50_50", "Ashley"), "Variation-1")
+    end
+
+    def test_activate_with_should_track_returning_user_true
+      vwo_instance = initialize_vwo_with_should_track_returning_user_true
+      assert_equal(vwo_instance.activate("AB_T_50_W_50_50", "Ashley", {should_track_returning_user: true}), "Variation-1")
+    end
+
+    def test_activate_with_should_track_returning_user_false
+      vwo_instance = initialize_vwo_with_should_track_returning_user_true
+      assert_equal(vwo_instance.activate("AB_T_50_W_50_50", "Ashley", {should_track_returning_user: false}), "Variation-1")
+    end
+
+    def test_activate_with_should_track_returning_user_invalid
+      vwo_instance = initialize_vwo_with_should_track_returning_user_true
+      assert_equal(vwo_instance.activate("AB_T_50_W_50_50", "Ashley", {should_track_returning_user: 123}), nil)
+    end
+
+    def initialize_vwo_with_should_track_returning_user_false
+      return VWO.new(88888888, 'someuniquestuff1234567', nil, nil, true, JSON.generate(SETTINGS_FILE['AB_T_50_W_50_50']), {should_track_returning_user: false})
+    end
+
+    def test_activate_track_returning_user_false_in_vwo_instance
+      vwo_instance = initialize_vwo_with_should_track_returning_user_false
+      assert_equal(vwo_instance.activate("AB_T_50_W_50_50", "Ashley"), "Variation-1")
+    end
+
+    def test_activate_track_returning_user_false_in_vwo_instance_true_as_param
+      vwo_instance = initialize_vwo_with_should_track_returning_user_false
+      assert_equal(vwo_instance.activate("AB_T_50_W_50_50", "Ashley", {should_track_returning_user: true}), "Variation-1")
+    end
+
+    def test_activate_track_returning_user_false_in_vwo_instance_false_as_param
+      vwo_instance = initialize_vwo_with_should_track_returning_user_false
+      assert_equal(vwo_instance.activate("AB_T_50_W_50_50", "Ashley", {should_track_returning_user: false}), "Variation-1")
+    end
+
+    def test_activate_track_returning_user_false_in_vwo_instance_invalid_as_param
+      vwo_instance = initialize_vwo_with_should_track_returning_user_false
+      assert_equal(vwo_instance.activate("AB_T_50_W_50_50", "Ashley", {should_track_returning_user: 123}), nil)
+    end
+
+    def initialize_vwo_with_should_track_returning_user_invalid
+      return VWO.new(88888888, 'someuniquestuff1234567', nil, nil, true, JSON.generate(SETTINGS_FILE['AB_T_50_W_50_50']), {should_track_returning_user: 123})
+    end
+
+    def test_activate_track_returning_user_invalid_in_vwo_instance_true_as_param
+      vwo_instance = initialize_vwo_with_should_track_returning_user_invalid
+      assert_equal(vwo_instance.activate("AB_T_50_W_50_50", "Ashley", {should_track_returning_user: true}), nil)
+    end
+
+    def test_activate_for_already_track_user
+      vwo_instance = initialize_vwo_with_should_track_returning_user_false
+      vwo_instance.stubs(:is_eligible_to_send_impression).returns(false)
+      assert_equal(vwo_instance.activate("AB_T_50_W_50_50", "Ashley", {should_track_returning_user: false}), nil)
+    end
+
+    def test_track_without_should_track_returning_user
+      vwo_instance = initialize_vwo_with_should_track_returning_user_true
+      assert_equal(vwo_instance.track("AB_T_50_W_50_50", "Ashley", 'CUSTOM')["AB_T_50_W_50_50"], true)
+    end
+
+    def test_track_with_should_track_returning_user_true
+      vwo_instance = initialize_vwo_with_should_track_returning_user_true
+      assert_equal(vwo_instance.track("AB_T_50_W_50_50", "Ashley", 'CUSTOM', {should_track_returning_user: true})["AB_T_50_W_50_50"], true)
+    end
+
+    def test_track_with_should_track_returning_user_false
+      vwo_instance = initialize_vwo_with_should_track_returning_user_true
+      assert_equal(vwo_instance.track("AB_T_50_W_50_50", "Ashley", 'CUSTOM',{should_track_returning_user: false})["AB_T_50_W_50_50"], true)
+    end
+
+    def test_track_with_should_track_returning_user_invalid
+      vwo_instance = initialize_vwo_with_should_track_returning_user_true
+      assert_equal(vwo_instance.track("AB_T_50_W_50_50", "Ashley", 'CUSTOM',{should_track_returning_user: 123}), false)
+    end
+
+    def test_track_track_returning_user_false_in_vwo_instance
+      vwo_instance = initialize_vwo_with_should_track_returning_user_false
+      assert_equal(vwo_instance.track("AB_T_50_W_50_50", "Ashley", 'CUSTOM')["AB_T_50_W_50_50"], true)
+    end
+
+    def test_track_track_returning_user_false_in_vwo_instance_true_as_param
+      vwo_instance = initialize_vwo_with_should_track_returning_user_false
+      assert_equal(vwo_instance.track("AB_T_50_W_50_50", "Ashley", 'CUSTOM', {should_track_returning_user: true})["AB_T_50_W_50_50"], true)
+    end
+
+    def test_track_track_returning_user_false_in_vwo_instance_false_as_param
+      vwo_instance = initialize_vwo_with_should_track_returning_user_false
+      assert_equal(vwo_instance.track("AB_T_50_W_50_50", "Ashley", 'CUSTOM', {should_track_returning_user: false})["AB_T_50_W_50_50"], true)
+    end
+
+    def test_track_track_returning_user_false_in_vwo_instance_invalid_as_param
+      vwo_instance = initialize_vwo_with_should_track_returning_user_false
+      assert_equal(vwo_instance.track("AB_T_50_W_50_50", "Ashley", 'CUSTOM', {should_track_returning_user: 123}), false)
+    end
+
+    def test_track_for_already_track_user
+      vwo_instance = initialize_vwo_with_should_track_returning_user_false
+      vwo_instance.stubs(:is_eligible_to_send_impression).returns(false)
+      variation_data = Hash.new
+      variation_data["id"] = 2
+      variation_data["name"] = "variation-1"
+      variation_data["goal_identifier"] = "_vwo_CUSTOM"
+      variation_decider = mock()
+      variation_decider.stubs(:get_variation).returns(variation_data)
+      vwo_instance.variation_decider = variation_decider
+      assert_equal(vwo_instance.track("AB_T_50_W_50_50", "Ashley", 'CUSTOM', {should_track_returning_user: false})["AB_T_50_W_50_50"], false)
+    end
+
+    def test_feature_enabled_for_already_track_user
+      vwo_instance = VWO.new(123456, 'someuniquestuff1234567', nil, nil, true, JSON.generate(SETTINGS_FILE['FT_T_75_W_10_20_30_40']), {should_track_returning_user: false})
+      vwo_instance.stubs(:is_eligible_to_send_impression).returns(false)
+      assert_equal(vwo_instance.feature_enabled?("FT_T_75_W_10_20_30_40", "Ashley", {should_track_returning_user: false}), true)
+    end
+
+
+    def get_batch_events_option
+      def flush_callback(events)
+      end
+
+      {
+        batch_events: {
+          events_per_request: 3,
+          request_time_interval: 5,
+          flushCallback: method(:flush_callback)
+        }
+      }
+    end
+
+    def initialize_vwo_with_batch_events_option(camp_key, option)
+      return VWO.new(88888888, 'someuniquestuff1234567', nil, nil, true, JSON.generate(SETTINGS_FILE[camp_key]), option)
+    end
+
+    # activate, track, feature_enabled? api when vwo object initialized with batch_events options
+    def test_api_with_batch_events
+      vwo_instance = initialize_vwo_with_batch_events_option('AB_T_50_W_50_50', get_batch_events_option)
+      assert_equal(vwo_instance.activate("AB_T_50_W_50_50", "Ashley", {}), "Variation-1")
+      assert_equal(vwo_instance.activate("AB_T_50_W_50_50", "Ashley", {}), "Variation-1")
+      assert_equal(vwo_instance.track("AB_T_50_W_50_50", "Ashley", 'CUSTOM', {})["AB_T_50_W_50_50"], true)
+      vwo_instance = initialize_vwo_with_batch_events_option('FT_T_100_W_10_20_30_40', get_batch_events_option)
+      assert_equal(vwo_instance.feature_enabled?("FT_T_100_W_10_20_30_40", "Ashley", {}), true)
+    end
+
+    # push api when vwo object initialized with batch_events options
+    def test_push_true_for_batch_events
+      vwo_instance = VWO.new(60781, 'ea87170ad94079aa190bc7c9b85d26fb', nil, nil, true, JSON.generate(SETTINGS_FILE['DUMMY_SETTINGS_FILE']), get_batch_events_option)
+      assert_equal(true, vwo_instance.push('browser', 'chrome', '12345'))
+    end
+
+    def test_without_events_per_request
+      def flush_callback(events)
+      end
+
+      options = {
+        batch_events: {
+          request_time_interval: 5,
+          flushCallback: method(:flush_callback)
+        }
+      }
+      vwo_instance = initialize_vwo_with_batch_events_option('AB_T_50_W_50_50', options)
+      assert_equal(vwo_instance.activate("AB_T_50_W_50_50", "Ashley", {}), "Variation-1")
+    end
+
+    def test_without_request_time_interval
+      def flush_callback(events)
+      end
+
+      options = {
+        batch_events: {
+          events_per_request: 3,
+          flushCallback: method(:flush_callback)
+        }
+      }
+      vwo_instance = initialize_vwo_with_batch_events_option('AB_T_50_W_50_50', options)
+      assert_equal(vwo_instance.activate("AB_T_50_W_50_50", "Ashley", {}), "Variation-1")
+    end
+
+    def test_without_flush_callback
+      def flush_callback(events)
+      end
+
+      options = {
+        batch_events: {
+          events_per_request: 3,
+          request_time_interval: 5
+        }
+      }
+      vwo_instance = initialize_vwo_with_batch_events_option('AB_T_50_W_50_50', options)
+      assert_equal(vwo_instance.activate("AB_T_50_W_50_50", "Ashley", {}), "Variation-1")
+    end
+
+    def test_flush_events
+      def flush_callback(events)
+      end
+
+      options = {
+        batch_events: {
+          events_per_request: 3,
+          request_time_interval: 5
+        }
+      }
+      vwo_instance = initialize_vwo_with_batch_events_option('AB_T_50_W_50_50', options)
+      assert_equal(vwo_instance.flush_events, true)
+    end
+
+    def test_flush_events_with_corrupted_vwo_instance
+      set_up('EMPTY_SETTINGS_FILE')
+      assert_equal(@vwo.flush_events, nil)
+    end
+
+    def test_flush_events_raises_exception
+      set_up()
+      @vwo.stub_and_raise(:valid_string?, StandardError)
+      assert_equal(@vwo.flush_events, false)
+    end
+
+    def test_activate_for_hooks
+      def integrations_callback(properties)
+      end
+      options = {
+        integrations: {
+          callback: method(:integrations_callback)
+        }
+      }
+      vwo_instance = VWO.new(88888888, 'someuniquestuff1234567', nil, nil, true, JSON.generate(SETTINGS_FILE['AB_T_50_W_50_50']), options)
+      assert_equal(vwo_instance.activate("AB_T_50_W_50_50", "Ashley", {}), "Variation-1")
+      vwo_instance = VWO.new(88888888, 'someuniquestuff1234567', nil, nil, true, JSON.generate(SETTINGS_FILE['FT_T_75_W_10_20_30_40']), options)
+      assert_equal(vwo_instance.feature_enabled?("FT_T_75_W_10_20_30_40", "Ashley", {}), true)
+    end
+
+    def test_additional_data_during_vwo_instantiation
+      def integrations_callback(properties)
+      end
+      options = {
+        log_level: Logger::DEBUG,
+        should_track_returning_user: true,
+        integrations: {
+          callback: method(:integrations_callback)
+        }
+      }
+      vwo_instance = VWO.new(88888888, 'someuniquestuff1234567', VWO::Logger.get_instance, VWO::UserStorage.new, false, JSON.generate(SETTINGS_FILE['AB_T_50_W_50_50']), options)
+      additional_data = vwo_instance.usage_stats.usage_stats
+      assert_equal(1, additional_data[:ig])
+      assert_equal(1, additional_data[:cl])
+      assert_equal(1, additional_data[:ss])
+      assert_equal(1, additional_data[:tr])
+      assert_equal(1, additional_data[:ll])
+      assert_equal(nil, additional_data[:eb])
+      assert_equal(1, additional_data[:_l])
+    end
+
+    def test_additional_data_for_logging_and_integrations
+      def integrations_callback(properties)
+      end
+      options = {
+        log_level: Logger::DEBUG,
+        integrations: {
+          callback: method(:integrations_callback)
+        }
+      }
+      vwo_instance = VWO.new(88888888, 'someuniquestuff1234567', VWO::Logger.get_instance, nil, false, JSON.generate(SETTINGS_FILE['AB_T_50_W_50_50']), options)
+      additional_data = vwo_instance.usage_stats.usage_stats
+      assert_equal(1, additional_data[:ig])
+      assert_equal(1, additional_data[:cl])
+      assert_equal(nil, additional_data[:ss])
+      assert_equal(nil, additional_data[:tr])
+      assert_equal(1, additional_data[:ll])
+      assert_equal(nil, additional_data[:eb])
+      assert_equal(1, additional_data[:_l])
+    end
+
+    def test_additional_data_for_user_storage
+      options = {}
+      vwo_instance = VWO.new(88888888, 'someuniquestuff1234567', nil, VWO::UserStorage.new, false, JSON.generate(SETTINGS_FILE['AB_T_50_W_50_50']), options)
+      additional_data = vwo_instance.usage_stats.usage_stats
+      assert_equal(nil, additional_data[:ig])
+      assert_equal(nil, additional_data[:cl])
+      assert_equal(1, additional_data[:ss])
+      assert_equal(nil, additional_data[:tr])
+      assert_equal(nil, additional_data[:ll])
+      assert_equal(nil, additional_data[:eb])
+      assert_equal(1, additional_data[:_l])
+    end
+
+    def test_additional_data_for_logging_and_should_track_returning_user
+      options = {
+        should_track_returning_user: true,
+      }
+      vwo_instance = VWO.new(88888888, 'someuniquestuff1234567', VWO::Logger.get_instance, nil, false, JSON.generate(SETTINGS_FILE['AB_T_50_W_50_50']), options)
+      additional_data = vwo_instance.usage_stats.usage_stats
+      assert_equal(nil, additional_data[:ig])
+      assert_equal(1, additional_data[:cl])
+      assert_equal(nil, additional_data[:ss])
+      assert_equal(1, additional_data[:tr])
+      assert_equal(nil, additional_data[:ll])
+      assert_equal(nil, additional_data[:eb])
+      assert_equal(1, additional_data[:_l])
+    end
+
+    def test_additional_data_for_event_batching
+      def flush_callback(events)
+      end
+      options = {
+        batch_events: {
+          events_per_request: 3,
+          flushCallback: method(:flush_callback)
+        }
+      }
+      vwo_instance = VWO.new(88888888, 'someuniquestuff1234567', nil, nil, false, JSON.generate(SETTINGS_FILE['AB_T_50_W_50_50']), options)
+      additional_data = vwo_instance.usage_stats.usage_stats
+      assert_equal(nil, additional_data[:ig])
+      assert_equal(nil, additional_data[:cl])
+      assert_equal(nil, additional_data[:ss])
+      assert_equal(nil, additional_data[:tr])
+      assert_equal(nil, additional_data[:ll])
+      assert_equal(1, additional_data[:eb])
+      assert_equal(1, additional_data[:_l])
+    end
+
+    def initialize_vwo_with_custom_goal_type_to_track(goal_type)
+      return VWO.new(88888888, 'someuniquestuff1234567', nil, nil, true, JSON.generate(SETTINGS_FILE['AB_T_100_W_50_50']), {goal_type_to_track: goal_type})
+    end
+
+    def test_track_with_custom_goal_type_to_track
+      vwo_instance = initialize_vwo_with_custom_goal_type_to_track("CUSTOM")
+      assert_equal(vwo_instance.track("AB_T_100_W_50_50", "Ashley", "CUSTOM", {})["AB_T_100_W_50_50"], true)
+    end
+
+    def test_track_with_wrong_goal_type_to_track
+      vwo_instance = initialize_vwo_with_custom_goal_type_to_track("WRONG_GOAL_TYPE")
+      assert_equal(vwo_instance.track("AB_T_100_W_50_50", "Ashley", "CUSTOM", {}), false)
+    end
+
+    def test_track_with_revenue_goal_type_to_track
+      vwo_instance = initialize_vwo_with_custom_goal_type_to_track("REVENUE")
+      assert_equal(vwo_instance.track("AB_T_100_W_50_50", "Ashley", "abcd", {revenue_value: 10})["AB_T_100_W_50_50"], true)
+    end
+
+    def test_track_with_wrong_campaign_key_type
+      vwo_instance = initialize_vwo_with_custom_goal_type_to_track("REVENUE")
+      assert_equal(vwo_instance.track(1, "Ashley", "REVENUE_TRACKING", {revenue_value: 10}), false)
+    end
+
+    def test_track_with_campaign_keys_array
+      vwo_instance = initialize_vwo_with_custom_goal_type_to_track("CUSTOM")
+      assert_equal(vwo_instance.track(["AB_T_100_W_50_50"], "Ashley", "CUSTOM", {})["AB_T_100_W_50_50"], true)
+    end
+
+    def test_track_with_campaign_keys_nil
+      vwo_instance = initialize_vwo_with_custom_goal_type_to_track("CUSTOM")
+      assert_equal(vwo_instance.track(nil, "Ashley", "CUSTOM", {})["AB_T_100_W_50_50"], true)
+    end
 end

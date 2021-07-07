@@ -1,11 +1,11 @@
-Metrics/LineLength:
+Layout/LineLength:
   Max: 200
 Metrics/ClassLength:
   Max: 2000
 Metrics/MethodLength:
   Max: 200
 Metrics/BlockLength:
-  Max: 50  
+  Max: 50
 Metrics/AbcSize:
   Max: 100
 Metrics/ParameterLists:
@@ -14,7 +14,9 @@ Metrics/CyclomaticComplexity:
   Max: 30
 Metrics/PerceivedComplexity:
   Max: 30
-Documentation:
+Style/Documentation:
+  Enabled: false
+Style/ZeroLengthPredicate:
   Enabled: false
 Naming/AccessorMethodName:
   Enabled: false
@@ -27,6 +29,4 @@ Style/PercentLiteralDelimiters:
 Style/MutableConstant:
   Enabled: false
 Style/FrozenStringLiteralComment:
-  Enabled: false
-ZeroLengthPredicate:
   Enabled: false

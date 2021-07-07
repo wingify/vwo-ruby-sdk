@@ -1,4 +1,4 @@
-# Copyright 2019-2020 Wingify Software Pvt. Ltd.
+# Copyright 2019-2021 Wingify Software Pvt. Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -25,7 +25,6 @@ class VWO
 
       PROTOCOL = 'https'
       HOSTNAME = ::VWO::CONSTANTS::ENDPOINTS::BASE_URL
-      PATH = ::VWO::CONSTANTS::ENDPOINTS::ACCOUNT_SETTINGS
 
       def initialize(account_id, sdk_key)
         @account_id = account_id
@@ -40,7 +39,7 @@ class VWO
       #                       as received from the server,
       #                       nil if no settings_file is found or sdk_key is incorrect
 
-      def get_settings_file
+      def get_settings_file(is_via_webhook = false)
         is_valid_key = valid_number?(@account_id) || valid_string?(@account_id)
 
         unless is_valid_key && valid_string?(@sdk_key)
@@ -48,7 +47,12 @@ class VWO
           return '{}'
         end
 
-        vwo_server_url = "#{PROTOCOL}://#{HOSTNAME}#{PATH}"
+        if is_via_webhook
+          path = ::VWO::CONSTANTS::ENDPOINTS::WEBHOOK_SETTINGS_URL
+        else
+          path = ::VWO::CONSTANTS::ENDPOINTS::SETTINGS_URL
+        end
+        vwo_server_url = "#{PROTOCOL}://#{HOSTNAME}#{path}"
 
         settings_file_response = ::VWO::Utils::Request.get(vwo_server_url, params)
 

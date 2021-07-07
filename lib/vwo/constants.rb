@@ -1,4 +1,4 @@
-# Copyright 2019-2020 Wingify Software Pvt. Ltd.
+# Copyright 2019-2021 Wingify Software Pvt. Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -26,20 +26,29 @@ class VWO
     HTTP_PROTOCOL = 'http://'
     HTTPS_PROTOCOL = 'https://'
     URL_NAMESPACE = '6ba7b811-9dad-11d1-80b4-00c04fd430c8'
-    SDK_VERSION = '1.6.0'
+    SDK_VERSION = '1.14.0'
     SDK_NAME = 'ruby'
+    VWO_DELIMITER = '_vwo_'
+    MAX_EVENTS_PER_REQUEST = 5000
+    MIN_EVENTS_PER_REQUEST = 1
+    DEFAULT_EVENTS_PER_REQUEST = 100
+    DEFAULT_REQUEST_TIME_INTERVAL = 600 # 10 * 60(secs) = 600 secs i.e. 10 minutes
+    MIN_REQUEST_TIME_INTERVAL = 2
 
     module ENDPOINTS
       BASE_URL = 'dev.visualwebsiteoptimizer.com'
-      ACCOUNT_SETTINGS = '/server-side/settings'
+      SETTINGS_URL = '/server-side/settings'
+      WEBHOOK_SETTINGS_URL = '/server-side/pull'
       TRACK_USER = '/server-side/track-user'
       TRACK_GOAL = '/server-side/track-goal'
       PUSH = '/server-side/push'
+      BATCH_EVENTS = '/server-side/batch-events'
     end
 
     module EVENTS
       TRACK_USER = 'track-user'
       TRACK_GOAL = 'track-goal'
+      PUSH = 'push'
     end
 
     module DATATYPE
@@ -61,11 +70,23 @@ class VWO
       BOOLEAN = 'boolean'
     end
 
+    module Hooks
+      DECISION_TYPES = {
+        'CAMPAIGN_DECISION' => 'CAMPAIGN_DECISION'
+      }
+    end
+
     RUBY_VARIABLE_TYPES = {
       'string' => [String],
       'integer' => [Integer],
       'double' => [Float],
       'boolean' => [TrueClass, FalseClass]
+    }
+
+    GOAL_TYPES = {
+      'REVENUE' => 'REVENUE_TRACKING',
+      'CUSTOM' => 'CUSTOM_GOAL',
+      'ALL' => 'ALL'
     }
 
     module ApiMethods
@@ -75,6 +96,8 @@ class VWO
       IS_FEATURE_ENABLED = 'is_feature_enabled'
       GET_FEATURE_VARIABLE_VALUE = 'get_feature_variable_value'
       PUSH = 'push'
+      GET_AND_UPDATE_SETTINGS_FILE = 'get_and_update_settings_file'
+      FLUSH_EVENTS = 'flush_events'
     end
 
     module PushApi
