@@ -18,6 +18,7 @@ Gem::Specification.new do |spec|
 
   spec.add_development_dependency 'coveralls', '~> 0.8.23'
   spec.add_development_dependency 'rubocop', '~> 0.70'
+  spec.add_development_dependency 'mocha', '~>1.13.0'
 
   spec.add_runtime_dependency 'json-schema', '~> 2.8'
   spec.add_runtime_dependency 'murmurhash3', '~> 0.1'
