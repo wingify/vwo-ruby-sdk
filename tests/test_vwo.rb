@@ -259,7 +259,7 @@ class VWOTest < Test::Unit::TestCase
     # It's goal_type is revenue, so test revenue
     set_up('AB_T_100_W_50_50')
     USER_EXPECTATIONS[@campaign_key].each do |test|
-      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier, 23)[@campaign_key], !test['variation'].nil?)
+      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier, {revenue_value: 23})[@campaign_key], !test['variation'].nil?)
     end
   end
 
@@ -267,7 +267,7 @@ class VWOTest < Test::Unit::TestCase
     # It's goal_type is revenue, so test revenue
     set_up('AB_T_100_W_50_50')
     USER_EXPECTATIONS[@campaign_key].each do |test|
-      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier, 23.3)[@campaign_key], !test['variation'].nil?)
+      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier, {revenue_value: 23.3})[@campaign_key], !test['variation'].nil?)
     end
   end
 
@@ -275,7 +275,7 @@ class VWOTest < Test::Unit::TestCase
     # It's goal_type is revenue, so test revenue
     set_up('AB_T_100_W_50_50')
     USER_EXPECTATIONS[@campaign_key].each do |test|
-      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier, '23.3')[@campaign_key], !test['variation'].nil?)
+      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier, {revenue_value: '23.3'})[@campaign_key], !test['variation'].nil?)
     end
   end
 

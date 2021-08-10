@@ -4,9 +4,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.14.1] - 2021-08-10
+
+### Changed
+
+- Update `track` API to accept `options` instead of parametered arguments.
+
+```ruby
+options = {
+  "revenue_value" => 10,
+  "custom_variables": {},
+  "variation_targeting_variables": {},
+  "should_track_returning_user": true,
+  "goal_type_to_track" => "ALL"
+}
+```
+
 ## [1.14.0] - 2021-07-06
 
-## Added
+### Added
 
 - Webhooks support
   - New API `get_and_update_settings_file` to fetch and update settings-file in case of webhook-trigger

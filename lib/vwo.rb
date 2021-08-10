@@ -563,10 +563,11 @@ class VWO
   # @param[String]                      :campaign_key     Unique campaign key
   # @param[String]                      :user_id          ID assigned to a user
   # @param[String]                      :goal_identifier  Unique campaign's goal identifier
-  # @param[Array|Hash]                  :args             Contains revenue value and custom variables
+  # @param[Hash]                        :options             Contains revenue value and custom variables
   # @param[Numeric|String]              :revenue_value    It is the revenue generated on triggering the goal
   #
-  def track(campaign_key, user_id, goal_identifier, *args)
+
+  def track(campaign_key, user_id, goal_identifier, options = {})
     unless @is_instance_valid
       @logger.log(
         LogLevelEnum::ERROR,
@@ -579,18 +580,11 @@ class VWO
       return false
     end
 
-    if args[0].is_a?(Hash)
-      revenue_value = args[0]['revenue_value'] || args[0][:revenue_value]
-      custom_variables = args[0]['custom_variables'] || args[0][:custom_variables]
-      variation_targeting_variables = args[0]['variation_targeting_variables'] || args[0][:variation_targeting_variables]
-      should_track_returning_user = get_should_track_returning_user(args[0])
-      goal_type_to_track = get_goal_type_to_track(args[0])
-    elsif args.is_a?(Array)
-      revenue_value = args[0]
-      custom_variables = nil
-      should_track_returning_user = @should_track_returning_user
-      goal_type_to_track = @goal_type_to_track
-    end
+    revenue_value = options['revenue_value'] || options[:revenue_value]
+    custom_variables = options['custom_variables'] || options[:custom_variables]
+    variation_targeting_variables = options['variation_targeting_variables'] || options[:variation_targeting_variables]
+    should_track_returning_user = get_should_track_returning_user(options)
+    goal_type_to_track = get_goal_type_to_track(options)
 
     # Check for valid args
     unless (valid_string?(campaign_key) || campaign_key.is_a?(Array) || campaign_key.nil?) && valid_string?(user_id) && valid_string?(goal_identifier) && (custom_variables.nil? || valid_hash?(custom_variables)) &&
