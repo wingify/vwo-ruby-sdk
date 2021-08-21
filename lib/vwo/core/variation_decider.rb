@@ -151,7 +151,10 @@ class VWO
 
         user_campaign_map = get_user_storage(user_id, campaign_key)
         variation = get_stored_variation(user_id, campaign_key, user_campaign_map) if valid_hash?(user_campaign_map)
-        variation = variation.dup  # deep copy
+
+        if variation
+          variation = variation.dup  # deep copy
+        end
 
         if variation
           if valid_string?(user_campaign_map['goal_identifier']) && api_name == ApiMethods::TRACK

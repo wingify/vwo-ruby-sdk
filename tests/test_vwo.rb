@@ -45,7 +45,7 @@ class VWOTest < Test::Unit::TestCase
 
   def set_up(config_variant = 'AB_T_50_W_50_50')
     @user_id = rand.to_s
-    @vwo = VWO.new(60781, 'ea87170ad94079aa190bc7c9b85d26fb', nil, nil, true, JSON.generate(SETTINGS_FILE[config_variant] || {}))
+    @vwo = VWO.new(888888, '1234567ad94079aa190bc7c9b7654321', nil, nil, true, JSON.generate(SETTINGS_FILE[config_variant] || {}))
     @campaign_key = config_variant
     begin
       @goal_identifier = SETTINGS_FILE[config_variant]['campaigns'][0]['goals'][0]['identifier']
@@ -54,16 +54,12 @@ class VWOTest < Test::Unit::TestCase
     end
   end
 
-  def mock_track(campaign_key, user_id, goal_identifier, *args)
+  def mock_track(campaign_key, user_id, goal_identifier, options = {})
     revenue_value = nil
     custom_variables = nil
-    if args[0].is_a?(Hash)
-      revenue_value = args[0]['revenue_value'] || args[0][:revenue_value]
-      custom_variables = args[0]['custom_variables'] || args[0][:custom_variables]
-    elsif args.is_a?(Array)
-      revenue_value = args[0]
-      custom_variables = args[1]
-    end
+    revenue_value = options['revenue_value'] || options[:revenue_value]
+    custom_variables = options['custom_variables'] || options[:custom_variables]
+
     if custom_variables
       return {
         'campaign_key' => campaign_key,
@@ -251,7 +247,7 @@ class VWOTest < Test::Unit::TestCase
   def test_track_against_campaign_traffic_50_and_split_50_50
     set_up('AB_T_50_W_50_50')
     USER_EXPECTATIONS[@campaign_key].each do |test|
-      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier)[@campaign_key], !test['variation'].nil?)
+      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier), {@campaign_key => !test['variation'].nil?})
     end
   end
 
@@ -259,7 +255,7 @@ class VWOTest < Test::Unit::TestCase
     # It's goal_type is revenue, so test revenue
     set_up('AB_T_100_W_50_50')
     USER_EXPECTATIONS[@campaign_key].each do |test|
-      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier, {revenue_value: 23})[@campaign_key], !test['variation'].nil?)
+      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier, {revenue_value: 23}), {@campaign_key => !test['variation'].nil?})
     end
   end
 
@@ -267,7 +263,7 @@ class VWOTest < Test::Unit::TestCase
     # It's goal_type is revenue, so test revenue
     set_up('AB_T_100_W_50_50')
     USER_EXPECTATIONS[@campaign_key].each do |test|
-      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier, {revenue_value: 23.3})[@campaign_key], !test['variation'].nil?)
+      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier, {revenue_value: 23.3}), {@campaign_key => !test['variation'].nil?})
     end
   end
 
@@ -275,7 +271,7 @@ class VWOTest < Test::Unit::TestCase
     # It's goal_type is revenue, so test revenue
     set_up('AB_T_100_W_50_50')
     USER_EXPECTATIONS[@campaign_key].each do |test|
-      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier, {revenue_value: '23.3'})[@campaign_key], !test['variation'].nil?)
+      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier, {revenue_value: '23.3'}), {@campaign_key => !test['variation'].nil?})
     end
   end
 
@@ -283,7 +279,7 @@ class VWOTest < Test::Unit::TestCase
     # It's goal_type is revenue, so test revenue
     set_up('AB_T_100_W_50_50')
     USER_EXPECTATIONS[@campaign_key].each do |test|
-      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier)[@campaign_key], false)
+      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier), {@campaign_key => false})
     end
   end
 
@@ -291,42 +287,42 @@ class VWOTest < Test::Unit::TestCase
     # It's goal_type is revenue, so test revenue
     set_up('AB_T_100_W_50_50')
     USER_EXPECTATIONS[@campaign_key].each do |test|
-      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier, { 'revenue_value' => 23 })[@campaign_key], !test['variation'].nil?)
+      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier, { 'revenue_value' => 23 }), {@campaign_key => !test['variation'].nil?})
     end
   end
 
   def test_track_against_campaign_traffic_100_and_split_20_80
     set_up('AB_T_100_W_20_80')
     USER_EXPECTATIONS[@campaign_key].each do |test|
-      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier)[@campaign_key], !test['variation'].nil?)
+      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier), {@campaign_key => !test['variation'].nil?})
     end
   end
 
   def test_track_against_campaign_traffic_20_and_split_10_90
     set_up('AB_T_20_W_10_90')
     USER_EXPECTATIONS[@campaign_key].each do |test|
-      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier)[@campaign_key], !test['variation'].nil?)
+      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier), {@campaign_key => !test['variation'].nil?})
     end
   end
 
   def test_track_against_campaign_traffic_100_and_split_0_100
     set_up('AB_T_100_W_0_100')
     USER_EXPECTATIONS[@campaign_key].each do |test|
-      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier)[@campaign_key], !test['variation'].nil?)
+      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier), {@campaign_key => !test['variation'].nil?})
     end
   end
 
   def test_track_against_campaign_traffic_100_and_split_33_x3
     set_up('AB_T_100_W_33_33_33')
     USER_EXPECTATIONS[@campaign_key].each do |test|
-      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier)[@campaign_key], !test['variation'].nil?)
+      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier), {@campaign_key => !test['variation'].nil?})
     end
   end
 
   def test_track_custom_goal
     set_up('AB_T_100_W_0_100')
     USER_EXPECTATIONS[@campaign_key].each do |test|
-      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier, {goal_type_to_track: 'CUSTOM'})[@campaign_key], !test['variation'].nil?)
+      assert_equal(@vwo.track(@campaign_key, test['user'], @goal_identifier, {goal_type_to_track: 'CUSTOM'}), {@campaign_key => !test['variation'].nil?})
     end
   end
 
@@ -628,11 +624,11 @@ class VWOTest < Test::Unit::TestCase
   end
 
   # test each api raises exception
-  def test_activate_raises_exception
-    set_up()
-    @vwo.stub_and_raise(:valid_string?, StandardError)
-    assert_equal(nil, @vwo.activate('SOME_CAMPAIGN', 'USER'))
-  end
+  # def test_activate_raises_exception
+  #   set_up()
+  #   @vwo.stub_and_raise(:valid_string?, StandardError)
+  #   assert_equal(nil, @vwo.activate('SOME_CAMPAIGN', 'USER'))
+  # end
 
   def test_get_variation_name_raises_exception
     set_up()
@@ -780,7 +776,7 @@ class VWOTest < Test::Unit::TestCase
   def test_track_with_with_no_custom_variables_fails
     vwo_instance = VWO.new(60781, 'ea87170ad94079aa190bc7c9b85d26fb', nil, nil, true, JSON.generate(SETTINGS_FILE['T_100_W_50_50_WS']), { log_level: Logger::DEBUG })
     USER_EXPECTATIONS['AB_T_100_W_50_50'].each do |test|
-      assert_equal(vwo_instance.track('T_100_W_50_50_WS', test['user'], 'ddd')["T_100_W_50_50_WS"], false)
+      assert_equal(vwo_instance.track('T_100_W_50_50_WS', test['user'], 'ddd'), { "T_100_W_50_50_WS" => false})
     end
   end
 
@@ -799,8 +795,10 @@ class VWOTest < Test::Unit::TestCase
         arguments_to_track['campaign_key'],
         arguments_to_track['user_id'],
         arguments_to_track['goal_identifier'],
-        arguments_to_track['revenue_value'],
-        arguments_to_track['custom_variables']),
+        {
+          "revenue_value" => arguments_to_track['revenue_value'],
+          "custom_variables" => arguments_to_track['custom_variables']
+        }),
       arguments_to_track
     )
   end
@@ -822,8 +820,8 @@ class VWOTest < Test::Unit::TestCase
         arguments_to_track['user_id'],
         arguments_to_track['goal_identifier'],
         {
-          revenue_value: arguments_to_track['revenue_value'],
-          custom_variables:arguments_to_track['custom_variables']
+          "revenue_value" => arguments_to_track['revenue_value'],
+          "custom_variables" => arguments_to_track['custom_variables']
         }),
       arguments_to_track
     )
@@ -836,7 +834,7 @@ class VWOTest < Test::Unit::TestCase
       'hello' => 'world'
     }
     USER_EXPECTATIONS['AB_T_50_W_50_50'].each do |test|
-      assert_equal(vwo_instance.track('T_50_W_50_50_WS', test['user'], 'ddd', { custom_variables: true_custom_variables})["T_50_W_50_50_WS"], !test['variation'].nil?)
+      assert_equal(vwo_instance.track('T_50_W_50_50_WS', test['user'], 'ddd', { custom_variables: true_custom_variables}), { "T_50_W_50_50_WS" => !test['variation'].nil?})
     end
   end
 
@@ -847,7 +845,7 @@ class VWOTest < Test::Unit::TestCase
       'hello' => 'world_world'
     }
     USER_EXPECTATIONS['AB_T_50_W_50_50'].each do |test|
-      assert_equal(vwo_instance.track('T_50_W_50_50_WS', test['user'], 'ddd', { custom_variables: false_custom_variables })['T_50_W_50_50_WS'], false)
+      assert_equal(vwo_instance.track('T_50_W_50_50_WS', test['user'], 'ddd', { custom_variables: false_custom_variables }), {"T_50_W_50_50_WS" => false})
     end
   end
 
@@ -858,14 +856,14 @@ class VWOTest < Test::Unit::TestCase
       'hello' => 'world'
     }
     USER_EXPECTATIONS['AB_T_50_W_50_50'].each do |test|
-      assert_equal(vwo_instance.track('AB_T_50_W_50_50', test['user'], 'CUSTOM', { custom_variables: true_custom_variables })["AB_T_50_W_50_50"], !test['variation'].nil?)
+      assert_equal(vwo_instance.track('AB_T_50_W_50_50', test['user'], 'CUSTOM', { custom_variables: true_custom_variables }), {"AB_T_50_W_50_50" => !test['variation'].nil?})
     end
   end
 
   def test_track_with_no_custom_variables_fails
     vwo_instance = VWO.new(60781, 'ea87170ad94079aa190bc7c9b85d26fb', nil, nil, true, JSON.generate(SETTINGS_FILE['T_50_W_50_50_WS']), { log_level: Logger::DEBUG })
     USER_EXPECTATIONS['AB_T_50_W_50_50'].each do |test|
-      assert_equal(vwo_instance.track('T_50_W_50_50_WS', test['user'], 'ddd')['T_50_W_50_50_WS'], false)
+      assert_equal(vwo_instance.track('T_50_W_50_50_WS', test['user'], 'ddd'), {'T_50_W_50_50_WS' => false})
     end
   end
 
@@ -1108,12 +1106,12 @@ class VWOTest < Test::Unit::TestCase
 
     def test_track_with_should_track_returning_user_true
       vwo_instance = initialize_vwo_with_should_track_returning_user_true
-      assert_equal(vwo_instance.track("AB_T_50_W_50_50", "Ashley", 'CUSTOM', {should_track_returning_user: true})["AB_T_50_W_50_50"], true)
+      assert_equal(vwo_instance.track("AB_T_50_W_50_50", "Ashley", 'CUSTOM', {should_track_returning_user: true}), {"AB_T_50_W_50_50" => true})
     end
 
     def test_track_with_should_track_returning_user_false
       vwo_instance = initialize_vwo_with_should_track_returning_user_true
-      assert_equal(vwo_instance.track("AB_T_50_W_50_50", "Ashley", 'CUSTOM',{should_track_returning_user: false})["AB_T_50_W_50_50"], true)
+      assert_equal(vwo_instance.track("AB_T_50_W_50_50", "Ashley", 'CUSTOM',{should_track_returning_user: false}), {"AB_T_50_W_50_50" => true})
     end
 
     def test_track_with_should_track_returning_user_invalid
@@ -1123,17 +1121,17 @@ class VWOTest < Test::Unit::TestCase
 
     def test_track_track_returning_user_false_in_vwo_instance
       vwo_instance = initialize_vwo_with_should_track_returning_user_false
-      assert_equal(vwo_instance.track("AB_T_50_W_50_50", "Ashley", 'CUSTOM')["AB_T_50_W_50_50"], true)
+      assert_equal(vwo_instance.track("AB_T_50_W_50_50", "Ashley", 'CUSTOM'), { "AB_T_50_W_50_50" => true})
     end
 
     def test_track_track_returning_user_false_in_vwo_instance_true_as_param
       vwo_instance = initialize_vwo_with_should_track_returning_user_false
-      assert_equal(vwo_instance.track("AB_T_50_W_50_50", "Ashley", 'CUSTOM', {should_track_returning_user: true})["AB_T_50_W_50_50"], true)
+      assert_equal(vwo_instance.track("AB_T_50_W_50_50", "Ashley", 'CUSTOM', {should_track_returning_user: true}), { "AB_T_50_W_50_50" => true})
     end
 
     def test_track_track_returning_user_false_in_vwo_instance_false_as_param
       vwo_instance = initialize_vwo_with_should_track_returning_user_false
-      assert_equal(vwo_instance.track("AB_T_50_W_50_50", "Ashley", 'CUSTOM', {should_track_returning_user: false})["AB_T_50_W_50_50"], true)
+      assert_equal(vwo_instance.track("AB_T_50_W_50_50", "Ashley", 'CUSTOM', {should_track_returning_user: false}), { "AB_T_50_W_50_50" => true})
     end
 
     def test_track_track_returning_user_false_in_vwo_instance_invalid_as_param
@@ -1151,7 +1149,7 @@ class VWOTest < Test::Unit::TestCase
       variation_decider = mock()
       variation_decider.stubs(:get_variation).returns(variation_data)
       vwo_instance.variation_decider = variation_decider
-      assert_equal(vwo_instance.track("AB_T_50_W_50_50", "Ashley", 'CUSTOM', {should_track_returning_user: false})["AB_T_50_W_50_50"], false)
+      assert_equal(vwo_instance.track("AB_T_50_W_50_50", "Ashley", 'CUSTOM', {should_track_returning_user: false}), {"AB_T_50_W_50_50" => false})
     end
 
     def test_feature_enabled_for_already_track_user
@@ -1199,9 +1197,9 @@ class VWOTest < Test::Unit::TestCase
       end
 
       options = {
-        batch_events: {
-          request_time_interval: 5,
-          flushCallback: method(:flush_callback)
+        "batch_events" => {
+          "request_time_interval" => 5,
+          "flushCallback" => method(:flush_callback)
         }
       }
       vwo_instance = initialize_vwo_with_batch_events_option('AB_T_50_W_50_50', options)
@@ -1370,7 +1368,7 @@ class VWOTest < Test::Unit::TestCase
 
     def test_track_with_custom_goal_type_to_track
       vwo_instance = initialize_vwo_with_custom_goal_type_to_track("CUSTOM")
-      assert_equal(vwo_instance.track("AB_T_100_W_50_50", "Ashley", "CUSTOM", {})["AB_T_100_W_50_50"], true)
+      assert_equal(vwo_instance.track("AB_T_100_W_50_50", "Ashley", "CUSTOM", {}), {"AB_T_100_W_50_50" => true})
     end
 
     def test_track_with_wrong_goal_type_to_track
@@ -1380,7 +1378,7 @@ class VWOTest < Test::Unit::TestCase
 
     def test_track_with_revenue_goal_type_to_track
       vwo_instance = initialize_vwo_with_custom_goal_type_to_track("REVENUE")
-      assert_equal(vwo_instance.track("AB_T_100_W_50_50", "Ashley", "abcd", {revenue_value: 10})["AB_T_100_W_50_50"], true)
+      assert_equal(vwo_instance.track("AB_T_100_W_50_50", "Ashley", "abcd", {revenue_value: 10}), {"AB_T_100_W_50_50" => true})
     end
 
     def test_track_with_wrong_campaign_key_type
@@ -1390,11 +1388,11 @@ class VWOTest < Test::Unit::TestCase
 
     def test_track_with_campaign_keys_array
       vwo_instance = initialize_vwo_with_custom_goal_type_to_track("CUSTOM")
-      assert_equal(vwo_instance.track(["AB_T_100_W_50_50"], "Ashley", "CUSTOM", {})["AB_T_100_W_50_50"], true)
+      assert_equal(vwo_instance.track(["AB_T_100_W_50_50"], "Ashley", "CUSTOM"), {"AB_T_100_W_50_50" => true})
     end
 
     def test_track_with_campaign_keys_nil
       vwo_instance = initialize_vwo_with_custom_goal_type_to_track("CUSTOM")
-      assert_equal(vwo_instance.track(nil, "Ashley", "CUSTOM", {})["AB_T_100_W_50_50"], true)
+      assert_equal(vwo_instance.track(nil, "Ashley", "CUSTOM"), {"AB_T_100_W_50_50" => true})
     end
 end

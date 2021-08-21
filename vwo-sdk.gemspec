@@ -16,7 +16,7 @@ Gem::Specification.new do |spec|
   spec.files         = Dir['lib/**/*']
   spec.require_paths = ['lib']
 
-  spec.add_development_dependency 'coveralls', '~> 0.8.23'
+  spec.add_development_dependency 'codecov', '~> 0.4.3'
   spec.add_development_dependency 'rubocop', '~> 0.70'
   spec.add_development_dependency 'mocha', '~>1.13.0'
 

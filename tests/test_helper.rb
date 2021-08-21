@@ -12,13 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# require 'coveralls'
 require 'simplecov'
-
 SimpleCov.command_name 'Unit Tests'
-
 SimpleCov.start
 
+require 'codecov'
+SimpleCov.formatter = SimpleCov::Formatter::Codecov
+
 require 'test/unit'
-# Coveralls.wear!
 $LOAD_PATH.unshift File.expand_path('../lib', __FILE__)
