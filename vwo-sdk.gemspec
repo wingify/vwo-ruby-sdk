@@ -8,15 +8,25 @@ Gem::Specification.new do |spec|
   spec.authors       = ['VWO']
   spec.email         = ['dev@wingify.com']
 
-  spec.summary       = "Ruby SDK for VWO full-stack testing"
-  spec.description   = "A Ruby SDK for VWO full-stack testing."
+  spec.summary       = "Ruby SDK for VWO FullStack testing"
+  spec.description   = "Ruby SDK for VWO FullStack testing."
   spec.homepage      = 'https://vwo.com/fullstack/server-side-testing/'
   spec.license       = 'Apache-2.0'
 
   spec.files         = Dir['lib/**/*']
   spec.require_paths = ['lib']
 
-  spec.add_development_dependency 'coveralls', '~> 0.8.23'
+  spec.metadata = {
+    "bug_tracker_uri"   => "https://github.com/wingify/vwo-ruby-sdk/issues",
+    "changelog_uri"     => "https://github.com/wingify/vwo-ruby-sdk/blob/master/CHANGELOG.md",
+    "documentation_uri" => "https://developers.vwo.com/docs/ruby-sdk-reference",
+    "homepage_uri"      => "https://github.com/wingify/vwo-ruby-sdk",
+    "source_code_uri"   => "https://github.com/wingify/vwo-ruby-sdk"
+  }
+
+  spec.required_ruby_version = '>= 2.2.10'
+
+  spec.add_development_dependency 'codecov', '~> 0.4.3'
   spec.add_development_dependency 'rubocop', '~> 0.70'
   spec.add_development_dependency 'mocha', '~>1.13.0'
 

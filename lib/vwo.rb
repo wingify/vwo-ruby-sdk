@@ -437,7 +437,7 @@ class VWO
         exception: e
       )
     )
-    nil
+    e
   end
 
   # This API method: Gets the variation name assigned for the
@@ -611,147 +611,149 @@ class VWO
 
     result = {}
     campaigns.each do |campaign|
-      campaign_type = campaign['type']
+      begin
+        campaign_type = campaign['type']
 
-      if campaign_type == CampaignTypes::FEATURE_ROLLOUT
+        if campaign_type == CampaignTypes::FEATURE_ROLLOUT
+          @logger.log(
+            LogLevelEnum::ERROR,
+            format(
+              LogMessageEnum::ErrorMessages::INVALID_API,
+              file: FILE,
+              api_name: ApiMethods::TRACK,
+              user_id: user_id,
+              campaign_key: campaign['key'],
+              campaign_type: campaign_type
+            )
+          )
+          result[campaign['key']] = false
+          next
+        end
+
+        variation = @variation_decider.get_variation(user_id, campaign, ApiMethods::TRACK, campaign['key'], custom_variables, variation_targeting_variables, goal_identifier)
+
+        if variation
+          goal = get_campaign_goal(campaign, goal_identifier)
+          if goal.nil? || !goal["id"]
+            @logger.log(
+              LogLevelEnum::ERROR,
+              format(
+                LogMessageEnum::ErrorMessages::TRACK_API_GOAL_NOT_FOUND,
+                file: FILE,
+                goal_identifier: goal_identifier,
+                user_id: user_id,
+                campaign_key: campaign['key'],
+                api_name: ApiMethods::TRACK
+              )
+            )
+            result[campaign['key']] = false
+            next
+          elsif goal['type'] == GoalTypes::REVENUE && !valid_value?(revenue_value)
+            @logger.log(
+              LogLevelEnum::ERROR,
+              format(
+                LogMessageEnum::ErrorMessages::TRACK_API_REVENUE_NOT_PASSED_FOR_REVENUE_GOAL,
+                file: FILE,
+                user_id: user_id,
+                goal_identifier: goal_identifier,
+                campaign_key: campaign['key'],
+                api_name: ApiMethods::TRACK
+              )
+            )
+            result[campaign['key']] = false
+            next
+          elsif goal['type'] == GoalTypes::CUSTOM
+            revenue_value = nil
+          end
+
+          if variation['goal_identifier']
+            identifiers = variation['goal_identifier'].split(VWO_DELIMITER)
+          else
+            variation['goal_identifier'] = ''
+            identifiers = []
+          end
+
+          if !identifiers.include? goal_identifier
+            updated_goal_identifier = variation['goal_identifier']
+            updated_goal_identifier += VWO_DELIMITER + goal_identifier
+            @variation_decider.save_user_storage(user_id, campaign['key'], variation['name'], updated_goal_identifier) if variation['name']
+            # set variation at user storage
+          elsif !should_track_returning_user
+            @logger.log(
+              LogLevelEnum::INFO,
+              format(
+                LogMessageEnum::InfoMessages::GOAL_ALREADY_TRACKED,
+                file: FILE,
+                user_id: user_id,
+                campaign_key: campaign['key'],
+                goal_identifier: goal_identifier,
+                api_name: ApiMethods::TRACK
+              )
+            )
+            result[campaign['key']] = false
+            next
+          end
+
+          if defined?(@batch_events)
+            impression = create_bulk_event_impression(
+              @settings_file,
+              campaign['id'],
+              variation['id'],
+              user_id,
+              goal['id'],
+              revenue_value
+            )
+            @batch_events_queue.enqueue(impression)
+          else
+            impression = create_impression(
+              @settings_file,
+              campaign['id'],
+              variation['id'],
+              user_id,
+              @sdk_key,
+              goal['id'],
+              revenue_value
+            )
+            if @event_dispatcher.dispatch(impression)
+              @logger.log(
+                LogLevelEnum::INFO,
+                format(
+                  LogMessageEnum::InfoMessages::IMPRESSION_SUCCESS,
+                  file: FILE,
+                  sdk_key: @sdk_key,
+                  account_id: @account_id,
+                  campaign_id: campaign['id'],
+                  variation_id: variation['id'],
+                  end_point: EVENTS::TRACK_GOAL
+                )
+              )
+              @logger.log(
+                LogLevelEnum::INFO,
+                format(
+                  LogMessageEnum::InfoMessages::MAIN_KEYS_FOR_IMPRESSION,
+                  file: FILE,
+                  sdk_key: @sdk_key,
+                  campaign_id: impression[:experiment_id],
+                  account_id: impression[:account_id],
+                  variation_id: impression[:combination]
+                )
+              )
+            end
+          end
+          result[campaign['key']] = true
+          next
+        end
+        result[campaign['key']] = false
+      rescue StandardError => e
         @logger.log(
           LogLevelEnum::ERROR,
           format(
-            LogMessageEnum::ErrorMessages::INVALID_API,
+            e.message,
             file: FILE,
-            api_name: ApiMethods::TRACK,
-            user_id: user_id,
-            campaign_key: campaign['key'],
-            campaign_type: campaign_type
+            exception: e
           )
         )
-        result[campaign['key']] = false
-        next
       end
-
-      variation = @variation_decider.get_variation(user_id, campaign, ApiMethods::TRACK, campaign['key'], custom_variables, variation_targeting_variables, goal_identifier)
-
-      if variation
-        goal = get_campaign_goal(campaign, goal_identifier)
-        if goal.nil? || !goal["id"]
-          @logger.log(
-            LogLevelEnum::ERROR,
-            format(
-              LogMessageEnum::ErrorMessages::TRACK_API_GOAL_NOT_FOUND,
-              file: FILE,
-              goal_identifier: goal_identifier,
-              user_id: user_id,
-              campaign_key: campaign['key'],
-              api_name: ApiMethods::TRACK
-            )
-          )
-          result[campaign['key']] = false
-          next
-        elsif goal['type'] == GoalTypes::REVENUE && !valid_value?(revenue_value)
-          @logger.log(
-            LogLevelEnum::ERROR,
-            format(
-              LogMessageEnum::ErrorMessages::TRACK_API_REVENUE_NOT_PASSED_FOR_REVENUE_GOAL,
-              file: FILE,
-              user_id: user_id,
-              goal_identifier: goal_identifier,
-              campaign_key: campaign['key'],
-              api_name: ApiMethods::TRACK
-            )
-          )
-          result[campaign['key']] = false
-          next
-        elsif goal['type'] == GoalTypes::CUSTOM
-          revenue_value = nil
-        end
-
-        if variation['goal_identifier']
-          identifiers = variation['goal_identifier'].split(VWO_DELIMITER)
-        else
-          variation['goal_identifier'] = ''
-          identifiers = []
-        end
-
-        if !identifiers.include? goal_identifier
-          updated_goal_identifier = variation['goal_identifier']
-          updated_goal_identifier += VWO_DELIMITER + goal_identifier
-          @variation_decider.save_user_storage(user_id, campaign['key'], variation['name'], updated_goal_identifier) if variation['name']
-          # set variation at user storage
-        elsif !should_track_returning_user
-          @logger.log(
-            LogLevelEnum::INFO,
-            format(
-              LogMessageEnum::InfoMessages::GOAL_ALREADY_TRACKED,
-              file: FILE,
-              user_id: user_id,
-              campaign_key: campaign['key'],
-              goal_identifier: goal_identifier,
-              api_name: ApiMethods::TRACK
-            )
-          )
-          result[campaign['key']] = false
-          next
-        end
-
-        if defined?(@batch_events)
-          impression = create_bulk_event_impression(
-            @settings_file,
-            campaign['id'],
-            variation['id'],
-            user_id,
-            goal['id'],
-            revenue_value
-          )
-          @batch_events_queue.enqueue(impression)
-        else
-          impression = create_impression(
-            @settings_file,
-            campaign['id'],
-            variation['id'],
-            user_id,
-            @sdk_key,
-            goal['id'],
-            revenue_value
-          )
-          if @event_dispatcher.dispatch(impression)
-            @logger.log(
-              LogLevelEnum::INFO,
-              format(
-                LogMessageEnum::InfoMessages::IMPRESSION_SUCCESS,
-                file: FILE,
-                sdk_key: @sdk_key,
-                account_id: @account_id,
-                campaign_id: campaign['id'],
-                variation_id: variation['id'],
-                end_point: EVENTS::TRACK_GOAL
-              )
-            )
-            @logger.log(
-              LogLevelEnum::INFO,
-              format(
-                LogMessageEnum::InfoMessages::MAIN_KEYS_FOR_IMPRESSION,
-                file: FILE,
-                sdk_key: @sdk_key,
-                campaign_id: impression[:experiment_id],
-                account_id: impression[:account_id],
-                variation_id: impression[:combination]
-              )
-            )
-          end
-        end
-        result[campaign['key']] = true
-        next
-      end
-      result[campaign['key']] = false
-    rescue StandardError => e
-      @logger.log(
-        LogLevelEnum::ERROR,
-        format(
-          e.message,
-          file: FILE,
-          exception: e
-        )
-      )
     end
 
     if result.length() == 0

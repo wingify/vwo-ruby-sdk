@@ -1,15 +1,15 @@
 # VWO Ruby SDK
 
 [![Gem version](https://badge.fury.io/rb/vwo-sdk.svg)](https://rubygems.org/gems/vwo-sdk)
-[![Build Status](http://img.shields.io/travis/wingify/vwo-ruby-sdk/master.svg?style=flat)](http://travis-ci.org/wingify/vwo-ruby-sdk)
-[![Coverage Status](https://coveralls.io/repos/github/wingify/vwo-ruby-sdk/badge.svg?branch=master)](https://coveralls.io/github/wingify/vwo-ruby-sdk?branch=master)
+[![CI](https://github.com/wingify/vwo-ruby-sdk/workflows/CI/badge.svg?branch=master)](https://github.com/wingify/vwo-ruby-sdk/actions?query=workflow%3ACI)
+[![codecov](https://codecov.io/gh/wingify/vwo-ruby-sdk/branch/master/graph/badge.svg?token=6F5QQEGO5Q)](https://codecov.io/gh/wingify/vwo-ruby-sdk)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](http://www.apache.org/licenses/LICENSE-2.0)
 
 This open source library allows you to A/B Test your Website at server-side.
 
 ## Requirements
 
-* Works with 1.9.3+
+* Works with 2.2.10 onwards
 
 ## Installation
 

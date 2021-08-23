@@ -190,7 +190,7 @@ class VWO
             end
             goal = get_campaign_goal(campaign, goal_identifier)
             if validate_goal(goal, goal_type_to_track)
-              campaigns.append(campaign)
+              campaigns.push(campaign)
             end
           end
         end
@@ -215,7 +215,7 @@ class VWO
 
           campaign = get_campaign_for_campaign_key_and_goal(campaign_key, settings_file, goal_identifier, goal_type_to_track)
           if campaign
-            campaigns.append(campaign)
+            campaigns.push(campaign)
           end
         end
         campaigns

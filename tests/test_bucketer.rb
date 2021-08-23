@@ -17,7 +17,7 @@ require 'json'
 require_relative '../lib/vwo/core/bucketer'
 require_relative '../lib/vwo/utils/campaign'
 
-SETTINGS_FILE = JSON.load(File.open(File.join(File.dirname(__FILE__), 'data/settings.json')))
+SETTINGS_FILE_1 = JSON.load(File.open(File.join(File.dirname(__FILE__), 'data/settings.json')))
 
 class BucketerTest < Test::Unit::TestCase
   include VWO::Utils::Campaign
@@ -111,7 +111,7 @@ class BucketerTest < Test::Unit::TestCase
   end
 
   def test_get_variation_return_none
-    campaign = ::SETTINGS_FILE['AB_T_50_W_50_50']['campaigns'][0]
+    campaign = ::SETTINGS_FILE_1['AB_T_50_W_50_50']['campaigns'][0]
     set_variation_allocation(campaign)
     result = @bucketer.send(:get_variation, campaign['variations'], 10001)
     assert_equal(result, nil)

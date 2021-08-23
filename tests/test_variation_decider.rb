@@ -18,7 +18,7 @@ require_relative '../lib/vwo/core/variation_decider'
 require_relative '../lib/vwo/user_storage'
 require_relative '../lib/vwo/utils/campaign'
 
-SETTINGS_FILE = JSON.load(File.open(File.join(File.dirname(__FILE__), 'data/settings.json')))
+VWO_SETTINGS_FILE = JSON.load(File.open(File.join(File.dirname(__FILE__), 'data/settings.json')))
 
 class UserStorage
   def get(_user_id, _campaign_key); end
@@ -60,7 +60,7 @@ class VariationDeciderTest < Test::Unit::TestCase
 
   def setup
     @user_id = rand.to_s
-    @settings_file = SETTINGS_FILE['DUMMY_SETTINGS_FILE']
+    @settings_file = VWO_SETTINGS_FILE['DUMMY_SETTINGS_FILE']
     @dummy_campaign = @settings_file['campaigns'][0]
     @campaign_key = @dummy_campaign['key']
     set_variation_allocation(@dummy_campaign)
