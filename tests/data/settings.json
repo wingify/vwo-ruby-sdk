@@ -480,14 +480,14 @@
             "value": 123
           },
           {
-            "id": 1,
+            "id": 3,
             "key": "FLOAT_VARIABLE",
             "type": "double",
             "value": 123.456
 
           },
           {
-            "id": 2,
+            "id": 4,
             "key": "BOOLEAN_VARIABLE",
             "type": "boolean",
             "value": true
@@ -496,6 +496,116 @@
         "id": 29,
         "percentTraffic": 50,
         "key": "FR_T_50_W_100",
+        "status": "RUNNING",
+        "type": "FEATURE_ROLLOUT"
+      }
+    ],
+    "accountId": 123456,
+    "version": 2
+  },
+
+  "FR_T_50_W_100_WITH_JSON_VARIABLE": {
+    "sdkKey": "someuniquestuff1234567",
+    "campaigns": [
+      {
+        "goals": [],
+        "variations": [
+          {
+            "id": "1",
+            "name": "Control",
+            "weight": 100
+          }
+        ],
+        "variables": [
+          {
+            "id": 1,
+            "key": "STRING_VARIABLE",
+            "type": "string",
+            "value": "this_is_a_string"
+          },
+          {
+            "id": 2,
+            "key": "INTEGER_VARIABLE",
+            "type": "integer",
+            "value": 123
+          },
+          {
+            "id": 3,
+            "key": "FLOAT_VARIABLE",
+            "type": "double",
+            "value": 123.456
+          },
+          {
+            "id": 4,
+            "key": "BOOLEAN_VARIABLE",
+            "type": "boolean",
+            "value": true
+          },
+          {
+            "id": 5,
+            "key": "JSON_VARIABLE",
+            "type": "json",
+            "value": {"data":123}
+          }
+        ],
+        "id": 29,
+        "percentTraffic": 50,
+        "key": "FR_T_50_W_100_WITH_JSON_VARIABLE",
+        "status": "RUNNING",
+        "type": "FEATURE_ROLLOUT"
+      }
+    ],
+    "accountId": 123456,
+    "version": 2
+  },
+
+  "FR_T_50_W_100_WITH_INVALID_JSON_VARIABLE": {
+    "sdkKey": "someuniquestuff1234567",
+    "campaigns": [
+      {
+        "goals": [],
+        "variations": [
+          {
+            "id": "1",
+            "name": "Control",
+            "weight": 100
+          }
+        ],
+        "variables": [
+          {
+            "id": 1,
+            "key": "STRING_VARIABLE",
+            "type": "string",
+            "value": "this_is_a_string"
+          },
+          {
+            "id": 2,
+            "key": "INTEGER_VARIABLE",
+            "type": "integer",
+            "value": 123
+          },
+          {
+            "id": 3,
+            "key": "FLOAT_VARIABLE",
+            "type": "double",
+            "value": 123.456
+          },
+          {
+            "id": 4,
+            "key": "BOOLEAN_VARIABLE",
+            "type": "boolean",
+            "value": true
+          },
+          {
+            "id": 5,
+            "key": "JSON_VARIABLE",
+            "type": "json",
+            "value": 12
+          }
+        ],
+        "id": 29,
+        "percentTraffic": 50,
+        "key": "FR_T_50_W_100_WITH_INVALID_JSON_VARIABLE",
         "status": "RUNNING",
         "type": "FEATURE_ROLLOUT"
       }

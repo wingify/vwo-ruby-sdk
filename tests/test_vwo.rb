@@ -1395,4 +1395,25 @@ class VWOTest < Test::Unit::TestCase
       vwo_instance = initialize_vwo_with_custom_goal_type_to_track("CUSTOM")
       assert_equal(vwo_instance.track(nil, "Ashley", "CUSTOM"), {"AB_T_100_W_50_50" => true})
     end
+
+    def test_validate_variables_without_json_variable
+      set_up('FR_T_50_W_100')
+      assert_equal(@vwo.is_instance_valid, true)
+      json_variable = @vwo.get_feature_variable_value('FR_T_50_W_100_WITH_INVALID_JSON_VARIABLE', 'JSON_VARIABLE', 'Ashley', {})
+      assert_equal(json_variable, nil)
+    end
+
+    def test_validate_variables_with_complete_data
+      set_up('FR_T_50_W_100_WITH_JSON_VARIABLE')
+      assert_equal(@vwo.is_instance_valid, true)
+      json_variable = @vwo.get_feature_variable_value('FR_T_50_W_100_WITH_JSON_VARIABLE', 'JSON_VARIABLE', 'Ashley', {})
+      assert_equal(json_variable, {"data"=>123})
+    end
+
+    def test_validate_variables_with_wrong_json_variable
+      set_up('FR_T_50_W_100_WITH_INVALID_JSON_VARIABLE')
+      assert_equal(@vwo.is_instance_valid, true)
+      json_variable = @vwo.get_feature_variable_value('FR_T_50_W_100_WITH_INVALID_JSON_VARIABLE', 'JSON_VARIABLE', 'Ashley', {})
+      assert_equal(json_variable, nil)
+    end
 end

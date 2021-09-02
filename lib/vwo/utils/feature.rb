@@ -38,6 +38,8 @@ class VWO
         return value.to_f if variable_type == VariableTypes::DOUBLE
 
         return !value || value == 0 ? false : true if variable_type == VariableTypes.BOOLEAN
+
+        return value if variable_type == VariableTypes::JSON
       rescue StandardError => _e
         VWO::Logger.get_instance.log(
           LogLevelEnum::ERROR,

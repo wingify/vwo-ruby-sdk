@@ -54,7 +54,13 @@ class VWO
             },
             weight: {
               type: %w[number string]
-            }
+            },
+           variables: {
+             type: 'array',
+             items: {
+               '$ref' => '#/definitions/variables_schema'
+             }
+           }
           },
           required: %w[id name weight]
         },
@@ -79,8 +85,32 @@ class VWO
                 '$ref' => '#/definitions/campaign_variation_schema'
               }
             },
+            variables: {
+              type: 'array',
+              items: {
+                '$ref' => '#/definitions/variables_schema'
+              }
+            },
             minItems: 2
           }
+        },
+        variables_schema: {
+          type: 'object',
+          properties: {
+            id: {
+              type: %w[number string]
+            },
+            key: {
+              type: ['string']
+            },
+            type: {
+              type: ['string']
+            },
+            value: {
+              type: %w[number string boolean double object]
+            }
+          },
+          required: %w[id key type value]
         },
         required: %w[
           id

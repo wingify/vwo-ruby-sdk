@@ -26,7 +26,7 @@ class VWO
     HTTP_PROTOCOL = 'http://'
     HTTPS_PROTOCOL = 'https://'
     URL_NAMESPACE = '6ba7b811-9dad-11d1-80b4-00c04fd430c8'
-    SDK_VERSION = '1.15.0'
+    SDK_VERSION = '1.16.0'
     SDK_NAME = 'ruby'
     VWO_DELIMITER = '_vwo_'
     MAX_EVENTS_PER_REQUEST = 5000
@@ -68,6 +68,7 @@ class VWO
       INTEGER = 'integer'
       DOUBLE = 'double'
       BOOLEAN = 'boolean'
+      JSON = 'json'
     end
 
     module Hooks
@@ -80,7 +81,8 @@ class VWO
       'string' => [String],
       'integer' => [Integer],
       'double' => [Float],
-      'boolean' => [TrueClass, FalseClass]
+      'boolean' => [TrueClass, FalseClass],
+      'json' => [Hash]
     }
 
     GOAL_TYPES = {
