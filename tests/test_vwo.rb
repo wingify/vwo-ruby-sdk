@@ -35,7 +35,7 @@ USER_EXPECTATIONS = JSON.load(File.open(File.join(File.dirname(__FILE__), 'data/
 
 class VWO
   class Logger
-    def log(level, message)
+    def log(level, message, disable_logs = false)
       # no-op
     end
   end
