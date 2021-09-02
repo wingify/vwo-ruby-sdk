@@ -1,0 +1,30 @@
+{"user_id"=>"Ashley", "variation_name"=>"Control", "campaign_key"=>"DEV_TEST_162"}
+GOT_ELIGIBLE_CAMPAIGNS
+{"user_id"=>"Ashley", "variation_name"=>"Control", "campaign_key"=>"DEV_TEST_162"}
+GOT_ELIGIBLE_CAMPAIGNS
+{"user_id"=>"Ashley", "variation_name"=>"Control", "campaign_key"=>"DEV_TEST_162"}
+GOT_ELIGIBLE_CAMPAIGNS
+{"user_id"=>"Ashley", "variation_name"=>"Control", "campaign_key"=>"DEV_TEST_162"}
+GOT_ELIGIBLE_CAMPAIGNS
+{"user_id"=>"Ashley", "variation_name"=>"Control", "campaign_key"=>"DEV_TEST_162"}
+GOT_ELIGIBLE_CAMPAIGNS
+{"user_id"=>"Ashley", "variation_name"=>"Control", "campaign_key"=>"DEV_TEST_162"}
+GOT_ELIGIBLE_CAMPAIGNS
+{"user_id"=>"Ashley", "variation_name"=>"Control", "campaign_key"=>"DEV_TEST_162"}
+GOT_ELIGIBLE_CAMPAIGNS
+{"user_id"=>"Ashley", "variation_name"=>"Control", "campaign_key"=>"DEV_TEST_162"}
+GOT_ELIGIBLE_CAMPAIGNS
+{"user_id"=>"Ashley", "variation_name"=>"Control", "campaign_key"=>"DEV_TEST_162"}
+GOT_ELIGIBLE_CAMPAIGNS
+{"user_id"=>"Ashley", "variation_name"=>"Control", "campaign_key"=>"DEV_TEST_162"}
+GOT_ELIGIBLE_CAMPAIGNS
+{"user_id"=>"Ashley", "variation_name"=>"Control", "campaign_key"=>"DEV_TEST_162"}
+GOT_ELIGIBLE_CAMPAIGNS
+{"user_id"=>"Ashley", "variation_name"=>"Control", "campaign_key"=>"DEV_TEST_162"}
+GOT_ELIGIBLE_CAMPAIGNS
+{"user_id"=>"Ashley", "variation_name"=>"Control", "campaign_key"=>"DEV_TEST_162"}
+GOT_ELIGIBLE_CAMPAIGNS
+{"user_id"=>"Ashley", "variation_name"=>"Control", "campaign_key"=>"DEV_TEST_162"}
+GOT_ELIGIBLE_CAMPAIGNS
+{"user_id"=>"Ashley", "variation_name"=>"Control", "campaign_key"=>"DEV_TEST_162"}
+GOT_ELIGIBLE_CAMPAIGNS

@@ -717,7 +717,7 @@ class VWO
 
         group_campaigns.each do |campaign|
           if called_campaign["id"] == campaign["id"] || check_presegmentation(campaign, user_id, custom_variables, '', true) && @bucketer.user_part_of_campaign?(user_id, campaign)
-            eligible_campaigns.append(campaign)
+            eligible_campaigns.push(campaign)
           end
         end
         return eligible_campaigns
@@ -748,7 +748,7 @@ class VWO
       def get_eligible_campaigns_key(eligible_campaigns)
         eligible_campaigns_key = []
         eligible_campaigns.each do |campaign|
-          eligible_campaigns_key.append(campaign["key"])
+          eligible_campaigns_key.push(campaign["key"])
         end
         eligible_campaigns_key
       end
@@ -763,7 +763,7 @@ class VWO
         non_eligible_campaigns_key = []
         group_campaigns.each do |campaign|
           unless eligible_campaigns.include? campaign
-            non_eligible_campaigns_key.append(campaign["key"])
+            non_eligible_campaigns_key.push(campaign["key"])
           end
         end
         non_eligible_campaigns_key

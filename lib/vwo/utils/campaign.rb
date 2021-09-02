@@ -299,7 +299,7 @@ class VWO
           group_campaign_ids.each do |campaign_id|
             settings_file["campaigns"].each do |campaign|
               if campaign["id"] == campaign_id && campaign["status"] == STATUS_RUNNING
-                group_campaigns.append(campaign)
+                group_campaigns.push(campaign)
               end
             end
           end

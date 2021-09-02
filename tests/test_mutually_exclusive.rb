@@ -330,7 +330,7 @@ class MutuallyExclusiveTest < Test::Unit::TestCase
 
         # new campaign is added to the group
         vwo_instance.get_settings['campaignGroups']['164'] = 2
-        vwo_instance.get_settings['groups']["2"]['campaigns'].append(164)
+        vwo_instance.get_settings['groups']["2"]['campaigns'].push(164)
         campaign_key = MEG_SETTINGS_FILE['campaigns'][4]['key']
         variation = vwo_instance.activate(campaign_key, 'Ashley')
         assert_equal(nil, variation)
