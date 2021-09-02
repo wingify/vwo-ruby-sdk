@@ -91,6 +91,7 @@ class VWO
                 '$ref' => '#/definitions/variables_schema'
               }
             },
+            isBucketingSeedEnabled: ['boolean'],
             minItems: 2
           }
         },

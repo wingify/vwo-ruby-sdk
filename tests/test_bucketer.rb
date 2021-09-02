@@ -116,4 +116,24 @@ class BucketerTest < Test::Unit::TestCase
     result = @bucketer.send(:get_variation, campaign['variations'], 10001)
     assert_equal(result, nil)
   end
+
+  def test_get_bucket_value_for_user_25_someonemailcom
+      campaign = {id: 1, isBucketingSeedEnabled: true}
+      bucket_value = @bucketer.get_bucket_value_for_user("someone@mail.com", campaign)
+      assert_equal(bucket_value, 25)
+
+      campaign[:isBucketingSeedEnabled] = false
+      bucket_value = @bucketer.get_bucket_value_for_user("someone@mail.com", campaign)
+      assert_equal(bucket_value, 64)
+    end
+
+    def test_get_bucket_value_for_user_1111111111111111
+      campaign = {id: 1, isBucketingSeedEnabled: true}
+      bucket_value = @bucketer.get_bucket_value_for_user("1111111111111111", campaign)
+      assert_equal(bucket_value, 82)
+      
+      campaign[:isBucketingSeedEnabled] = false
+      bucket_value = @bucketer.get_bucket_value_for_user("1111111111111111", campaign)
+      assert_equal(bucket_value, 50)
+    end
 end

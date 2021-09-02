@@ -63,10 +63,11 @@ class VWO
       # @param[String]                  :user_id              Unique user identifier
       # @param[Hash]                    :dsl                  Segments provided in the settings_file
       # @param[Hash]                    :custom_variables     Custom variables provided in the apis
+      # @param[Boolean]                 :disable_logs         disable logs if True
       #
       # @return[Boolean]                true if user passed pre-segmentation, else false
       #
-      def evaluate(campaign_key, user_id, dsl, custom_variables)
+      def evaluate(campaign_key, user_id, dsl, custom_variables, disable_logs = false)
         result = evaluate_util(dsl, custom_variables) if valid_value?(dsl)
         result
       rescue StandardError => e
@@ -79,7 +80,8 @@ class VWO
             campaign_key: campaign_key,
             custom_variables: custom_variables,
             error_message: e
-          )
+          ),
+          disable_logs
         )
         false
       end

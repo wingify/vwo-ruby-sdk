@@ -60,7 +60,7 @@ class VWO
         end
 
         traffic_allocation = campaign['percentTraffic']
-        value_assigned_to_user = get_bucket_value_for_user(user_id)
+        value_assigned_to_user = get_bucket_value_for_user(user_id, campaign)
         is_user_part = (value_assigned_to_user != 0) && value_assigned_to_user <= traffic_allocation
         @logger.log(
           LogLevelEnum::INFO,
@@ -94,7 +94,11 @@ class VWO
           return
         end
 
-        hash_value = MurmurHash3::V32.str_hash(user_id, SEED_VALUE) & U_MAX_32_BIT
+        user_id_for_hash_value = user_id
+        if campaign[:isBucketingSeedEnabled]
+          user_id_for_hash_value = campaign[:id].to_s + "_" + user_id
+        end
+        hash_value = MurmurHash3::V32.str_hash(user_id_for_hash_value, SEED_VALUE) & U_MAX_32_BIT
         normalize = MAX_TRAFFIC_VALUE.to_f / campaign['percentTraffic']
         multiplier = normalize / 100
         bucket_value = get_bucket_value(
@@ -136,10 +140,17 @@ class VWO
       # User by hashing the userId by murmurHash and scaling it down.
       #
       # @param[String]    :user_id    The unique ID assigned to User
+      # @param[String]    :campaign   Campaign data
       # @return[Integer]              The bucket Value allotted to User
       #                               (between 1 to $this->$MAX_TRAFFIC_PERCENT)
-      def get_bucket_value_for_user(user_id)
-        hash_value = MurmurHash3::V32.str_hash(user_id, SEED_VALUE) & U_MAX_32_BIT
+      def get_bucket_value_for_user(user_id, campaign = {}, group_id = nil, disable_logs = false)
+        user_id_for_hash_value = user_id
+        if group_id
+          user_id_for_hash_value = group_id.to_s + "_" + user_id
+        elsif campaign[:isBucketingSeedEnabled]
+          user_id_for_hash_value = campaign[:id].to_s + "_" + user_id
+        end
+        hash_value = MurmurHash3::V32.str_hash(user_id_for_hash_value, SEED_VALUE) & U_MAX_32_BIT
         bucket_value = get_bucket_value(hash_value, MAX_TRAFFIC_PERCENT)
 
         @logger.log(
@@ -150,7 +161,8 @@ class VWO
             hash_value: hash_value,
             bucket_value: bucket_value,
             user_id: user_id
-          )
+          ),
+          disable_logs
         )
         bucket_value
       end
@@ -167,6 +179,22 @@ class VWO
         ratio = hash_value.to_f / MAX_HASH_VALUE
         multiplied_value = (max_value * ratio + 1) * multiplier
         multiplied_value.to_i
+      end
+
+      # Returns a campaign by checking the Start and End Bucket Allocations of each campaign.
+      #
+      # @param[Integer]     :range_for_campaigns       the bucket value of the user
+      # @param[Hash]        :campaigns                 The bucket Value of the user
+      # @return[Hash|nil]
+      #
+      def get_campaign_using_range(range_for_campaigns, campaigns)
+        range_for_campaigns = range_for_campaigns * 100
+        campaigns.each do |campaign|
+          if campaign["max_range"] && campaign["max_range"] >= range_for_campaigns && campaign["min_range"] <= range_for_campaigns
+            return campaign
+          end
+        end
+        nil
       end
     end
   end

@@ -413,7 +413,6 @@ class VWO
           )
         end
       end
-      variation['name']
     else
       @logger.log(
         LogLevelEnum::INFO,
@@ -425,8 +424,8 @@ class VWO
           api_name: ApiMethods::ACTIVATE
         )
       )
-      nil
     end
+    variation['name']
   rescue StandardError => e
     @logger.log(
       LogLevelEnum::ERROR,
@@ -676,7 +675,7 @@ class VWO
           if !identifiers.include? goal_identifier
             updated_goal_identifier = variation['goal_identifier']
             updated_goal_identifier += VWO_DELIMITER + goal_identifier
-            @variation_decider.save_user_storage(user_id, campaign['key'], variation['name'], updated_goal_identifier) if variation['name']
+            @variation_decider.save_user_storage(user_id, campaign['key'], campaign['name'], variation['name'], updated_goal_identifier) if variation['name']
             # set variation at user storage
           elsif !should_track_returning_user
             @logger.log(
@@ -870,80 +869,85 @@ class VWO
     return false unless variation
 
     # if campaign type is feature_test Send track call to server
-    if campaign_type == CampaignTypes::FEATURE_TEST
-      if is_eligible_to_send_impression(should_track_returning_user)
-        if defined?(@batch_events)
-          impression = create_bulk_event_impression(
-            @settings_file,
-            campaign['id'],
-            variation['id'],
-            user_id
-          )
-          @batch_events_queue.enqueue(impression)
-        else
-          impression = create_impression(
-            @settings_file,
-            campaign['id'],
-            variation['id'],
-            user_id,
-            @sdk_key,
-            goal_id: nil,
-            revenue: nil,
-            usage_stats: @usage_stats.usage_stats
-          )
 
-          @event_dispatcher.dispatch(impression)
-          @logger.log(
-            LogLevelEnum::INFO,
-            format(
-              LogMessageEnum::InfoMessages::MAIN_KEYS_FOR_IMPRESSION,
-              file: FILE,
-              campaign_id: impression[:experiment_id],
-              sdk_key: @sdk_key,
-              account_id: impression[:account_id],
-              variation_id: impression[:combination]
-            )
-          )
-        end
-        result = variation['isFeatureEnabled']
-        if result
-          @logger.log(
-            LogLevelEnum::INFO,
-            format(
-              LogMessageEnum::InfoMessages::FEATURE_ENABLED_FOR_USER,
-              file: FILE,
-              user_id: user_id,
-              feature_key: campaign_key,
-              api_name: ApiMethods::IS_FEATURE_ENABLED
-            )
-          )
-        else
-          @logger.log(
-            LogLevelEnum::INFO,
-            format(
-              LogMessageEnum::InfoMessages::FEATURE_NOT_ENABLED_FOR_USER,
-              file: FILE,
-              user_id: user_id,
-              feature_key: campaign_key,
-              api_name: ApiMethods::IS_FEATURE_ENABLED
-            )
-          )
-        end
-        return result
+    if is_eligible_to_send_impression(should_track_returning_user)
+      if defined?(@batch_events)
+        impression = create_bulk_event_impression(
+          @settings_file,
+          campaign['id'],
+          variation['id'],
+          user_id
+        )
+        @batch_events_queue.enqueue(impression)
       else
+        impression = create_impression(
+          @settings_file,
+          campaign['id'],
+          variation['id'],
+          user_id,
+          @sdk_key,
+          nil,
+          nil,
+          usage_stats: @usage_stats.usage_stats
+        )
+
+        @event_dispatcher.dispatch(impression)
         @logger.log(
           LogLevelEnum::INFO,
           format(
-            LogMessageEnum::InfoMessages::USER_ALREADY_TRACKED,
+            LogMessageEnum::InfoMessages::MAIN_KEYS_FOR_IMPRESSION,
             file: FILE,
-            user_id: user_id,
-            campaign_key: campaign_key,
-            api_name: ApiMethods::IS_FEATURE_ENABLED
+            campaign_id: impression[:experiment_id],
+            sdk_key: @sdk_key,
+            account_id: impression[:account_id],
+            variation_id: impression[:combination]
           )
         )
       end
+
+    else
+      @logger.log(
+        LogLevelEnum::INFO,
+        format(
+          LogMessageEnum::InfoMessages::USER_ALREADY_TRACKED,
+          file: FILE,
+          user_id: user_id,
+          campaign_key: campaign_key,
+          api_name: ApiMethods::IS_FEATURE_ENABLED
+        )
+      )
     end
-    true
+    if campaign_type == CampaignTypes::FEATURE_ROLLOUT
+      result = true
+    else
+      result = variation['isFeatureEnabled']
+    end
+
+    if result
+      @logger.log(
+        LogLevelEnum::INFO,
+        format(
+          LogMessageEnum::InfoMessages::FEATURE_ENABLED_FOR_USER,
+          file: FILE,
+          user_id: user_id,
+          feature_key: campaign_key,
+          api_name: ApiMethods::IS_FEATURE_ENABLED
+        )
+      )
+    else
+      @logger.log(
+        LogLevelEnum::INFO,
+        format(
+          LogMessageEnum::InfoMessages::FEATURE_NOT_ENABLED_FOR_USER,
+          file: FILE,
+          user_id: user_id,
+          feature_key: campaign_key,
+          api_name: ApiMethods::IS_FEATURE_ENABLED
+        )
+      )
+    end
+
+    result
   rescue StandardError => e
     @logger.log(
       LogLevelEnum::ERROR,

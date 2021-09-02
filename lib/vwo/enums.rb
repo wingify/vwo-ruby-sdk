@@ -113,6 +113,7 @@ class VWO
         BULK_NOT_PROCESSED = "(%<file>s): Batch events couldn't be received by VWO. Calling Flush Callback with error and data."
         BEFORE_FLUSHING = '(%<file>s): Flushing events queue %<manually>s having %<length>s events %<timer>s queue summary: %<queue_metadata>s'
         EVENT_BATCHING_INSUFFICIENT = '(%<file>s): %<key>s not provided, assigning default value'
+        GOT_ELIGIBLE_CAMPAIGNS = "(%<file>s): Campaigns:%<eligible_campaigns_key>s are eligible, %<ineligible_campaigns_log_text>s are ineligible from the Group:%<group_name>s for the User ID:%<user_id>s"
       end
 
       # Info Messages
@@ -152,9 +153,13 @@ class VWO
         CAMPAIGN_NOT_ACTIVATED = '(%<file>s): Activate the campaign:%<campaign_key>s for User ID:%<user_id>s to %<reason>s.'
         GOAL_ALREADY_TRACKED = '(%<file>s): Goal:%<goal_identifier>s of Campaign:%<campaign_key>s for User ID:%<user_id>s has already been tracked earlier. Skipping now'
         USER_ALREADY_TRACKED = '(%<file>s): User ID:%<user_id>s for Campaign:%<campaign_key>s has already been tracked earlier for "%<api_name>s" API. Skipping now'
-        API_CALLED = '(%<file>s): API: {api_name} called for UserId:%<user_id>s'
+        API_CALLED = '(%<file>s): API: %<api_name>s called for UserId:%<user_id>s'
         BULK_IMPRESSION_SUCCESS = '(%<file>s): Impression event - %<end_point>s was successfully received by VWO having accountId:%<a>s'
         AFTER_FLUSHING = '(%<file>s): Events queue having %<length>s events has been flushed %<manually>s queue summary: %<queue_metadata>s'
+        GOT_WINNER_CAMPAIGN = "(%<file>s): Campaign:%<campaign_key>s is selected from the mutually exclusive group:%<group_name>s for the User ID:%<user_id>s"
+        GOT_ELIGIBLE_CAMPAIGNS = "(%<file>s): Got %<no_of_eligible_campaigns>s eligible winners out of %<no_of_group_campaigns>s from the Group:%<group_name>s and for User ID:%<user_id>s"
+        CALLED_CAMPAIGN_NOT_WINNER = "(%<file>s): Campaign:%<campaign_key>s does not qualify from the mutually exclusive group:%<group_name>s for User ID:%<user_id>s"
+        OTHER_CAMPAIGN_SATISFIES_WHITELISTING_OR_STORAGE = "(%<file>s): Campaign:%<campaign_key>s of Group:%<group_name>s satisfies %<type>s for User ID:%<user_id>s"
       end
 
       # Warning Messages

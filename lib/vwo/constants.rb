@@ -19,6 +19,7 @@ class VWO
     SEED_VALUE = 1
     MAX_TRAFFIC_PERCENT = 100
     MAX_TRAFFIC_VALUE = 10_000
+    MAX_RANGE = 10000
     STATUS_RUNNING = 'RUNNING'
     # rubocop:disable Style/ExpandPathArguments
     LIBRARY_PATH =  File.expand_path('../..', __FILE__)
@@ -26,7 +27,7 @@ class VWO
     HTTP_PROTOCOL = 'http://'
     HTTPS_PROTOCOL = 'https://'
     URL_NAMESPACE = '6ba7b811-9dad-11d1-80b4-00c04fd430c8'
-    SDK_VERSION = '1.16.0'
+    SDK_VERSION = '1.22.0'
     SDK_NAME = 'ruby'
     VWO_DELIMITER = '_vwo_'
     MAX_EVENTS_PER_REQUEST = 5000

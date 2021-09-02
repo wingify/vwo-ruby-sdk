@@ -28,8 +28,10 @@ class VWO
     end
 
     # Override this method to handle logs in a custom manner
-    def log(level, message)
-      @@logger_instance.log(level, message)
+    def log(level, message, disable_logs = false)
+      unless disable_logs
+        @@logger_instance.log(level, message)
+      end
     end
 
     def instance

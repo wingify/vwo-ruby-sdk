@@ -876,7 +876,7 @@ class VWOTest < Test::Unit::TestCase
     }
     USER_EXPECTATIONS['T_75_W_10_20_30_40'].each do |test|
       assert_equal(@vwo.feature_enabled?('FT_T_75_W_10_20_30_40_WS', test['user'], { custom_variables: true_custom_variables }),
-                   !test['variation'].nil? && !is_feature_not_enabled_variations.include?(test['variation'])
+      !test['variation'].nil? && !is_feature_not_enabled_variations.include?(test['variation'])
       )
     end
   end
@@ -1096,7 +1096,7 @@ class VWOTest < Test::Unit::TestCase
     def test_activate_for_already_track_user
       vwo_instance = initialize_vwo_with_should_track_returning_user_false
       vwo_instance.stubs(:is_eligible_to_send_impression).returns(false)
-      assert_equal(vwo_instance.activate("AB_T_50_W_50_50", "Ashley", {should_track_returning_user: false}), nil)
+      assert_equal(vwo_instance.activate("AB_T_50_W_50_50", "Ashley", {should_track_returning_user: false}), 'Variation-1')
     end
 
     def test_track_without_should_track_returning_user
@@ -1415,5 +1415,23 @@ class VWOTest < Test::Unit::TestCase
       assert_equal(@vwo.is_instance_valid, true)
       json_variable = @vwo.get_feature_variable_value('FR_T_50_W_100_WITH_INVALID_JSON_VARIABLE', 'JSON_VARIABLE', 'Ashley', {})
       assert_equal(json_variable, nil)
+    end
+
+    def test_get_feature_variable_value_fail_prior_campaign_activation_for_feature_rollout
+      vwo_instance = VWO.new(88888888, 'someuniquestuff1234567', VWO::Logger.get_instance, VWO::UserStorage.new, false, JSON.generate(SETTINGS_FILE['FR_T_50_W_100']), {})
+      string_variable = vwo_instance.get_feature_variable_value('FR_T_50_W_100', 'STRING_VARIABLE', 'Ashley', {})
+      assert_equal(string_variable, nil)
+    end
+
+    def test_get_feature_variable_value_pass_after_campaign_activation_for_feature_rollout
+      vwo_instance = VWO.new(88888888, 'someuniquestuff1234567', VWO::Logger.get_instance, VWO::UserStorage.new, false, JSON.generate(SETTINGS_FILE['FR_T_50_W_100']), {})
+      variation_data = Hash.new
+      variation_data["id"] = 1
+      variation_data["name"] = "website"
+      variation_decider = mock()
+      variation_decider.stubs(:get_variation).returns(variation_data)
+      vwo_instance.variation_decider = variation_decider
+      string_variable = vwo_instance.get_feature_variable_value('FR_T_50_W_100', 'STRING_VARIABLE', 'Ashley', {log_level: Logger::DEBUG})
+      assert_equal(string_variable, "this_is_a_string")
     end
 end

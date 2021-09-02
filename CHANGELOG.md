@@ -4,7 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.22.0] - 2021-09-02
+
+### Added
+
+- Introducing support for Mutually Exclusive Campaigns. By creating Mutually Exclusive Groups in VWO Application, you can group multiple FullStack A/B campaigns together that are mutually exclusive. SDK will ensure that visitors do not overlap in multiple running mutually exclusive campaigns and the same visitor does not see the unrelated campaign variations. This eliminates the interaction effects that multiple campaigns could have with each other. You simply need to configure the group in the VWO application and the SDK will take care what to be shown to the visitor when you will call the `activate` API for a given user and a campaign.
+
+### Changed
+
+- Sending visitor tracking call for Feature Rollout campaign when `feature_enabled?` API is used. This will help in visualizing the overall traffic for the respective campaign's report in the VWO application.
+- Use Campaign ID along with User ID for bucketing a user in a campaign. This will ensure that a particular user gets different variation for different campaigns having similar settings i.e. same campaign-traffic, number of variations, and variation traffic.
+
 ## [1.16.0] - 2021-09-02
+
 
 ### Added
 
@@ -33,6 +45,7 @@ options = {
   "goal_type_to_track" => "ALL"
 }
 ```
+
 
 ## [1.14.0] - 2021-07-06
 

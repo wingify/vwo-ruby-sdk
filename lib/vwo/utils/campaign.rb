@@ -57,6 +57,26 @@ class VWO
         end
       end
 
+      # Sets campaign allocation range in the provided campaigns list
+      #
+      # @param [Array]: Array of Campaigns
+      def set_campaign_allocation(campaigns)
+        current_allocation = 0
+        campaigns.each do |campaign|
+          step_factor = get_variation_bucketing_range(campaign['weight'])
+          if step_factor > 0
+            start_range = current_allocation + 1
+            end_range = current_allocation + step_factor
+            campaign['min_range'] = start_range
+            campaign['max_range'] = end_range
+            current_allocation += step_factor
+          else
+            campaign['min_range'] = -1
+            campaign['max_range'] = -1
+          end
+        end
+      end
+
       # Returns goal from given campaign_key and gaol_identifier.
       # @param[String]            :campaign             Campaign object
       # @param[String]            :goal_identifier      Goal identifier
@@ -247,6 +267,44 @@ class VWO
           nil
         end
         return campaign
+      end
+
+      # Checks whether a campaign is part of a group.
+      #
+      #  @param[Hash]       :settings_file          Settings file for the project
+      #  @param[Integer]     :campaign_id            Id of campaign which is to be checked
+      #  @return[Boolean]
+      def is_part_of_group(settings_file, campaign_id)
+        if settings_file["campaignGroups"] && (settings_file["campaignGroups"].has_key?(campaign_id.to_s))
+          return true
+        end
+        false
+      end
+
+      # Returns campaigns which are part of given group using group_id.
+      #
+      #  @param[Hash]       :settings_file          Settings file for the project
+      #  @param[Integer]    :group_id               id of group whose campaigns are to be return
+      #  @return[Array]
+      def get_group_campaigns(settings_file, group_id)
+        group_campaign_ids = []
+        group_campaigns = []
+        groups = settings_file["groups"]
+
+        if groups && groups.has_key?(group_id.to_s)
+          group_campaign_ids = groups[group_id.to_s]["campaigns"]
+        end
+
+        if group_campaign_ids
+          group_campaign_ids.each do |campaign_id|
+            settings_file["campaigns"].each do |campaign|
+              if campaign["id"] == campaign_id && campaign["status"] == STATUS_RUNNING
+                group_campaigns.append(campaign)
+              end
+            end
+          end
+        end
+        group_campaigns
       end
 
     end
