@@ -195,7 +195,7 @@ Refer [third-party-attributions.txt](https://github.com/wingify/vwo-ruby-sdk/blo
 
 ## Authors
 
-* Main Contributor - [Sahil Batla](https://github.com/sahilbathla)
+* Main Contributor - [Abbas Khaliq](https://github.com/Abbas-khaliq)
 * Repo health maintainer - [Varun Malhotra](https://github.com/softvar)([@s0ftvar](https://twitter.com/s0ftvar))
 
 ## Changelog
