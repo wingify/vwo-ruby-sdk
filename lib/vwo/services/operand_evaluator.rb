@@ -91,11 +91,10 @@ class VWO
       # @return [Boolean]
       def evaluate_custom_variable?(operand, custom_variables)
         # Extract custom_variable_key and custom_variables_value from operand
-
         operand_key, operand = get_key_value(operand)
 
         # Retrieve corresponding custom_variable value from custom_variables
-        custom_variables_value = custom_variables[operand_key]
+        custom_variables_value = custom_variables[operand_key.to_sym]
 
         # Pre process custom_variable value
         custom_variables_value = process_custom_variables_value(custom_variables_value)
@@ -113,7 +112,7 @@ class VWO
       def evaluate_user?(operand, custom_variables)
         users = operand.split(',')
         users.each do |user|
-          return true if user.strip == custom_variables['_vwo_user_id']
+          return true if user.strip == custom_variables[:_vwo_user_id]
         end
         false
       end

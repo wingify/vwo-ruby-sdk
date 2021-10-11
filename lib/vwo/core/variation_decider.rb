@@ -460,9 +460,9 @@ class VWO
 
       def evaluate_whitelisting(user_id, campaign, api_name, campaign_key, variation_targeting_variables = {}, disable_logs = false)
         if variation_targeting_variables.nil?
-          variation_targeting_variables = { '_vwo_user_id' => user_id }
+          variation_targeting_variables = { _vwo_user_id: user_id }
         else
-          variation_targeting_variables['_vwo_user_id'] = user_id
+          variation_targeting_variables[:_vwo_user_id] = user_id
         end
         targeted_variations = []
 

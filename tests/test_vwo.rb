@@ -1294,6 +1294,37 @@ class VWOTest < Test::Unit::TestCase
       assert_equal(1, additional_data[:_l])
     end
 
+    def test_additional_data_during_vwo_instantiation_for_non_symbol_hash
+      def flush_callback(events)
+      end
+
+      def integrations_callback(properties)
+      end
+
+      options = {
+        "batch_events" => {
+          "events_per_request" => 3,
+          "request_time_interval" => 5,
+          "flushCallback" => method(:flush_callback)
+        },
+        "log_level": Logger::DEBUG,
+        "should_track_returning_user" => true,
+        "integrations" => {
+          "callback" => method(:integrations_callback)
+        }
+      }
+      vwo_instance = VWO.new(88888888, 'someuniquestuff1234567', VWO::Logger.get_instance, VWO::UserStorage.new, false, JSON.generate(SETTINGS_FILE['AB_T_50_W_50_50']), options)
+      additional_data = vwo_instance.usage_stats.usage_stats
+      assert_equal(1, additional_data[:ig])
+      assert_equal(1, additional_data[:cl])
+      assert_equal(1, additional_data[:ss])
+      assert_equal(1, additional_data[:tr])
+      assert_equal(1, additional_data[:ll])
+      assert_equal(1, additional_data[:eb])
+      assert_equal(1, additional_data[:_l])
+    end
+    
+
     def test_additional_data_for_logging_and_integrations
       def integrations_callback(properties)
       end
@@ -1433,5 +1464,111 @@ class VWOTest < Test::Unit::TestCase
       vwo_instance.variation_decider = variation_decider
       string_variable = vwo_instance.get_feature_variable_value('FR_T_50_W_100', 'STRING_VARIABLE', 'Ashley', {log_level: Logger::DEBUG})
       assert_equal(string_variable, "this_is_a_string")
+    end
+
+    def test_apis_with_hash_version_1
+        set_up('T_50_W_50_50_WS')
+        true_custom_variables = {
+          'a' => 987.1234,
+          'hello' => 'world'
+        }
+        goal_identifier = 'ddd'
+        options = { "custom_variables" => true_custom_variables }
+        assert_equal(@vwo.activate('T_50_W_50_50_WS', 'Ashley', options), "Variation-1")
+        assert_equal(@vwo.get_variation_name('T_50_W_50_50_WS', 'Ashley', options), "Variation-1")
+        assert_equal(@vwo.track('T_50_W_50_50_WS', 'Ashley', goal_identifier, options), { "T_50_W_50_50_WS" => true})
+
+        set_up('FT_T_75_W_10_20_30_40_WS')
+        assert_equal(@vwo.feature_enabled?('FT_T_75_W_10_20_30_40_WS', 'Ashley', options), true)
+        result = @vwo.get_feature_variable_value('FT_T_75_W_10_20_30_40_WS', 'STRING_VARIABLE', 'Ashley', options)
+        assert_equal(result, "Variation-3 string") if result
+        assert_equal(@vwo.get_variation_name('FT_T_75_W_10_20_30_40_WS', 'Ashley', options), "Variation-3")
+    end
+
+    def test_apis_with_hash_version_1_2
+        set_up('T_50_W_50_50_WS')
+        true_custom_variables = {
+          a: 987.1234,
+          hello: 'world'
+        }
+        goal_identifier = 'ddd'
+        options = { "custom_variables"=> true_custom_variables }
+        assert_equal(@vwo.activate('T_50_W_50_50_WS', 'Ashley', options), "Variation-1")
+        assert_equal(@vwo.get_variation_name('T_50_W_50_50_WS', 'Ashley', options), "Variation-1")
+        assert_equal(@vwo.track('T_50_W_50_50_WS', 'Ashley', goal_identifier, options), { "T_50_W_50_50_WS" => true})
+
+        set_up('FT_T_75_W_10_20_30_40_WS')
+        assert_equal(@vwo.feature_enabled?('FT_T_75_W_10_20_30_40_WS', 'Ashley', options), true)
+        result = @vwo.get_feature_variable_value('FT_T_75_W_10_20_30_40_WS', 'STRING_VARIABLE', 'Ashley', options)
+        assert_equal(result, "Variation-3 string") if result
+        assert_equal(@vwo.get_variation_name('FT_T_75_W_10_20_30_40_WS', 'Ashley', options), "Variation-3")
+    end
+
+    def test_apis_with_hash_version_2
+        set_up('T_50_W_50_50_WS')
+        true_custom_variables = {
+          'a' => 987.1234,
+          'hello' => 'world'
+        }
+        goal_identifier = 'ddd'
+        options = { custom_variables: true_custom_variables }
+        assert_equal(@vwo.activate('T_50_W_50_50_WS', 'Ashley', options), "Variation-1")
+        assert_equal(@vwo.get_variation_name('T_50_W_50_50_WS', 'Ashley', options), "Variation-1")
+        assert_equal(@vwo.track('T_50_W_50_50_WS', 'Ashley', goal_identifier, options), { "T_50_W_50_50_WS" => true})
+
+        set_up('FT_T_75_W_10_20_30_40_WS')
+        assert_equal(@vwo.feature_enabled?('FT_T_75_W_10_20_30_40_WS', 'Ashley', options), true)
+        result = @vwo.get_feature_variable_value('FT_T_75_W_10_20_30_40_WS', 'STRING_VARIABLE', 'Ashley', options)
+        assert_equal(result, "Variation-3 string") if result
+        assert_equal(@vwo.get_variation_name('FT_T_75_W_10_20_30_40_WS', 'Ashley', options), "Variation-3")
+    end
+
+    def test_apis_with_hash_version_2_2
+      set_up('T_50_W_50_50_WS')
+      true_custom_variables = {
+        a: 987.1234,
+        hello: 'world'
+      }
+      goal_identifier = 'ddd'
+      options = { custom_variables: true_custom_variables }
+      assert_equal(@vwo.activate('T_50_W_50_50_WS', 'Ashley', options), "Variation-1")
+      assert_equal(@vwo.get_variation_name('T_50_W_50_50_WS', 'Ashley', options), "Variation-1")
+      assert_equal(@vwo.track('T_50_W_50_50_WS', 'Ashley', goal_identifier, options), { "T_50_W_50_50_WS" => true})
+
+      set_up('FT_T_75_W_10_20_30_40_WS')
+      assert_equal(@vwo.feature_enabled?('FT_T_75_W_10_20_30_40_WS', 'Ashley', options), true)
+      result = @vwo.get_feature_variable_value('FT_T_75_W_10_20_30_40_WS', 'STRING_VARIABLE', 'Ashley', options)
+      assert_equal(result, "Variation-3 string") if result
+      assert_equal(@vwo.get_variation_name('FT_T_75_W_10_20_30_40_WS', 'Ashley', options), "Variation-3")
+  end
+
+    def test_vwo_instantiation_with_string_type_hash
+        def integrations_callback(properties)
+        end
+        options = {
+            "log_level" => Logger::DEBUG,
+            "should_track_returning_user" => true,
+            "integrations" => {
+                "callback" => method(:integrations_callback)
+            }
+        }
+        vwo_instance = VWO.new(88888888, 'someuniquestuff1234567', nil, nil, true, JSON.generate(SETTINGS_FILE['AB_T_50_W_50_50']), options)
+        assert_equal(vwo_instance.activate("AB_T_50_W_50_50", "Ashley", {}), "Variation-1")
+        assert_equal(vwo_instance.track("AB_T_50_W_50_50", "Ashley", 'CUSTOM')["AB_T_50_W_50_50"], true)
+    end
+
+    def test_vwo_instantiation_with_symbolize_hash
+        def integrations_callback(properties)
+        end
+        options = {
+            log_level: Logger::DEBUG,
+            should_track_returning_user: true,
+            integrations: {
+                callback: method(:integrations_callback)
+            }
+        }
+        vwo_instance = VWO.new(88888888, 'someuniquestuff1234567', nil, nil, true, JSON.generate(SETTINGS_FILE['AB_T_50_W_50_50']), options)
+        assert_equal(vwo_instance.activate("AB_T_50_W_50_50", "Ashley", {}), "Variation-1")
+        assert_equal(vwo_instance.track("AB_T_50_W_50_50", "Ashley", 'CUSTOM')["AB_T_50_W_50_50"], true)
     end
 end

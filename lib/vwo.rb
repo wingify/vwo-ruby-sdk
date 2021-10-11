@@ -23,6 +23,7 @@ require_relative 'vwo/utils/campaign'
 require_relative 'vwo/utils/impression'
 require_relative 'vwo/utils/feature'
 require_relative 'vwo/utils/custom_dimensions'
+require_relative 'vwo/utils/utility'
 require_relative 'vwo/constants'
 require_relative 'vwo/core/variation_decider'
 require_relative 'vwo/services/batch_events_dispatcher'
@@ -39,6 +40,7 @@ class VWO
   include Utils::CustomDimensions
   include Utils::Campaign
   include Utils::Impression
+  include Utils::Utility
   include CONSTANTS
 
   FILE = FileNameEnum::VWO
@@ -62,6 +64,7 @@ class VWO
     settings_file = nil,
     options = {}
   )
+    options = convert_to_symbol_hash(options)
     @account_id = account_id
     @sdk_key = sdk_key
     @user_storage = user_storage
@@ -295,9 +298,10 @@ class VWO
       return
     end
 
+    options = convert_to_symbol_hash(options)
     # Retrieve custom variables
-    custom_variables = options['custom_variables'] || options[:custom_variables]
-    variation_targeting_variables = options['variation_targeting_variables'] || options[:variation_targeting_variables]
+    custom_variables = options[:custom_variables]
+    variation_targeting_variables = options[:variation_targeting_variables]
 
     should_track_returning_user = get_should_track_returning_user(options)
     # Validate input parameters
@@ -468,9 +472,10 @@ class VWO
       )
       return
     end
+    options = convert_to_symbol_hash(options)
     # Retrieve custom variables
-    custom_variables = options['custom_variables'] || options[:custom_variables]
-    variation_targeting_variables = options['variation_targeting_variables'] || options[:variation_targeting_variables]
+    custom_variables = options[:custom_variables]
+    variation_targeting_variables = options[:variation_targeting_variables]
 
     # Validate input parameters
     unless valid_string?(campaign_key) && valid_string?(user_id) && (custom_variables.nil? || valid_hash?(custom_variables)) &&
@@ -579,9 +584,10 @@ class VWO
       return false
     end
 
-    revenue_value = options['revenue_value'] || options[:revenue_value]
-    custom_variables = options['custom_variables'] || options[:custom_variables]
-    variation_targeting_variables = options['variation_targeting_variables'] || options[:variation_targeting_variables]
+    options = convert_to_symbol_hash(options)
+    revenue_value = options[:revenue_value]
+    custom_variables = options[:custom_variables]
+    variation_targeting_variables = options[:variation_targeting_variables]
     should_track_returning_user = get_should_track_returning_user(options)
     goal_type_to_track = get_goal_type_to_track(options)
 
@@ -799,9 +805,10 @@ class VWO
       return false
     end
 
+    options = convert_to_symbol_hash(options)
     # Retrieve custom variables
-    custom_variables = options['custom_variables'] || options[:custom_variables]
-    variation_targeting_variables = options['variation_targeting_variables'] || options[:variation_targeting_variables]
+    custom_variables = options[:custom_variables]
+    variation_targeting_variables = options[:variation_targeting_variables]
     should_track_returning_user = get_should_track_returning_user(options)
     @logger.log(
       LogLevelEnum::INFO,
@@ -993,9 +1000,10 @@ class VWO
       return
     end
 
+    options = convert_to_symbol_hash(options)
     # Retrieve custom variables
-    custom_variables = options['custom_variables'] || options[:custom_variables]
-    variation_targeting_variables = options['variation_targeting_variables'] || options[:variation_targeting_variables]
+    custom_variables = options[:custom_variables]
+    variation_targeting_variables = options[:variation_targeting_variables]
 
     unless valid_string?(campaign_key) && valid_string?(variable_key) && valid_string?(user_id) &&
       (custom_variables.nil? || valid_hash?(custom_variables)) && (variation_targeting_variables.nil? || valid_hash?(variation_targeting_variables))

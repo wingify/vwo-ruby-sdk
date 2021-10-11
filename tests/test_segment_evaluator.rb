@@ -15,12 +15,15 @@
 require 'test/unit'
 require 'json'
 require_relative '../lib/vwo/services/segment_evaluator'
+require_relative '../lib/vwo/utils/utility'
 
 SEGMENT_EXPECTATIONS = JSON.load(File.open(File.join(File.dirname(__FILE__), 'data/segment_expectations.json')))
 
 class SegmentEvaluatorTest < Test::Unit::TestCase
+  include VWO::Utils::Utility
   def test_segmentation_expectations
-    SEGMENT_EXPECTATIONS.each do |_test_group_key, test_group_value|
+    segment_expectations = convert_to_symbol_hash(SEGMENT_EXPECTATIONS)
+    segment_expectations.each do |_test_group_key, test_group_value|
       test_group_value.each do |_test_case_key, test_case_value|
         custom_variables = test_case_value['custom_variables'] || test_case_value['variation_targeting_variables']
         dsl = test_case_value['dsl']

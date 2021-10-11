@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.23.0] - 2021-10-11
+
+### Changed
+
+- Added support for passing hash with keys as Symbol/String in different APIs
+
+  ```ruby
+  # keys as Symbol
+  {
+    test: "some value",
+    num:  123
+  }
+
+  # keys as String
+  {
+    "test" => "some value",
+    "num"  =>  123
+  }
+  ```
+
 ## [1.22.1] - 2021-09-02
 
 ### Changed
