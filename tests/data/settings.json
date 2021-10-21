@@ -1853,5 +1853,64 @@
     ],
     "accountId": 123456,
     "version": 2
+  },
+
+  "FR_T_100_W_100_WHITELISTING": {
+    "sdkKey": "someuniquestuff1234567",
+    "campaigns": [
+      {
+        "goals": [],
+        "variations": [
+          {
+            "id": "1",
+            "name": "Feature-Rollout",
+            "weight": 100,
+            "segments": {
+                "or": [
+                  {
+                    "custom_variable": {
+                        "chrome": "false"
+                    }
+                  }
+                ]
+              }
+          }
+        ],
+        "variables": [
+          {
+            "id": 1,
+            "key": "STRING_VARIABLE",
+            "type": "string",
+            "value": "this_is_a_string"
+          },
+          {
+            "id": 2,
+            "key": "INTEGER_VARIABLE",
+            "type": "integer",
+            "value": 123
+          },
+          {
+            "id": 1,
+            "key": "FLOAT_VARIABLE",
+            "type": "double",
+            "value": 123.456
+          },
+          {
+            "id": 2,
+            "key": "BOOLEAN_VARIABLE",
+            "type": "boolean",
+            "value": true
+          }
+        ],
+        "id": 29,
+        "percentTraffic": 100,
+        "key": "FR_T_100_W_100_WHITELISTING",
+        "status": "RUNNING",
+        "type": "FEATURE_ROLLOUT",
+        "isForcedVariationEnabled":true
+      }
+    ],
+    "accountId": 123456,
+    "version": 2
   }
 }

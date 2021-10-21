@@ -106,7 +106,7 @@ class VWO
         IMPRESSION_FOR_TRACK_USER = '(%<file>s): Impression built for track-user - %<properties>s'
         IMPRESSION_FOR_TRACK_GOAL = '(%<file>s): Impression built for track-goal - %<properties>s'
         GOT_VARIATION_FOR_USER = '(%<file>s): userId:%<user_id>s for campaign:%<campaign_key>s got variationName:%<variation_name>s'
-        SEGMENTATION_STATUS = '(%<file>s): In API: %<api_name>s, for UserId:%<user_id>s of campaign:%<campaign_key>s  with variables:%<custom_variables>s %<status>s %<segmentation_type>s for %<variation_name>s'
+        SEGMENTATION_STATUS = '(%<file>s): In API: %<api_name>s, for UserId:%<user_id>s of campaign:%<campaign_key>s  with variables:%<custom_variables>s %<status>s %<segmentation_type>s %<variation_name>s'
         PARAMS_FOR_PUSH_CALL = '(%<file>s): Params for push call - %<properties>s'
         CAMPAIGN_NOT_ACTIVATED = '(%<file>s): Campaign:%<campaign_key>s for User ID:%<user_id>s is not yet activated for API:%<api_name>s. Use activate API to activate A/B test or isFeatureEnabled API to activate Feature Test.'
         BATCH_EVENT_LIMIT_EXCEEDED = '(%<file>s): Impression event - %<end_point>s failed due to exceeding payload size. Parameter eventsPerRequest in batchEvents config in launch API has value:%<eventsPerRequest>s for accountId:%<accountId>s. Please read the official documentation for knowing the size limits.'
@@ -143,7 +143,7 @@ class VWO
         USER_PASSED_SEGMENTATION = '(%<file>s): UserId:%<user_id>s of campaign:%<campaign_key>s with custom_variables:%<custom_variables>s passed segmentation'
         USER_FAILED_SEGMENTATION = '(%<file>s): UserId:%<user_id>s of campaign:%<campaign_key>s with custom_variables:%<custom_variables>s failed segmentation'
 
-        NO_CUSTOM_VARIABLES = '(%<file>s): In API: %<api_name>s, for UserId:%<user_id>s preSegments/customVariables are not passed for campaign:%<campaign_key>s and campaign has pre-segmentation'
+        NO_CUSTOM_VARIABLES = '(%<file>s): In API: %<api_name>s, for UserId:%<user_id>s customVariables are not passed for campaign:%<campaign_key>s and campaign has pre-segmentation'
         SKIPPING_SEGMENTATION = '(%<file>s): In API: %<api_name>s, Skipping segmentation:%<variation>s for UserId:%<user_id>s as no valid segments found in campaign:%<campaign_key>s'
 
         SEGMENTATION_STATUS = '(%<file>s): In API: %<api_name>s, for UserId:%<user_id>s of campaign:%<campaign_key>s  with variables:%<custom_variables>s %<status>s %<segmentation_type>s %<variation_name>s'

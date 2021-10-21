@@ -1571,4 +1571,78 @@ class VWOTest < Test::Unit::TestCase
         assert_equal(vwo_instance.activate("AB_T_50_W_50_50", "Ashley", {}), "Variation-1")
         assert_equal(vwo_instance.track("AB_T_50_W_50_50", "Ashley", 'CUSTOM')["AB_T_50_W_50_50"], true)
     end
+
+    def test_fr_whitelisting
+      campaign_key = 'FR_T_100_W_100_WHITELISTING'
+      vwo_instance = VWO.new(1, 'someuniquestuff1234567', nil, nil, true, JSON.generate(SETTINGS_FILE['FR_T_100_W_100_WHITELISTING']))
+      options = {
+          variation_targeting_variables: {
+              "chrome" => "false"
+          }
+      }
+
+      boolean_variable = USER_EXPECTATIONS['ROLLOUT_VARIABLES']['BOOLEAN_VARIABLE']
+      USER_EXPECTATIONS[campaign_key].each do |test|
+        is_feature_enabled = vwo_instance.feature_enabled?(campaign_key, test['user'], options)
+        assert_equal(is_feature_enabled, true)
+        result = vwo_instance.get_feature_variable_value(campaign_key, 'BOOLEAN_VARIABLE', test['user'], options)
+        assert_equal(result, boolean_variable)
+      end
+    end
+
+    def test_fr_whitelisting_passed_when_Traffic_zero
+      campaign_key = 'FR_T_100_W_100_WHITELISTING'
+      vwo_instance = VWO.new(1, 'someuniquestuff1234567', nil, nil, true, JSON.generate(SETTINGS_FILE['FR_T_100_W_100_WHITELISTING']))
+      vwo_instance.get_settings['campaigns'][0]['percentTraffic'] = 0
+      options = {
+          variation_targeting_variables: {
+              "chrome" => "false"
+          }
+      }
+
+      boolean_variable = USER_EXPECTATIONS['ROLLOUT_VARIABLES']['BOOLEAN_VARIABLE']
+      USER_EXPECTATIONS[campaign_key].each do |test|
+        is_feature_enabled = vwo_instance.feature_enabled?(campaign_key, test['user'], options)
+        assert_equal(is_feature_enabled, true)
+        result = vwo_instance.get_feature_variable_value(campaign_key, 'BOOLEAN_VARIABLE', test['user'], options)
+        assert_equal(result, boolean_variable)
+      end
+    end
+
+    def test_fr_whitelisting_not_passed
+      campaign_key = 'FR_T_100_W_100_WHITELISTING'
+      vwo_instance = VWO.new(1, 'someuniquestuff1234567', nil, nil, true, JSON.generate(SETTINGS_FILE['FR_T_100_W_100_WHITELISTING']))
+      options = {
+          variation_targeting_variables: {
+              "chrome" => "true"
+          }
+      }
+
+      boolean_variable = USER_EXPECTATIONS['ROLLOUT_VARIABLES']['BOOLEAN_VARIABLE']
+      USER_EXPECTATIONS[campaign_key].each do |test|
+        is_feature_enabled = vwo_instance.feature_enabled?(campaign_key, test['user'], options)
+        assert_equal(is_feature_enabled, true)
+        result = vwo_instance.get_feature_variable_value(campaign_key, 'BOOLEAN_VARIABLE', test['user'], options)
+        assert_equal(result, boolean_variable)
+      end
+    end
+
+    def test_fr_whitelisting_not_passed_and_Traffic_10
+      campaign_key = 'FR_T_100_W_100_WHITELISTING'
+      vwo_instance = VWO.new(1, 'someuniquestuff1234567', nil, nil, true, JSON.generate(SETTINGS_FILE['FR_T_100_W_100_WHITELISTING']))
+      vwo_instance.get_settings['campaigns'][0]['percentTraffic'] = 10
+      options = {
+          variation_targeting_variables: {
+              "chrome" => "true"
+          }
+      }
+
+      boolean_variable = USER_EXPECTATIONS['ROLLOUT_VARIABLES']['BOOLEAN_VARIABLE']
+      USER_EXPECTATIONS['FR_T_10_W_100_WHITELISTING_FAIL'].each do |test|
+        is_feature_enabled = vwo_instance.feature_enabled?(campaign_key, test['user'], options)
+        assert_equal(is_feature_enabled, test['is_feature_enabled'])
+        result = vwo_instance.get_feature_variable_value(campaign_key, 'BOOLEAN_VARIABLE', test['user'], options)
+        assert_equal(result, test["boolean_variable_value"])
+      end
+    end
 end

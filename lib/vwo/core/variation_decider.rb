@@ -485,7 +485,7 @@ class VWO
                 user_id: user_id,
                 status: status,
                 custom_variables: variation_targeting_variables,
-                variation_name: variation['name'],
+                variation_name: status == StatusEnum::PASSED ? (campaign['type'] == CampaignTypes::FEATURE_ROLLOUT ? 'and hence becomes part of the rollout' : "for " + variation['name']) : '',
                 segmentation_type: SegmentationTypeEnum::WHITELISTING,
                 api_name: api_name
               ),
@@ -865,8 +865,8 @@ class VWO
               campaign_key: campaign_key,
               user_id: user_id,
               status: status,
-              custom_variables: variation_targeting_variables,
-              variation_name: status == StatusEnum::PASSED ? "and #{variation['name']} is Assigned" : ' ',
+              custom_variables: variation_targeting_variables ? variation_targeting_variables : {},
+              variation_name: (status == StatusEnum::PASSED && campaign['type'] != CampaignTypes::FEATURE_ROLLOUT) ? "and #{variation['name']} is Assigned" : ' ',
               segmentation_type: SegmentationTypeEnum::WHITELISTING,
               api_name: api_name
             ),
@@ -879,10 +879,9 @@ class VWO
               decision[:variation_id] = variation['id']
               if campaign['type'] == CampaignTypes::FEATURE_TEST
                 decision[:is_feature_enabled] = variation['isFeatureEnabled']
-              elsif campaign['type'] == CampaignTypes::VISUAL_AB
-                decision[:is_user_whitelisted] = !!variation['name']
               end
             end
+            decision[:is_user_whitelisted] = true
             @hooks_manager.execute(decision)
           end
 
