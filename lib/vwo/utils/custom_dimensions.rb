@@ -17,6 +17,7 @@ require_relative '../logger'
 require_relative '../enums'
 require_relative '../constants'
 require_relative './impression'
+require_relative './utility'
 
 # Utility module for helper math and random functions
 class VWO
@@ -25,6 +26,7 @@ class VWO
       include VWO::CONSTANTS
       include VWO::Enums
       include VWO::Utils::Impression
+      include VWO::Utils::Utility
 
       def get_url_params(settings_file, tag_key, tag_value, user_id, sdk_key)
         url = HTTPS_PROTOCOL + ENDPOINTS::BASE_URL + ENDPOINTS::PUSH
@@ -39,7 +41,7 @@ class VWO
           format(
             LogMessageEnum::DebugMessages::PARAMS_FOR_PUSH_CALL,
             file: FileNameEnum::CustomDimensionsUtil,
-            properties: JSON.generate(params)
+            properties: remove_sensitive_properties(params)
           )
         )
         params

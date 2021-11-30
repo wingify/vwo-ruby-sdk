@@ -95,6 +95,10 @@ class VWO
           :vwo_user_id => generator_for(user_id, @settings_file['accountId'])
         }
 
+        if campaign.has_key?("name")
+          decision[:campaign_name] = campaign['name']
+        end
+
         if is_campaign_part_of_group
           group_id = @settings_file["campaignGroups"][campaign["id"].to_s]
           decision[:group_id] = group_id

@@ -408,7 +408,6 @@ class VWO
             format(
               LogMessageEnum::InfoMessages::IMPRESSION_SUCCESS,
               file: FILE,
-              sdk_key: @sdk_key,
               account_id: @account_id,
               campaign_id: campaign['id'],
               variation_id: variation['id'],
@@ -725,7 +724,6 @@ class VWO
                 format(
                   LogMessageEnum::InfoMessages::IMPRESSION_SUCCESS,
                   file: FILE,
-                  sdk_key: @sdk_key,
                   account_id: @account_id,
                   campaign_id: campaign['id'],
                   variation_id: variation['id'],
@@ -737,7 +735,6 @@ class VWO
                 format(
                   LogMessageEnum::InfoMessages::MAIN_KEYS_FOR_IMPRESSION,
                   file: FILE,
-                  sdk_key: @sdk_key,
                   campaign_id: impression[:experiment_id],
                   account_id: impression[:account_id],
                   variation_id: impression[:combination]
@@ -905,7 +902,6 @@ class VWO
             LogMessageEnum::InfoMessages::MAIN_KEYS_FOR_IMPRESSION,
             file: FILE,
             campaign_id: impression[:experiment_id],
-            sdk_key: @sdk_key,
             account_id: impression[:account_id],
             variation_id: impression[:combination]
           )
@@ -1206,7 +1202,6 @@ class VWO
         format(
           LogMessageEnum::InfoMessages::MAIN_KEYS_FOR_PUSH_API,
           file: FILE,
-          sdk_key: @sdk_key,
           u: impression['u'],
           account_id: impression['account_id'],
           tags: impression['tags']

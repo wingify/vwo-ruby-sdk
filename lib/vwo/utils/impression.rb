@@ -19,6 +19,7 @@ require_relative '../enums'
 require_relative '../constants'
 require_relative 'function'
 require_relative 'uuid'
+require_relative 'utility'
 
 # Creates the impression from the arguments passed
 class VWO
@@ -28,6 +29,7 @@ class VWO
       include VWO::CONSTANTS
       include VWO::Utils::Function
       include UUID
+      include VWO::Utils::Utility
 
       # Creates the impression from the arguments passed
       #
@@ -76,7 +78,7 @@ class VWO
             format(
               LogMessageEnum::DebugMessages::IMPRESSION_FOR_TRACK_USER,
               file: FileNameEnum::ImpressionUtil,
-              properties: JSON.generate(impression)
+              properties: remove_sensitive_properties(impression)
             )
           )
         else
@@ -88,7 +90,7 @@ class VWO
             format(
               LogMessageEnum::DebugMessages::IMPRESSION_FOR_TRACK_GOAL,
               file: FileNameEnum::ImpressionUtil,
-              properties: JSON.generate(impression)
+              properties: remove_sensitive_properties(impression)
             )
           )
         end

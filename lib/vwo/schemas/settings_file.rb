@@ -73,6 +73,9 @@ class VWO
             key: {
               type: ['string']
             },
+            name: {
+              type: ['string']
+            },
             status: {
               type: ['string']
             },

@@ -78,7 +78,9 @@ class VWO
           i: @sdk_key,
           r: get_random_number,
           platform: 'server',
-          'api-version' => 1
+          'api-version' => 1,
+          'sdk-v' => VWO::CONSTANTS::SDK_VERSION,
+          'sdk' => VWO::CONSTANTS::SDK_NAME
         }
       end
     end

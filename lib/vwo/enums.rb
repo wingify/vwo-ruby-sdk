@@ -128,9 +128,9 @@ class VWO
         AUDIENCE_CONDITION_NOT_MET = '(%<file>s): userId:%<user_id>s does not become part of campaign because of not meeting audience conditions'
         GOT_VARIATION_FOR_USER = '(%<file>s): userId:%<user_id>s for campaign:%<campaign_key>s got variationName:%<variation_name>s'
         USER_GOT_NO_VARIATION = '(%<file>s): userId:%<user_id>s for campaign:%<campaign_key>s did not allot any variation'
-        IMPRESSION_SUCCESS = '(%<file>s): Impression event - %<end_point>s was successfully received by VWO having main keys: sdkKey:%<sdk_key>s accountId:%<account_id>s campaignId:%<campaign_id>s and variationId:%<variation_id>s'
-        MAIN_KEYS_FOR_IMPRESSION = '(%<file>s): Having main keys: {sdkKey:%<sdk_key>s accountId:%<account_id>s campaignId:%<campaign_id>s and variationId:%<variation_id>s}'
-        MAIN_KEYS_FOR_PUSH_API = '(%<file>s): Having main keys: {sdkKey:%<sdk_key>s accountId:%<account_id>s u:%<u>s and tags:%<tags>s}'
+        IMPRESSION_SUCCESS = '(%<file>s): Impression event - %<end_point>s was successfully received by VWO having main keys: accountId:%<account_id>s campaignId:%<campaign_id>s and variationId:%<variation_id>s'
+        MAIN_KEYS_FOR_IMPRESSION = '(%<file>s): Having main keys: accountId:%<account_id>s campaignId:%<campaign_id>s and variationId:%<variation_id>s}'
+        MAIN_KEYS_FOR_PUSH_API = '(%<file>s): Having main keys: accountId:%<account_id>s u:%<u>s and tags:%<tags>s}'
         INVALID_VARIATION_KEY = '(%<file>s): Variation was not assigned to userId:%<user_id>s for campaign:%<campaign_key>s'
 
         USER_IN_FEATURE_ROLLOUT = '(%<file>s): User ID:%<user_id>s is in feature rollout:%<campaign_key>s'

@@ -35,6 +35,12 @@ class VWO
                 end
                 convertedHash
             end
+
+            def remove_sensitive_properties(properties)
+                properties.delete("env")
+                properties.delete("env".to_sym)
+                JSON.generate(properties)
+            end
         end
     end
 end
