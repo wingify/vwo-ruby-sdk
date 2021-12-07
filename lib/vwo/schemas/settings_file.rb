@@ -95,6 +95,7 @@ class VWO
               }
             },
             isBucketingSeedEnabled: ['boolean'],
+            isUserListEnabled: ['boolean'],
             minItems: 2
           }
         },

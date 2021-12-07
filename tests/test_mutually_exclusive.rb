@@ -321,8 +321,6 @@ class MutuallyExclusiveTest < Test::Unit::TestCase
         }
         user_storage = CustomUserStorage.new
         user_storage.set(variationInfo)
-        File.write('lib/abc.txt', user_storage.get('Ashley', campaign_key), mode: 'a')
-        File.write('lib/abc.txt', "\nGOT_ELIGIBLE_CAMPAIGNS\n", mode: 'a')
         vwo_instance = VWO.new(1, 'someuniquestuff1234567', nil, user_storage, true, JSON.generate(MEG_SETTINGS_FILE))
         # user is already a part of a campaign
         variation = vwo_instance.activate(campaign_key, 'Ashley')

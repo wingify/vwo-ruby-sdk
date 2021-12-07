@@ -1645,4 +1645,16 @@ class VWOTest < Test::Unit::TestCase
         assert_equal(result, test["boolean_variable_value"])
       end
     end
+
+    def test_get_variation_as_user_hash_passes_whitelisting
+      vwo_instance = VWO.new(1, 'someuniquestuff1234567', nil, nil, true, JSON.generate(SETTINGS_FILE['AB_T_100_W_25_25_25_25']))
+
+      vwo_instance.get_settings['campaigns'][0]['isUserListEnabled'] = true
+      vwo_instance.get_settings['campaigns'][0]['variations'][1]['segments'] = {
+        "or" => [
+            "user" => "78A6CEDE959A518491D7DCEDC0A01686"
+        ]
+      }
+      assert_equal(vwo_instance.get_variation_name('AB_T_100_W_25_25_25_25', 'Rohit'), 'Variation-1')
+    end
 end
