@@ -201,7 +201,6 @@ class VWO
         TAG_KEY_LENGTH_EXCEEDED = '(%<file>s): In API: %<api_name>s, the length of tag_key:%<tag_key>s and userID: %<user_id>s can not be greater than 255'
         TRACK_API_MISSING_PARAMS = '(%<file>s): "track" API got bad parameters. It expects campaignKey(null/String/array) as first, userId(String/Number) as second and goalIdentifier (string) as third argument. options is revenueValue(Float/Number/String) and is required for revenue goal only.'
         NO_CAMPAIGN_FOUND = '(%<file>s): No campaign found for goal_identifier:%<goal_identifier>s. Please verify from VWO app.'
-        INVALID_TRACK_RETURNING_USER_VALUE  = '(%<file>s): should_track_returning_user should be boolean'
         INVALID_GOAL_TYPE = '(%<file>s): goal_type_to_track should be certain strings'
         EVENT_BATCHING_NOT_OBJECT = '(%<file>s): Batch events settings are not of type object.'
         EVENTS_PER_REQUEST_INVALID = '(%<file>s): events_per_request should be an integer'

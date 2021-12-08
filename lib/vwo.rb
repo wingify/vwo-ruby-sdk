@@ -89,25 +89,6 @@ class VWO
       return
     end
 
-    if options.key?(:should_track_returning_user)
-      if [true, false].include? options[:should_track_returning_user]
-        @should_track_returning_user = options[:should_track_returning_user]
-        usage_stats[:tr] = 1 if @should_track_returning_user
-      else
-        @logger.log(
-          LogLevelEnum::ERROR,
-          format(
-            LogMessageEnum::ErrorMessages::INVALID_TRACK_RETURNING_USER_VALUE,
-            file: FILE
-          )
-        )
-        @is_instance_valid = false
-        return
-      end
-    else
-      @should_track_returning_user = false
-    end
-
     if options.key?(:goal_type_to_track)
       if GOAL_TYPES.key? options[:goal_type_to_track]
         @goal_type_to_track = options[:goal_type_to_track]
@@ -303,10 +284,9 @@ class VWO
     custom_variables = options[:custom_variables]
     variation_targeting_variables = options[:variation_targeting_variables]
 
-    should_track_returning_user = get_should_track_returning_user(options)
     # Validate input parameters
     unless valid_string?(campaign_key) && valid_string?(user_id) && (custom_variables.nil? || valid_hash?(custom_variables)) &&
-      (variation_targeting_variables.nil? || valid_hash?(variation_targeting_variables)) && [true, false].include?(should_track_returning_user)
+      (variation_targeting_variables.nil? || valid_hash?(variation_targeting_variables))
       @logger.log(
         LogLevelEnum::ERROR,
         format(
@@ -381,7 +361,7 @@ class VWO
       return
     end
 
-    if is_eligible_to_send_impression(should_track_returning_user)
+    if is_eligible_to_send_impression()
       if defined?(@batch_events)
         impression = create_bulk_event_impression(
           @settings_file,
@@ -587,12 +567,11 @@ class VWO
     revenue_value = options[:revenue_value]
     custom_variables = options[:custom_variables]
     variation_targeting_variables = options[:variation_targeting_variables]
-    should_track_returning_user = get_should_track_returning_user(options)
     goal_type_to_track = get_goal_type_to_track(options)
 
     # Check for valid args
     unless (valid_string?(campaign_key) || campaign_key.is_a?(Array) || campaign_key.nil?) && valid_string?(user_id) && valid_string?(goal_identifier) && (custom_variables.nil? || valid_hash?(custom_variables)) &&
-      (variation_targeting_variables.nil? || valid_hash?(variation_targeting_variables)) && [true, false].include?(should_track_returning_user) && (GOAL_TYPES.key? (goal_type_to_track))
+      (variation_targeting_variables.nil? || valid_hash?(variation_targeting_variables)) && (GOAL_TYPES.key? (goal_type_to_track))
       # log invalid params
       @logger.log(
         LogLevelEnum::ERROR,
@@ -682,7 +661,7 @@ class VWO
             updated_goal_identifier += VWO_DELIMITER + goal_identifier
             @variation_decider.save_user_storage(user_id, campaign['key'], campaign['name'], variation['name'], updated_goal_identifier) if variation['name']
             # set variation at user storage
-          elsif !should_track_returning_user
+          else
             @logger.log(
               LogLevelEnum::INFO,
               format(
@@ -806,7 +785,6 @@ class VWO
     # Retrieve custom variables
     custom_variables = options[:custom_variables]
     variation_targeting_variables = options[:variation_targeting_variables]
-    should_track_returning_user = get_should_track_returning_user(options)
     @logger.log(
       LogLevelEnum::INFO,
       format(
@@ -818,7 +796,7 @@ class VWO
     )
     # Validate input parameters
     unless valid_string?(campaign_key) && valid_string?(user_id) && (custom_variables.nil? || valid_hash?(custom_variables)) &&
-      (variation_targeting_variables.nil? || valid_hash?(variation_targeting_variables)) && [true, false].include?(should_track_returning_user)
+      (variation_targeting_variables.nil? || valid_hash?(variation_targeting_variables))
       @logger.log(
         LogLevelEnum::ERROR,
         format(
@@ -874,7 +852,7 @@ class VWO
 
     # if campaign type is feature_test Send track call to server
 
-    if is_eligible_to_send_impression(should_track_returning_user)
+    if is_eligible_to_send_impression()
       if defined?(@batch_events)
         impression = create_bulk_event_impression(
           @settings_file,
@@ -1222,23 +1200,8 @@ class VWO
     false
   end
 
-  def get_should_track_returning_user(options)
-    if !options.key?(:should_track_returning_user)
-      options[:should_track_returning_user] = @should_track_returning_user
-    elsif ![true, false].include?(options[:should_track_returning_user])
-      @logger.log(
-        LogLevelEnum::ERROR,
-        format(
-          LogMessageEnum::ErrorMessages::INVALID_TRACK_RETURNING_USER_VALUE,
-          file: FILE
-        )
-      )
-    end
-    options[:should_track_returning_user]
-  end
-
-  def is_eligible_to_send_impression(should_track_returning_user = false)
-    !@user_storage || !@variation_decider.has_stored_variation || should_track_returning_user
+  def is_eligible_to_send_impression()
+    !@user_storage || !@variation_decider.has_stored_variation
   end
 
   def flush_events

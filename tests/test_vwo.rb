@@ -1036,111 +1036,9 @@ class VWOTest < Test::Unit::TestCase
     assert_equal(old_settings, latest_settings)
   end
 
-    def initialize_vwo_with_should_track_returning_user_true
-      return VWO.new(88888888, 'someuniquestuff1234567', nil, nil, true, JSON.generate(SETTINGS_FILE['AB_T_50_W_50_50']), {should_track_returning_user: true})
-    end
-
-    def test_activate_without_should_track_returning_user
-      vwo_instance = initialize_vwo_with_should_track_returning_user_true
-      assert_equal(vwo_instance.activate("AB_T_50_W_50_50", "Ashley"), "Variation-1")
-    end
-
-    def test_activate_with_should_track_returning_user_true
-      vwo_instance = initialize_vwo_with_should_track_returning_user_true
-      assert_equal(vwo_instance.activate("AB_T_50_W_50_50", "Ashley", {should_track_returning_user: true}), "Variation-1")
-    end
-
-    def test_activate_with_should_track_returning_user_false
-      vwo_instance = initialize_vwo_with_should_track_returning_user_true
-      assert_equal(vwo_instance.activate("AB_T_50_W_50_50", "Ashley", {should_track_returning_user: false}), "Variation-1")
-    end
-
-    def test_activate_with_should_track_returning_user_invalid
-      vwo_instance = initialize_vwo_with_should_track_returning_user_true
-      assert_equal(vwo_instance.activate("AB_T_50_W_50_50", "Ashley", {should_track_returning_user: 123}), nil)
-    end
-
-    def initialize_vwo_with_should_track_returning_user_false
-      return VWO.new(88888888, 'someuniquestuff1234567', nil, nil, true, JSON.generate(SETTINGS_FILE['AB_T_50_W_50_50']), {should_track_returning_user: false})
-    end
-
-    def test_activate_track_returning_user_false_in_vwo_instance
-      vwo_instance = initialize_vwo_with_should_track_returning_user_false
-      assert_equal(vwo_instance.activate("AB_T_50_W_50_50", "Ashley"), "Variation-1")
-    end
-
-    def test_activate_track_returning_user_false_in_vwo_instance_true_as_param
-      vwo_instance = initialize_vwo_with_should_track_returning_user_false
-      assert_equal(vwo_instance.activate("AB_T_50_W_50_50", "Ashley", {should_track_returning_user: true}), "Variation-1")
-    end
-
-    def test_activate_track_returning_user_false_in_vwo_instance_false_as_param
-      vwo_instance = initialize_vwo_with_should_track_returning_user_false
-      assert_equal(vwo_instance.activate("AB_T_50_W_50_50", "Ashley", {should_track_returning_user: false}), "Variation-1")
-    end
-
-    def test_activate_track_returning_user_false_in_vwo_instance_invalid_as_param
-      vwo_instance = initialize_vwo_with_should_track_returning_user_false
-      assert_equal(vwo_instance.activate("AB_T_50_W_50_50", "Ashley", {should_track_returning_user: 123}), nil)
-    end
-
-    def initialize_vwo_with_should_track_returning_user_invalid
-      return VWO.new(88888888, 'someuniquestuff1234567', nil, nil, true, JSON.generate(SETTINGS_FILE['AB_T_50_W_50_50']), {should_track_returning_user: 123})
-    end
-
-    def test_activate_track_returning_user_invalid_in_vwo_instance_true_as_param
-      vwo_instance = initialize_vwo_with_should_track_returning_user_invalid
-      assert_equal(vwo_instance.activate("AB_T_50_W_50_50", "Ashley", {should_track_returning_user: true}), nil)
-    end
-
-    def test_activate_for_already_track_user
-      vwo_instance = initialize_vwo_with_should_track_returning_user_false
-      vwo_instance.stubs(:is_eligible_to_send_impression).returns(false)
-      assert_equal(vwo_instance.activate("AB_T_50_W_50_50", "Ashley", {should_track_returning_user: false}), 'Variation-1')
-    end
-
-    def test_track_without_should_track_returning_user
-      vwo_instance = initialize_vwo_with_should_track_returning_user_true
-      assert_equal(vwo_instance.track("AB_T_50_W_50_50", "Ashley", 'CUSTOM')["AB_T_50_W_50_50"], true)
-    end
-
-    def test_track_with_should_track_returning_user_true
-      vwo_instance = initialize_vwo_with_should_track_returning_user_true
-      assert_equal(vwo_instance.track("AB_T_50_W_50_50", "Ashley", 'CUSTOM', {should_track_returning_user: true}), {"AB_T_50_W_50_50" => true})
-    end
-
-    def test_track_with_should_track_returning_user_false
-      vwo_instance = initialize_vwo_with_should_track_returning_user_true
-      assert_equal(vwo_instance.track("AB_T_50_W_50_50", "Ashley", 'CUSTOM',{should_track_returning_user: false}), {"AB_T_50_W_50_50" => true})
-    end
-
-    def test_track_with_should_track_returning_user_invalid
-      vwo_instance = initialize_vwo_with_should_track_returning_user_true
-      assert_equal(vwo_instance.track("AB_T_50_W_50_50", "Ashley", 'CUSTOM',{should_track_returning_user: 123}), false)
-    end
-
-    def test_track_track_returning_user_false_in_vwo_instance
-      vwo_instance = initialize_vwo_with_should_track_returning_user_false
-      assert_equal(vwo_instance.track("AB_T_50_W_50_50", "Ashley", 'CUSTOM'), { "AB_T_50_W_50_50" => true})
-    end
-
-    def test_track_track_returning_user_false_in_vwo_instance_true_as_param
-      vwo_instance = initialize_vwo_with_should_track_returning_user_false
-      assert_equal(vwo_instance.track("AB_T_50_W_50_50", "Ashley", 'CUSTOM', {should_track_returning_user: true}), { "AB_T_50_W_50_50" => true})
-    end
-
-    def test_track_track_returning_user_false_in_vwo_instance_false_as_param
-      vwo_instance = initialize_vwo_with_should_track_returning_user_false
-      assert_equal(vwo_instance.track("AB_T_50_W_50_50", "Ashley", 'CUSTOM', {should_track_returning_user: false}), { "AB_T_50_W_50_50" => true})
-    end
-
-    def test_track_track_returning_user_false_in_vwo_instance_invalid_as_param
-      vwo_instance = initialize_vwo_with_should_track_returning_user_false
-      assert_equal(vwo_instance.track("AB_T_50_W_50_50", "Ashley", 'CUSTOM', {should_track_returning_user: 123}), false)
-    end
 
     def test_track_for_already_track_user
-      vwo_instance = initialize_vwo_with_should_track_returning_user_false
+      vwo_instance = VWO.new(88888888, 'someuniquestuff1234567', nil, nil, true, JSON.generate(SETTINGS_FILE['AB_T_50_W_50_50']))
       vwo_instance.stubs(:is_eligible_to_send_impression).returns(false)
       variation_data = Hash.new
       variation_data["id"] = 2
@@ -1149,13 +1047,13 @@ class VWOTest < Test::Unit::TestCase
       variation_decider = mock()
       variation_decider.stubs(:get_variation).returns(variation_data)
       vwo_instance.variation_decider = variation_decider
-      assert_equal(vwo_instance.track("AB_T_50_W_50_50", "Ashley", 'CUSTOM', {should_track_returning_user: false}), {"AB_T_50_W_50_50" => false})
+      assert_equal(vwo_instance.track("AB_T_50_W_50_50", "Ashley", 'CUSTOM'), {"AB_T_50_W_50_50" => false})
     end
 
     def test_feature_enabled_for_already_track_user
-      vwo_instance = VWO.new(123456, 'someuniquestuff1234567', nil, nil, true, JSON.generate(SETTINGS_FILE['FT_T_75_W_10_20_30_40']), {should_track_returning_user: false})
+      vwo_instance = VWO.new(123456, 'someuniquestuff1234567', nil, nil, true, JSON.generate(SETTINGS_FILE['FT_T_75_W_10_20_30_40']))
       vwo_instance.stubs(:is_eligible_to_send_impression).returns(false)
-      assert_equal(vwo_instance.feature_enabled?("FT_T_75_W_10_20_30_40", "Ashley", {should_track_returning_user: false}), true)
+      assert_equal(vwo_instance.feature_enabled?("FT_T_75_W_10_20_30_40", "Ashley"), true)
     end
 
 
@@ -1278,7 +1176,6 @@ class VWOTest < Test::Unit::TestCase
       end
       options = {
         log_level: Logger::DEBUG,
-        should_track_returning_user: true,
         integrations: {
           callback: method(:integrations_callback)
         }
@@ -1288,7 +1185,6 @@ class VWOTest < Test::Unit::TestCase
       assert_equal(1, additional_data[:ig])
       assert_equal(1, additional_data[:cl])
       assert_equal(1, additional_data[:ss])
-      assert_equal(1, additional_data[:tr])
       assert_equal(1, additional_data[:ll])
       assert_equal(nil, additional_data[:eb])
       assert_equal(1, additional_data[:_l])
@@ -1308,7 +1204,6 @@ class VWOTest < Test::Unit::TestCase
           "flushCallback" => method(:flush_callback)
         },
         "log_level": Logger::DEBUG,
-        "should_track_returning_user" => true,
         "integrations" => {
           "callback" => method(:integrations_callback)
         }
@@ -1318,7 +1213,6 @@ class VWOTest < Test::Unit::TestCase
       assert_equal(1, additional_data[:ig])
       assert_equal(1, additional_data[:cl])
       assert_equal(1, additional_data[:ss])
-      assert_equal(1, additional_data[:tr])
       assert_equal(1, additional_data[:ll])
       assert_equal(1, additional_data[:eb])
       assert_equal(1, additional_data[:_l])
@@ -1339,7 +1233,6 @@ class VWOTest < Test::Unit::TestCase
       assert_equal(1, additional_data[:ig])
       assert_equal(1, additional_data[:cl])
       assert_equal(nil, additional_data[:ss])
-      assert_equal(nil, additional_data[:tr])
       assert_equal(1, additional_data[:ll])
       assert_equal(nil, additional_data[:eb])
       assert_equal(1, additional_data[:_l])
@@ -1352,22 +1245,17 @@ class VWOTest < Test::Unit::TestCase
       assert_equal(nil, additional_data[:ig])
       assert_equal(nil, additional_data[:cl])
       assert_equal(1, additional_data[:ss])
-      assert_equal(nil, additional_data[:tr])
       assert_equal(nil, additional_data[:ll])
       assert_equal(nil, additional_data[:eb])
       assert_equal(1, additional_data[:_l])
     end
 
-    def test_additional_data_for_logging_and_should_track_returning_user
-      options = {
-        should_track_returning_user: true,
-      }
-      vwo_instance = VWO.new(88888888, 'someuniquestuff1234567', VWO::Logger.get_instance, nil, false, JSON.generate(SETTINGS_FILE['AB_T_50_W_50_50']), options)
+    def test_additional_data_for_logging
+      vwo_instance = VWO.new(88888888, 'someuniquestuff1234567', VWO::Logger.get_instance, nil, false, JSON.generate(SETTINGS_FILE['AB_T_50_W_50_50']))
       additional_data = vwo_instance.usage_stats.usage_stats
       assert_equal(nil, additional_data[:ig])
       assert_equal(1, additional_data[:cl])
       assert_equal(nil, additional_data[:ss])
-      assert_equal(1, additional_data[:tr])
       assert_equal(nil, additional_data[:ll])
       assert_equal(nil, additional_data[:eb])
       assert_equal(1, additional_data[:_l])
@@ -1387,7 +1275,6 @@ class VWOTest < Test::Unit::TestCase
       assert_equal(nil, additional_data[:ig])
       assert_equal(nil, additional_data[:cl])
       assert_equal(nil, additional_data[:ss])
-      assert_equal(nil, additional_data[:tr])
       assert_equal(nil, additional_data[:ll])
       assert_equal(1, additional_data[:eb])
       assert_equal(1, additional_data[:_l])
@@ -1547,7 +1434,6 @@ class VWOTest < Test::Unit::TestCase
         end
         options = {
             "log_level" => Logger::DEBUG,
-            "should_track_returning_user" => true,
             "integrations" => {
                 "callback" => method(:integrations_callback)
             }
@@ -1562,7 +1448,6 @@ class VWOTest < Test::Unit::TestCase
         end
         options = {
             log_level: Logger::DEBUG,
-            should_track_returning_user: true,
             integrations: {
                 callback: method(:integrations_callback)
             }
