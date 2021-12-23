@@ -1531,6 +1531,67 @@ class VWOTest < Test::Unit::TestCase
       end
     end
 
+    def test_activate_with_event_arch
+      set_up('AB_T_100_W_50_50')
+      @vwo.get_settings['isEventArchEnabled'] = true
+      USER_EXPECTATIONS[@campaign_key].each do |test|
+        assert_equal(@vwo.activate(@campaign_key, test['user']), test['variation'])
+      end
+    end
+
+    def test_feature_enabled_with_event_arch
+      set_up('FR_T_100_W_100')
+      @vwo.get_settings['isEventArchEnabled'] = true
+
+      USER_EXPECTATIONS['T_100_W_10_20_30_40'].each do |test|
+        assert_equal(@vwo.feature_enabled?('FR_T_100_W_100', test['user']), !test['variation'].nil?)
+      end
+    end
+
+    def test_track_with_event_arch
+      set_up('AB_T_100_W_50_50')
+      @vwo.get_settings['isEventArchEnabled'] = true
+      @vwo.get_settings['campaigns'][0]['goals'][0]['revenueProp'] = 'dummyRevenueProperty'
+      USER_EXPECTATIONS[@campaign_key].each do |test|
+        result = @vwo.track(@campaign_key, test['user'], @goal_identifier, {revenue_value: '23.3'})
+        assert_equal(result, {@campaign_key => !test['variation'].nil?})
+      end
+    end
+
+    def test_push_true_with_event_arch
+      vwo_instance = VWO.new(60781, 'ea87170ad94079aa190bc7c9b85d26fb', nil, nil, true, JSON.generate(SETTINGS_FILE['DUMMY_SETTINGS_FILE']), { log_level: Logger::DEBUG })
+      vwo_instance.get_settings['isEventArchEnabled'] = true
+      assert_equal(true, vwo_instance.push('browser', 'chrome', '12345'))
+    end
+
+    def test_push_int_value_false_with_event_arch
+      vwo_instance = VWO.new(60781, 'ea87170ad94079aa190bc7c9b85d26fb', nil, nil, true, JSON.generate(SETTINGS_FILE['DUMMY_SETTINGS_FILE']), { log_level: Logger::DEBUG })
+      vwo_instance.get_settings['isEventArchEnabled'] = true
+      assert_equal(false, vwo_instance.push('browser', 1, '12345'))
+    end
+
+    def test_push_true_with_two_arg_and_with_event_arch
+      vwo_instance = VWO.new(60781, 'ea87170ad94079aa190bc7c9b85d26fb', nil, nil, true, JSON.generate(SETTINGS_FILE['DUMMY_SETTINGS_FILE']), { log_level: Logger::DEBUG })
+      vwo_instance.get_settings['isEventArchEnabled'] = true
+      assert_equal(true, vwo_instance.push({'browser' => 'chrome'}, '12345'))
+    end
+
+    def test_push_true_with_two_arg
+      vwo_instance = VWO.new(60781, 'ea87170ad94079aa190bc7c9b85d26fb', nil, nil, true, JSON.generate(SETTINGS_FILE['DUMMY_SETTINGS_FILE']), { log_level: Logger::DEBUG })
+      assert_equal(true, vwo_instance.push({'browser' => 'chrome'}, '12345'))
+    end
+
+    def test_push_int_value_false_with_two_arg_and_with_event_arch
+      vwo_instance = VWO.new(60781, 'ea87170ad94079aa190bc7c9b85d26fb', nil, nil, true, JSON.generate(SETTINGS_FILE['DUMMY_SETTINGS_FILE']), { log_level: Logger::DEBUG })
+      vwo_instance.get_settings['isEventArchEnabled'] = true
+      assert_equal(false, vwo_instance.push({'browser' => 1}, '12345'))
+    end
+
+    def test_push_int_value_false_with_two_arg
+      vwo_instance = VWO.new(60781, 'ea87170ad94079aa190bc7c9b85d26fb', nil, nil, true, JSON.generate(SETTINGS_FILE['DUMMY_SETTINGS_FILE']), { log_level: Logger::DEBUG })
+      assert_equal(false, vwo_instance.push({'browser' => 1}, '12345'))
+    end
+
     def test_get_variation_as_user_hash_passes_whitelisting
       vwo_instance = VWO.new(1, 'someuniquestuff1234567', nil, nil, true, JSON.generate(SETTINGS_FILE['AB_T_100_W_25_25_25_25']))
 

@@ -15,11 +15,13 @@
 require_relative '../logger'
 require_relative '../enums'
 require_relative '../utils/request'
+require_relative '../constants'
 
 class VWO
   module Services
     class EventDispatcher
       include VWO::Enums
+      include VWO::CONSTANTS
 
       EXCLUDE_KEYS = ['url'].freeze
 
@@ -60,6 +62,38 @@ class VWO
         @logger.log(
           LogLevelEnum::ERROR,
           format(LogMessageEnum::ErrorMessages::IMPRESSION_FAILED, file: FileNameEnum::EventDispatcher, end_point: impression['url'])
+        )
+        false
+      end
+
+      def dispatch_event_arch_post(params, post_data)
+        return true if @is_development_mode
+
+        url = HTTPS_PROTOCOL + ENDPOINTS::BASE_URL + ENDPOINTS::EVENTS
+        resp = VWO::Utils::Request.event_post(url, params, post_data, SDK_NAME)
+        if resp.code == '200'
+          @logger.log(
+            LogLevelEnum::INFO,
+            format(
+              LogMessageEnum::InfoMessages::IMPRESSION_SUCCESS_FOR_EVENT_ARCH, 
+              file: FileNameEnum::EventDispatcher, 
+              event: 'visitor property:' + JSON.generate(post_data[:d][:visitor][:props]), 
+              url: url,
+              a: params[:a]
+            )
+          )
+          true
+        else
+          @logger.log(
+            LogLevelEnum::ERROR,
+            format(LogMessageEnum::ErrorMessages::IMPRESSION_FAILED, file: FileNameEnum::EventDispatcher, end_point: url)
+          )
+          false
+        end
+      rescue StandardError
+        @logger.log(
+          LogLevelEnum::ERROR,
+          format(LogMessageEnum::ErrorMessages::IMPRESSION_FAILED, file: FileNameEnum::EventDispatcher, end_point: url)
         )
         false
       end

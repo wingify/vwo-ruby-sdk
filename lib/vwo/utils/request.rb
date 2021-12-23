@@ -38,6 +38,20 @@ class VWO
         response = http.post(uri, post_data.to_json, headers)
         response
       end
+
+      def self.event_post(url, params, post_data, user_agent_value)
+        uri = URI.parse(url)
+        http = Net::HTTP.new(uri.host, uri.port)
+        http.use_ssl = true
+        uri.query = URI.encode_www_form(params)
+        headers = {
+          'User-Agent' => user_agent_value,
+          'Content-Type' =>'application/json',
+          'Accept'=>'application/json'
+        }
+        response = http.post(uri, post_data.to_json, headers)
+        response
+      end
     end
   end
 end

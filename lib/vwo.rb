@@ -370,6 +370,10 @@ class VWO
           user_id
         )
         @batch_events_queue.enqueue(impression)
+      elsif is_event_arch_enabled
+        properties = get_events_base_properties(@settings_file, EventEnum::VWO_VARIATION_SHOWN, @usage_stats.usage_stats)
+        payload = get_track_user_payload_data(@settings_file, user_id, EventEnum::VWO_VARIATION_SHOWN, campaign['id'], variation['id'])
+        @event_dispatcher.dispatch_event_arch_post(properties, payload)
       else
         # Variation found, dispatch it to server
         impression = create_impression(
@@ -592,6 +596,8 @@ class VWO
       return nil
     end
 
+    metric_map = {}
+    revenue_props = []
     result = {}
     campaigns.each do |campaign|
       begin
@@ -687,6 +693,11 @@ class VWO
               revenue_value
             )
             @batch_events_queue.enqueue(impression)
+          elsif  is_event_arch_enabled
+            metric_map[campaign['id']] = goal['id']
+            if goal['type'] == GoalTypes::REVENUE && !(revenue_props.include? goal['revenueProp'])
+              revenue_props << goal['revenueProp']
+            end
           else
             impression = create_impression(
               @settings_file,
@@ -735,6 +746,12 @@ class VWO
           )
         )
       end
+    end
+
+    if is_event_arch_enabled
+      properties = get_events_base_properties(@settings_file, goal_identifier)
+      payload = get_track_goal_payload_data(@settings_file, user_id, goal_identifier, revenue_value, metric_map, revenue_props)
+      @event_dispatcher.dispatch_event_arch_post(properties, payload)
     end
 
     if result.length() == 0
@@ -861,6 +878,10 @@ class VWO
           user_id
         )
         @batch_events_queue.enqueue(impression)
+      elsif is_event_arch_enabled
+        properties = get_events_base_properties(@settings_file, EventEnum::VWO_VARIATION_SHOWN, @usage_stats.usage_stats)
+        payload = get_track_user_payload_data(@settings_file, user_id, EventEnum::VWO_VARIATION_SHOWN, campaign['id'], variation['id'])
+        @event_dispatcher.dispatch_event_arch_post(properties, payload)
       else
         impression = create_impression(
           @settings_file,
@@ -1110,12 +1131,12 @@ class VWO
   # This API method: Makes a call to our server to store the tag_values
   # 1. Validates the arguments being passed
   # 2. Send a call to our server
-  # @param[String]          :tag_key              key name of the tag
-  # @param[String]          :tag_value            Value of the tag
+  # @param[String|Hash]     :tag_key              key name of the tag OR tagKey/tagValue pair(custom dimension map)
+  # @param[String]          :tag_value            Value of the tag OR userId if TagKey is hash
   # @param[String]          :user_id              ID of the user for which value should be stored
   # @return                                       true if call is made successfully, else false
 
-  def push(tag_key, tag_value, user_id)
+  def push(tag_key, tag_value, user_id = nil)
     unless @is_instance_valid
       @logger.log(
         LogLevelEnum::ERROR,
@@ -1128,7 +1149,16 @@ class VWO
       return
     end
 
-    unless valid_string?(tag_key) && valid_string?(tag_value) && valid_string?(user_id)
+    # Argument reshuffling.
+    custom_dimension_map = {}
+    if user_id.nil? || tag_key.is_a?(Hash)
+      custom_dimension_map = convert_to_symbol_hash(tag_key)
+      user_id = tag_value
+    else
+      custom_dimension_map[tag_key.to_sym] = tag_value
+    end
+
+    unless (valid_string?(tag_key) || valid_hash?(tag_key)) && valid_string?(tag_value) && valid_string?(user_id)
       @logger.log(
         LogLevelEnum::ERROR,
         format(
@@ -1140,51 +1170,61 @@ class VWO
       return false
     end
 
-    if tag_key.length > PushApi::TAG_KEY_LENGTH
-      @logger.log(
-        LogLevelEnum::ERROR,
-        format(
-          LogMessageEnum::ErrorMessages::TAG_KEY_LENGTH_EXCEEDED,
-          file: FILE,
-          user_id: user_id,
-          tag_key: tag_key,
-          api_name: ApiMethods::PUSH
+    custom_dimension_map.each do |tag_key, tag_value|
+      if tag_key.length > PushApi::TAG_KEY_LENGTH
+        @logger.log(
+          LogLevelEnum::ERROR,
+          format(
+            LogMessageEnum::ErrorMessages::TAG_KEY_LENGTH_EXCEEDED,
+            file: FILE,
+            user_id: user_id,
+            tag_key: tag_key,
+            api_name: ApiMethods::PUSH
+          )
         )
-      )
-      return false
-    end
+        return false
+      end
 
-    if tag_value.length > PushApi::TAG_VALUE_LENGTH
-      @logger.log(
-        LogLevelEnum::ERROR,
-        format(
-          LogMessageEnum::ErrorMessages::TAG_VALUE_LENGTH_EXCEEDED,
-          file: FILE,
-          user_id: user_id,
-          tag_value: tag_value,
-          api_name: ApiMethods::PUSH
+      if tag_value.length > PushApi::TAG_VALUE_LENGTH
+        @logger.log(
+          LogLevelEnum::ERROR,
+          format(
+            LogMessageEnum::ErrorMessages::TAG_VALUE_LENGTH_EXCEEDED,
+            file: FILE,
+            user_id: user_id,
+            tag_value: tag_value,
+            api_name: ApiMethods::PUSH
+          )
         )
-      )
-      return false
+        return false
+      end
     end
 
     if defined?(@batch_events)
-      impression = get_batch_event_url_params(@settings_file, tag_key, tag_value, user_id)
-      @batch_events_queue.enqueue(impression)
+      custom_dimension_map.each do |tag_key, tag_value|
+        impression = get_batch_event_url_params(@settings_file, tag_key, tag_value, user_id)
+        @batch_events_queue.enqueue(impression)
+      end
+    elsif is_event_arch_enabled
+      properties = get_events_base_properties(@settings_file, EventEnum::VWO_SYNC_VISITOR_PROP)
+      payload = get_push_payload_data(@settings_file, user_id, EventEnum::VWO_SYNC_VISITOR_PROP, custom_dimension_map)
+      @event_dispatcher.dispatch_event_arch_post(properties, payload)
     else
-      impression = get_url_params(@settings_file, tag_key, tag_value, user_id, @sdk_key)
-      @event_dispatcher.dispatch(impression)
+      custom_dimension_map.each do |tag_key, tag_value|
+        impression = get_url_params(@settings_file, tag_key, tag_value, user_id, @sdk_key)
+        @event_dispatcher.dispatch(impression)
 
-      @logger.log(
-        LogLevelEnum::INFO,
-        format(
-          LogMessageEnum::InfoMessages::MAIN_KEYS_FOR_PUSH_API,
-          file: FILE,
-          u: impression['u'],
-          account_id: impression['account_id'],
-          tags: impression['tags']
+        @logger.log(
+          LogLevelEnum::INFO,
+          format(
+            LogMessageEnum::InfoMessages::MAIN_KEYS_FOR_PUSH_API,
+            file: FILE,
+            u: impression['u'],
+            account_id: impression['account_id'],
+            tags: impression['tags']
+          )
         )
-      )
+      end
     end
     true
   rescue StandardError => e
@@ -1252,5 +1292,9 @@ class VWO
       )
     end
     goal_type_to_track
+  end
+
+  def is_event_arch_enabled
+    return @settings_file.key?('isEventArchEnabled') && @settings_file['isEventArchEnabled']
   end
 end

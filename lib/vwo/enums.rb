@@ -114,6 +114,9 @@ class VWO
         BEFORE_FLUSHING = '(%<file>s): Flushing events queue %<manually>s having %<length>s events %<timer>s queue summary: %<queue_metadata>s'
         EVENT_BATCHING_INSUFFICIENT = '(%<file>s): %<key>s not provided, assigning default value'
         GOT_ELIGIBLE_CAMPAIGNS = "(%<file>s): Campaigns:%<eligible_campaigns_key>s are eligible, %<ineligible_campaigns_log_text>s are ineligible from the Group:%<group_name>s for the User ID:%<user_id>s"
+        IMPRESSION_FOR_EVENT_ARCH_TRACK_USER = "(%<file>s): impression built for vwo_variationShown event for account ID:%<a>s, user ID:%<u>s, and campaign ID:%<c>s"
+        IMPRESSION_FOR_EVENT_ARCH_TRACK_GOAL = "(%<file>s): impression built for %<goal_identifier>s event for account ID:%<a>s, user ID:%<u>s, and campaign ID:%<c>s"
+        IMPRESSION_FOR_EVENT_ARCH_PUSH = "(%<file>s): impression built for visitor property:%<property>s for account ID:%<a>s and user ID:%<u>s"
       end
 
       # Info Messages
@@ -128,6 +131,7 @@ class VWO
         AUDIENCE_CONDITION_NOT_MET = '(%<file>s): userId:%<user_id>s does not become part of campaign because of not meeting audience conditions'
         GOT_VARIATION_FOR_USER = '(%<file>s): userId:%<user_id>s for campaign:%<campaign_key>s got variationName:%<variation_name>s'
         USER_GOT_NO_VARIATION = '(%<file>s): userId:%<user_id>s for campaign:%<campaign_key>s did not allot any variation'
+        IMPRESSION_SUCCESS_FOR_EVENT_ARCH = '(%<file>s): Impression for %<event>s - %<url>s was successfully received by VWO for account ID:%<a>s'
         IMPRESSION_SUCCESS = '(%<file>s): Impression event - %<end_point>s was successfully received by VWO having main keys: accountId:%<account_id>s campaignId:%<campaign_id>s and variationId:%<variation_id>s'
         MAIN_KEYS_FOR_IMPRESSION = '(%<file>s): Having main keys: accountId:%<account_id>s campaignId:%<campaign_id>s and variationId:%<variation_id>s}'
         MAIN_KEYS_FOR_PUSH_API = '(%<file>s): Having main keys: accountId:%<account_id>s u:%<u>s and tags:%<tags>s}'

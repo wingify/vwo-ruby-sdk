@@ -4,6 +4,45 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.25.0] - 2021-12-23
+
+### Added
+
+- Support for pushing multiple custom dimensions at once. Earlier, you had to call push API multiple times for tracking multiple custom dimensions as follows:
+
+  ```ruby
+  vwo_client_instance.push('browser', 'chrome', user_id)
+  vwo_client_instance.push('price', '20', user_id)
+  ```
+
+  Now, you can pass an hash
+
+  ```ruby
+  custom_dimension_map = {
+    browser: 'chrome',
+    price: '20'
+  }
+
+  vwo_client_instance.push(custom_dimension_map, user_id)
+  ```
+
+  Multiple asynchronous tracking calls would be initiated in this case.
+
+### Changed
+
+- If Events Architecture is enabled for your VWO account, all the tracking calls being initiated from SDK would now be `POST` instead of `GET` and there would be single endpoint i.e. `/events/t`. This is done in order to bring events support and building advanced capabilities in future.
+
+- For events architecture accounts, tracking same goal across multiple campaigns will not send multiple tracking calls. Instead, one single `POST` call would be made to track the same goal across multiple different campaigns running on the same environment.
+
+- Multiple custom dimension can be pushed via `push` API. For events architecture enabled account, only one single asynchronous call would be made to track multiple custom dimensions.
+```ruby
+  custom_dimension_map = {
+    browser: 'chrome',
+    price: '20'
+  }
+  vwo_client_instance.push(custom_dimension_map, user_id)
+```
+
 ## [1.24.1] - 2021-12-09
 
 ### Changed

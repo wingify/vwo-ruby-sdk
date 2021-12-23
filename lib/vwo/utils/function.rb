@@ -33,6 +33,11 @@ class VWO
         Time.now.to_i
       end
 
+      # @return[Integer]
+      def get_current_unix_timestamp_in_millis
+        (Time.now.to_f * 1000).to_i
+      end
+
       # @return[any, any]
       def get_key_value(obj)
         [obj.keys[0], obj.values[0]]

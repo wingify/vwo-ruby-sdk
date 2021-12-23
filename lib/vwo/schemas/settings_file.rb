@@ -26,6 +26,9 @@ class VWO
         accountId: {
           type: %w[number string]
         },
+        isEventArchEnabled: {
+          type: ['boolean']
+        },
         campaigns: {
           if: {
             type: 'array'

@@ -27,7 +27,7 @@ class VWO
     HTTP_PROTOCOL = 'http://'
     HTTPS_PROTOCOL = 'https://'
     URL_NAMESPACE = '6ba7b811-9dad-11d1-80b4-00c04fd430c8'
-    SDK_VERSION = '1.24.1'
+    SDK_VERSION = '1.25.0'
     SDK_NAME = 'ruby'
     VWO_DELIMITER = '_vwo_'
     MAX_EVENTS_PER_REQUEST = 5000
@@ -44,6 +44,7 @@ class VWO
       TRACK_GOAL = '/server-side/track-goal'
       PUSH = '/server-side/push'
       BATCH_EVENTS = '/server-side/batch-events'
+      EVENTS = '/events/t'
     end
 
     module EVENTS
@@ -112,6 +113,11 @@ class VWO
       VISUAL_AB = 'VISUAL_AB'
       FEATURE_TEST = 'FEATURE_TEST'
       FEATURE_ROLLOUT = 'FEATURE_ROLLOUT'
+    end
+
+    module EventEnum
+      VWO_VARIATION_SHOWN = 'vwo_variationShown'
+      VWO_SYNC_VISITOR_PROP = 'vwo_syncVisitorProp'
     end
   end
 end
