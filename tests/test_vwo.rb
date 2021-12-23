@@ -1148,7 +1148,7 @@ class VWOTest < Test::Unit::TestCase
 
     def test_flush_events_with_corrupted_vwo_instance
       set_up('EMPTY_SETTINGS_FILE')
-      assert_equal(@vwo.flush_events, nil)
+      assert_equal(@vwo.flush_events, false)
     end
 
     def test_flush_events_raises_exception
@@ -1602,5 +1602,49 @@ class VWOTest < Test::Unit::TestCase
         ]
       }
       assert_equal(vwo_instance.get_variation_name('AB_T_100_W_25_25_25_25', 'Rohit'), 'Variation-1')
+    end
+
+    def test_set_opt_out_api
+      set_up('T_50_W_50_50_WS')
+      assert_equal(@vwo.set_opt_out, true)
+    end
+
+    def test_apis_when_set_opt_out_called
+      set_up('T_50_W_50_50_WS')
+
+      assert_equal(@vwo.set_opt_out, true)
+      assert_equal(@vwo.activate('T_50_W_50_50_WS', 'Ashley', {}), nil)
+      assert_equal(@vwo.get_variation_name('T_50_W_50_50_WS', 'Ashley', {}), nil)
+      goal_identifier = 'ddd'
+      assert_equal(@vwo.track('T_50_W_50_50_WS', 'Ashley', goal_identifier, {}), false)
+      assert_equal(@vwo.feature_enabled?('T_50_W_50_50_WS', 'Ashley', {}), false)
+      assert_equal(@vwo.get_feature_variable_value('FT_T_75_W_10_20_30_40_WS', 'STRING_VARIABLE', 'Ashley', {}), nil)
+      assert_equal(@vwo.get_and_update_settings_file, false)
+      assert_equal(@vwo.push('tagKey', 'tagValue', 'Ashley'), false)      
+      assert_equal(@vwo.flush_events, false)
+    end
+
+    def test_apis_when_set_opt_out_called_with_event_batch
+      def flush_callback(events)
+      end
+
+      options = {
+        batch_events: {
+          events_per_request: 3,
+          request_time_interval: 5
+        }
+      }
+      vwo_instance = initialize_vwo_with_batch_events_option('AB_T_50_W_50_50', options)
+
+      assert_equal(vwo_instance.set_opt_out, true)
+      assert_equal(vwo_instance.activate('T_50_W_50_50_WS', 'Ashley', {}), nil)
+      assert_equal(vwo_instance.get_variation_name('T_50_W_50_50_WS', 'Ashley', {}), nil)
+      goal_identifier = 'ddd'
+      assert_equal(vwo_instance.track('T_50_W_50_50_WS', 'Ashley', goal_identifier, {}), false)
+      assert_equal(vwo_instance.feature_enabled?('T_50_W_50_50_WS', 'Ashley', {}), false)
+      assert_equal(vwo_instance.get_feature_variable_value('FT_T_75_W_10_20_30_40_WS', 'STRING_VARIABLE', 'Ashley', {}), nil)
+      assert_equal(vwo_instance.get_and_update_settings_file, false)
+      assert_equal(vwo_instance.push('tagKey', 'tagValue', 'Ashley'), false)      
+      assert_equal(vwo_instance.flush_events, false)
     end
 end

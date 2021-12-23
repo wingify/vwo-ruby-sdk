@@ -164,6 +164,8 @@ class VWO
         GOT_ELIGIBLE_CAMPAIGNS = "(%<file>s): Got %<no_of_eligible_campaigns>s eligible winners out of %<no_of_group_campaigns>s from the Group:%<group_name>s and for User ID:%<user_id>s"
         CALLED_CAMPAIGN_NOT_WINNER = "(%<file>s): Campaign:%<campaign_key>s does not qualify from the mutually exclusive group:%<group_name>s for User ID:%<user_id>s"
         OTHER_CAMPAIGN_SATISFIES_WHITELISTING_OR_STORAGE = "(%<file>s): Campaign:%<campaign_key>s of Group:%<group_name>s satisfies %<type>s for User ID:%<user_id>s"
+        OPT_OUT_API_CALLED = "(%<file>s): You have opted out for not tracking i.e. all API calls will stop functioning and will simply early return"
+        API_NOT_ENABLED = "(%<file>s): %<api>s API is disabled as you opted out for tracking. Reinitialize the SDK to enable the normal functioning of all APIs."
       end
 
       # Warning Messages

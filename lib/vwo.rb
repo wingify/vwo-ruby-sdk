@@ -65,6 +65,7 @@ class VWO
     options = {}
   )
     options = convert_to_symbol_hash(options)
+    @is_opted_out = false
     @account_id = account_id
     @sdk_key = sdk_key
     @user_storage = user_storage
@@ -208,6 +209,10 @@ class VWO
   # VWO get_settings method to get settings for a particular account_id
   def get_and_update_settings_file
 
+    if is_opted_out(ApiMethods::GET_AND_UPDATE_SETTINGS_FILE)
+      return false
+    end
+
     unless @is_instance_valid
       @logger.log(
         LogLevelEnum::ERROR,
@@ -217,7 +222,7 @@ class VWO
           api_name: ApiMethods.GET_AND_UPDATE_SETTINGS_FILE
         )
       )
-      return
+      return false
     end
 
     latest_settings = @settings_file_manager.get_settings_file(true)
@@ -267,6 +272,10 @@ class VWO
   #                                               otherwise null in case of user not becoming part
 
   def activate(campaign_key, user_id, options = {})
+    if is_opted_out(ApiMethods::ACTIVATE)
+      return nil
+    end
+
     unless @is_instance_valid
       @logger.log(
         LogLevelEnum::ERROR,
@@ -444,6 +453,10 @@ class VWO
   #                                                       Otherwise null in case of user not becoming part
   #
   def get_variation_name(campaign_key, user_id, options = {})
+    if is_opted_out(ApiMethods::GET_VARIATION_NAME)
+      return nil
+    end
+
     unless @is_instance_valid
       @logger.log(
         LogLevelEnum::ERROR,
@@ -555,6 +568,10 @@ class VWO
   #
 
   def track(campaign_key, user_id, goal_identifier, options = {})
+    if is_opted_out(ApiMethods::TRACK)
+      return false
+    end
+
     unless @is_instance_valid
       @logger.log(
         LogLevelEnum::ERROR,
@@ -786,6 +803,10 @@ class VWO
   # @return[Boolean]  true if user becomes part of feature test/rollout, otherwise false.
 
   def feature_enabled?(campaign_key, user_id, options = {})
+    if is_opted_out(ApiMethods::IS_FEATURE_ENABLED)
+      return false
+    end
+
     unless @is_instance_valid
       @logger.log(
         LogLevelEnum::ERROR,
@@ -983,13 +1004,17 @@ class VWO
   #
 
   def get_feature_variable_value(campaign_key, variable_key, user_id, options = {})
+    if is_opted_out(ApiMethods::GET_FEATURE_VARIABLE_VALUE)
+      return nil
+    end
+
     unless @is_instance_valid
       @logger.log(
         LogLevelEnum::ERROR,
         format(
           LogMessageEnum::ErrorMessages::API_CONFIG_CORRUPTED,
           file: FILE,
-          api_name: ApiMethods.GET_FEATURE_VARIABLE_VALUE
+          api_name: ApiMethods::GET_FEATURE_VARIABLE_VALUE
         )
       )
       return
@@ -1137,16 +1162,20 @@ class VWO
   # @return                                       true if call is made successfully, else false
 
   def push(tag_key, tag_value, user_id = nil)
+    if is_opted_out(ApiMethods::PUSH)
+      return false
+    end
+
     unless @is_instance_valid
       @logger.log(
         LogLevelEnum::ERROR,
         format(
           LogMessageEnum::ErrorMessages::API_CONFIG_CORRUPTED,
           file: FILE,
-          api_name: ApiMethods.PUSH
+          api_name: ApiMethods::PUSH
         )
       )
-      return
+      return false
     end
 
     # Argument reshuffling.
@@ -1245,6 +1274,10 @@ class VWO
   end
 
   def flush_events
+    if is_opted_out(ApiMethods::FLUSH_EVENTS)
+      return false
+    end
+
     unless @is_instance_valid
       @logger.log(
         LogLevelEnum::ERROR,
@@ -1254,10 +1287,13 @@ class VWO
           api_name: ApiMethods::FLUSH_EVENTS
         )
       )
-      return
+      return false
     end
-    result = @batch_events_queue.flush(manual: true)
-    @batch_events_queue.kill_thread
+    result = false
+    if defined?(@batch_events) && !@batch_events_queue.nil?
+      result = @batch_events_queue.flush(manual: true)
+      @batch_events_queue.kill_thread
+    end
     result
   rescue StandardError => e
     @logger.log(
@@ -1292,6 +1328,55 @@ class VWO
       )
     end
     goal_type_to_track
+  end
+
+  # Manually opting out of VWO SDK, No tracking will happen
+  #
+  # return[bool]
+  #
+  def set_opt_out
+    @logger.log(
+        LogLevelEnum::INFO,
+        format(
+          LogMessageEnum::InfoMessages::OPT_OUT_API_CALLED,
+          file: FILE
+        )
+      )
+      if defined?(@batch_events) && !@batch_events_queue.nil?
+        @batch_events_queue.flush(manual: true)
+        @batch_events_queue.kill_thread
+      end
+
+      @is_opted_out = true
+      @settings_file = nil
+      @user_storage = nil
+      @event_dispatcher = nil
+      @variation_decider = nil
+      @config = nil
+      @usage_stats = nil
+      @batch_event_dispatcher = nil
+      @batch_events_queue = nil
+      @batch_events = nil
+
+      return @is_opted_out
+  end
+
+
+  # Check if VWO SDK is manually opted out
+  # @param[String]          :api_name              api_name is used in logging
+  # @return[bool]
+  def is_opted_out(api_name)
+    if @is_opted_out
+      @logger.log(
+        LogLevelEnum::INFO,
+        format(
+          LogMessageEnum::InfoMessages::API_NOT_ENABLED,
+          file: FILE,
+          api: api_name
+        )
+      )
+    end
+    return @is_opted_out
   end
 
   def is_event_arch_enabled

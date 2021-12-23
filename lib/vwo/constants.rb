@@ -27,7 +27,7 @@ class VWO
     HTTP_PROTOCOL = 'http://'
     HTTPS_PROTOCOL = 'https://'
     URL_NAMESPACE = '6ba7b811-9dad-11d1-80b4-00c04fd430c8'
-    SDK_VERSION = '1.25.0'
+    SDK_VERSION = '1.28.0'
     SDK_NAME = 'ruby'
     VWO_DELIMITER = '_vwo_'
     MAX_EVENTS_PER_REQUEST = 5000
@@ -102,6 +102,7 @@ class VWO
       PUSH = 'push'
       GET_AND_UPDATE_SETTINGS_FILE = 'get_and_update_settings_file'
       FLUSH_EVENTS = 'flush_events'
+      OPT_OUT = 'opt_out'
     end
 
     module PushApi

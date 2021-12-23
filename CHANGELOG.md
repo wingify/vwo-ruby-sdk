@@ -35,13 +35,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - For events architecture accounts, tracking same goal across multiple campaigns will not send multiple tracking calls. Instead, one single `POST` call would be made to track the same goal across multiple different campaigns running on the same environment.
 
 - Multiple custom dimension can be pushed via `push` API. For events architecture enabled account, only one single asynchronous call would be made to track multiple custom dimensions.
-```ruby
+
+  ```ruby
   custom_dimension_map = {
     browser: 'chrome',
     price: '20'
   }
   vwo_client_instance.push(custom_dimension_map, user_id)
-```
+  ```
 
 ## [1.24.1] - 2021-12-09
 
