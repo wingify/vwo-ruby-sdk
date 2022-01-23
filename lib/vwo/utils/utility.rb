@@ -25,6 +25,7 @@ class VWO
             # @param[Hash]
             # @return[Hash]
             def convert_to_symbol_hash(hashObject)
+                hashObject ||= {}
                 convertedHash = {}
                 hashObject.each do |key, value|
                     if valid_hash?(value)
