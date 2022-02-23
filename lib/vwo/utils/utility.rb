@@ -1,4 +1,4 @@
-# Copyright 2019-2021 Wingify Software Pvt. Ltd.
+# Copyright 2019-2022 Wingify Software Pvt. Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,12 +14,16 @@
 
 require 'json'
 require_relative './validations'
+require_relative './data_location_manager'
+require_relative '../constants'
 
 # Generic utility module
 class VWO
     module Utils
         module Utility
             include Validations
+            include VWO::Utils
+            include VWO::CONSTANTS
 
             # converting hash with keys as strings into hash with keys as strings
             # @param[Hash]
@@ -41,6 +45,10 @@ class VWO
                 properties.delete("env")
                 properties.delete("env".to_sym)
                 JSON.generate(properties)
+            end
+
+            def get_url(endpoint)
+                return DataLocationManager.get_instance().get_data_location + endpoint
             end
         end
     end

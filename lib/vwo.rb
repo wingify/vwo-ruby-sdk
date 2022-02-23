@@ -1,4 +1,4 @@
-# Copyright 2019-2021 Wingify Software Pvt. Ltd.
+# Copyright 2019-2022 Wingify Software Pvt. Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ require_relative 'vwo/utils/impression'
 require_relative 'vwo/utils/feature'
 require_relative 'vwo/utils/custom_dimensions'
 require_relative 'vwo/utils/utility'
+require_relative 'vwo/utils/data_location_manager'
 require_relative 'vwo/constants'
 require_relative 'vwo/core/variation_decider'
 require_relative 'vwo/services/batch_events_dispatcher'
@@ -41,6 +42,7 @@ class VWO
   include Utils::Campaign
   include Utils::Impression
   include Utils::Utility
+  include VWO::Utils
   include CONSTANTS
 
   FILE = FileNameEnum::VWO
@@ -123,6 +125,7 @@ class VWO
     # Process the settings file
     @config.process_settings_file
     @settings_file = @config.get_settings_file
+    DataLocationManager.get_instance().set_settings(@settings_file)
 
     @usage_stats = VWO::Services::UsageStats.new(usage_stats, @is_development_mode)
 

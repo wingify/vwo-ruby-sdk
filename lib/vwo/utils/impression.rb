@@ -1,4 +1,4 @@
-# Copyright 2019-2021 Wingify Software Pvt. Ltd.
+# Copyright 2019-2022 Wingify Software Pvt. Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -67,12 +67,11 @@ class VWO
 
         impression = usage_stats.merge(impression)
 
-        url = HTTPS_PROTOCOL + ENDPOINTS::BASE_URL
         logger = VWO::Logger.get_instance
 
         if is_track_user_api
           impression['ed'] = JSON.generate(p: 'server')
-          impression['url'] = "#{url}#{ENDPOINTS::TRACK_USER}"
+          impression['url'] = HTTPS_PROTOCOL + get_url(ENDPOINTS::TRACK_USER)
           logger.log(
             LogLevelEnum::DEBUG,
             format(
@@ -82,7 +81,7 @@ class VWO
             )
           )
         else
-          impression['url'] = url + ENDPOINTS::TRACK_GOAL
+          impression['url'] = HTTPS_PROTOCOL + get_url(ENDPOINTS::TRACK_GOAL)
           impression['goal_id'] = goal_id
           impression['r'] = revenue if revenue
           logger.log(

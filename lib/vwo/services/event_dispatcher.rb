@@ -1,4 +1,4 @@
-# Copyright 2019-2021 Wingify Software Pvt. Ltd.
+# Copyright 2019-2022 Wingify Software Pvt. Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 require_relative '../logger'
 require_relative '../enums'
 require_relative '../utils/request'
+require_relative '../utils/utility'
 require_relative '../constants'
 
 class VWO
@@ -22,6 +23,7 @@ class VWO
     class EventDispatcher
       include VWO::Enums
       include VWO::CONSTANTS
+      include Utils::Utility
 
       EXCLUDE_KEYS = ['url'].freeze
 
@@ -69,7 +71,7 @@ class VWO
       def dispatch_event_arch_post(params, post_data)
         return true if @is_development_mode
 
-        url = HTTPS_PROTOCOL + ENDPOINTS::BASE_URL + ENDPOINTS::EVENTS
+        url = HTTPS_PROTOCOL + get_url(ENDPOINTS::EVENTS)
         resp = VWO::Utils::Request.event_post(url, params, post_data, SDK_NAME)
         if resp.code == '200'
           @logger.log(

@@ -12,5 +12,35 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require_relative './test_helper'
-Dir[File.dirname(File.absolute_path(__FILE__)) + '/**/test_*.rb'].each {|file| require file }
+
+require_relative '../constants'
+
+# Utility module for generating uuid
+class VWO
+  module Utils
+    class DataLocationManager
+
+      @@instance = nil
+
+      def self.get_instance
+        if @@instance.nil?
+            @@instance = self.new
+        end
+        @@instance
+      end
+
+
+      def get_data_location
+        url = VWO::CONSTANTS::ENDPOINTS::BASE_URL
+        if @settings.key?("collectionPrefix")
+            url = url  + '/' + @settings["collectionPrefix"]
+        end
+        url
+      end
+
+      def set_settings(settings)
+        @settings = settings
+      end
+    end
+  end
+end

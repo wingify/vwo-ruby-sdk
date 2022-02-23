@@ -1,4 +1,4 @@
-# Copyright 2019-2021 Wingify Software Pvt. Ltd.
+# Copyright 2019-2022 Wingify Software Pvt. Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,10 +15,12 @@
 require_relative '../logger'
 require_relative '../enums'
 require_relative '../utils/request'
+require_relative '../utils/utility'
 class VWO
   module Services
     class BatchEventsDispatcher
       include VWO::Enums
+      include VWO::Utils::Utility
       # Initialize the BatchEventDispatcher with logger and development mode
       #
       # @param [Boolean] :  To specify whether the request
@@ -36,7 +38,7 @@ class VWO
       # @return[Boolean]
       #
       def dispatch(impression, callback, query_params)
-        url = CONSTANTS::HTTPS_PROTOCOL + CONSTANTS::ENDPOINTS::BASE_URL + CONSTANTS::ENDPOINTS::BATCH_EVENTS
+        url = CONSTANTS::HTTPS_PROTOCOL + get_url(CONSTANTS::ENDPOINTS::BATCH_EVENTS)
         account_id = query_params[:a]
         resp = VWO::Utils::Request.post(url, query_params, impression)
         if resp.code == '200'
