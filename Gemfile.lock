@@ -8,6 +8,7 @@ GEM
     mocha (1.13.0)
     murmurhash3 (0.1.6)
     public_suffix (3.1.1)
+    vwo_log_messages (0.7.1)
 
 PLATFORMS
   ruby
@@ -16,6 +17,7 @@ DEPENDENCIES
   json-schema (~> 2.8.1)
   mocha (~> 1.13)
   murmurhash3 (~> 0.1.6)
+  vwo_log_messages (~> 0.7.1)
 
 BUNDLED WITH
    1.17.3
