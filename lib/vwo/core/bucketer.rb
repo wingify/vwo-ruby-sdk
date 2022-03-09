@@ -95,8 +95,8 @@ class VWO
         end
 
         user_id_for_hash_value = user_id
-        if campaign[:isBucketingSeedEnabled]
-          user_id_for_hash_value = campaign[:id].to_s + "_" + user_id
+        if campaign['isBucketingSeedEnabled']
+          user_id_for_hash_value = campaign['id'].to_s + "_" + user_id
         end
         hash_value = MurmurHash3::V32.str_hash(user_id_for_hash_value, SEED_VALUE) & U_MAX_32_BIT
         normalize = MAX_TRAFFIC_VALUE.to_f / campaign['percentTraffic']
@@ -147,8 +147,8 @@ class VWO
         user_id_for_hash_value = user_id
         if group_id
           user_id_for_hash_value = group_id.to_s + "_" + user_id
-        elsif campaign[:isBucketingSeedEnabled]
-          user_id_for_hash_value = campaign[:id].to_s + "_" + user_id
+        elsif campaign['isBucketingSeedEnabled']
+          user_id_for_hash_value = campaign['id'].to_s + "_" + user_id
         end
         hash_value = MurmurHash3::V32.str_hash(user_id_for_hash_value, SEED_VALUE) & U_MAX_32_BIT
         bucket_value = get_bucket_value(hash_value, MAX_TRAFFIC_PERCENT)
