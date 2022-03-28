@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require_relative '../logger'
 require_relative '../enums'
 require_relative '../utils/campaign'
+require_relative '../utils/log_message'
 
 class VWO
   module Services
@@ -30,7 +30,6 @@ class VWO
 
       def initialize(settings_file)
         @settings_file = JSON.parse(settings_file)
-        @logger = VWO::Logger.get_instance
       end
 
       # Processes the settings_file, assigns variation allocation range
@@ -38,9 +37,13 @@ class VWO
         (@settings_file['campaigns'] || []).each do |campaign|
           set_variation_allocation(campaign)
         end
-        @logger.log(
+        Utils::Logger.log(
           LogLevelEnum::DEBUG,
-          format(LogMessageEnum::DebugMessages::SETTINGS_FILE_PROCESSED, file: FileNameEnum::SettingsFileProcessor)
+          'SETTINGS_FILE_PROCESSED',
+          {
+            '{file}' => FileNameEnum::SettingsFileProcessor,
+            '{accountId}' => @settings_file['accountId']
+          }
         )
       end
 

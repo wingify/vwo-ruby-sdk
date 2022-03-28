@@ -25,6 +25,7 @@ require_relative 'vwo/utils/feature'
 require_relative 'vwo/utils/custom_dimensions'
 require_relative 'vwo/utils/utility'
 require_relative 'vwo/utils/data_location_manager'
+require_relative 'vwo/utils/log_message'
 require_relative 'vwo/constants'
 require_relative 'vwo/core/variation_decider'
 require_relative 'vwo/services/batch_events_dispatcher'
@@ -33,7 +34,7 @@ require_relative 'vwo/services/usage_stats'
 
 # VWO main file
 class VWO
-  attr_accessor :is_instance_valid, :logger, :settings_file_manager, :variation_decider
+  attr_accessor :is_instance_valid, :logging, :settings_file_manager, :variation_decider
   attr_reader :usage_stats
   include Enums
   include Utils::Validations
@@ -66,14 +67,16 @@ class VWO
     settings_file = nil,
     options = {}
   )
+    @logger = Utils::Logger
+    @logger.set_api_name(ApiMethods::LAUNCH)
     options = convert_to_symbol_hash(options)
     @is_opted_out = false
     @account_id = account_id
     @sdk_key = sdk_key
     @user_storage = user_storage
     @is_development_mode = is_development_mode
-    @logger = VWO::Logger.get_instance(logger)
-    @logger.instance.level = options[:log_level] if (0..5).include?(options[:log_level])
+    @logging = VWO::Logger.get_instance(logger)
+    @logging.instance.level = options[:log_level] if (0..5).include?(options[:log_level])
     usage_stats = {}
 
     usage_stats[:cl] = 1 if logger
@@ -82,11 +85,19 @@ class VWO
     usage_stats[:ig] = 1 if options.key?(:integrations)
     usage_stats[:eb] = 1 if options.key?(:batch_events)
 
+    unless validate_sdk_config?(@user_storage, is_development_mode, ApiMethods::LAUNCH)
+      @is_instance_valid = false
+      return
+    end
+
     @settings_file_manager = VWO::Services::SettingsFileManager.new(@account_id, @sdk_key)
     unless valid_settings_file?(get_settings(settings_file))
       @logger.log(
         LogLevelEnum::ERROR,
-        format(LogMessageEnum::ErrorMessages::SETTINGS_FILE_CORRUPTED, file: FILE)
+        'SETTINGS_FILE_CORRUPTED',
+        {
+          '{file}' => FILE
+        }
       )
       @is_instance_valid = false
       return
@@ -99,10 +110,13 @@ class VWO
       else
         @logger.log(
           LogLevelEnum::ERROR,
-          format(
-            LogMessageEnum::ErrorMessages::INVALID_GOAL_TYPE,
-            file: FILE
-          )
+          'CONFIG_PARAMETER_INVALID',
+          {
+            '{file}' => FILE,
+            '{parameter}' => 'goal_type_to_track',
+            '{type}' => 'string(REVENUE, CUSTOM, ALL)',
+            '{api}' => 'init'
+          }
         )
         @is_instance_valid = false
         return
@@ -114,15 +128,7 @@ class VWO
     @is_instance_valid = true
     @config = VWO::Services::SettingsFileProcessor.new(get_settings)
 
-    @logger.log(
-      LogLevelEnum::DEBUG,
-      format(
-        LogMessageEnum::DebugMessages::VALID_CONFIGURATION,
-        file: FILE
-      )
-    )
-
-    # Process the settings file
+    #Process the settings file
     @config.process_settings_file
     @settings_file = @config.get_settings_file
     DataLocationManager.get_instance().set_settings(@settings_file)
@@ -131,11 +137,11 @@ class VWO
 
     if options.key?(:batch_events)
       if options[:batch_events].is_a?(Hash)
-        unless is_valid_batch_event_settings(options[:batch_events])
+        unless is_valid_batch_event_settings(options[:batch_events], ApiMethods::LAUNCH)
           @is_instance_valid = false
           return
         end
-        @batch_event_dispatcher = VWO::Services::BatchEventsDispatcher.new
+        @batch_event_dispatcher = VWO::Services::BatchEventsDispatcher.new(@is_development_mode)
         def dispatcher (events, callback)
           @batch_event_dispatcher.dispatch(
             {
@@ -163,10 +169,13 @@ class VWO
       else
         @logger.log(
           LogLevelEnum::ERROR,
-          format(
-            LogMessageEnum::ErrorMessages::EVENT_BATCHING_NOT_OBJECT,
-            file: FILE
-          )
+          'CONFIG_PARAMETER_INVALID',
+          {
+            '{file}' => FILE,
+            '{parameter}' => 'batch_events',
+            '{type}' => 'hash',
+            '{api}' => 'init'
+          }
         )
         @is_instance_valid = false
         return
@@ -176,25 +185,14 @@ class VWO
     # Assign VariationDecider to VWO
     @variation_decider = VWO::Core::VariationDecider.new(@settings_file, user_storage, options)
 
-    if is_development_mode
-      @logger.log(
-        LogLevelEnum::DEBUG,
-        format(
-          LogMessageEnum::DebugMessages::SET_DEVELOPMENT_MODE,
-          file: FILE
-        )
-      )
-    end
     # Assign event dispatcher
     @event_dispatcher = VWO::Services::EventDispatcher.new(is_development_mode)
 
     # Successfully initialized VWO SDK
     @logger.log(
-      LogLevelEnum::DEBUG,
-      format(
-        LogMessageEnum::DebugMessages::SDK_INITIALIZED,
-        file: FILE
-      )
+      LogLevelEnum::INFO,
+      'SDK_INITIALIZED',
+      {'{file}' => FILE}
     )
   end
 
@@ -211,7 +209,7 @@ class VWO
 
   # VWO get_settings method to get settings for a particular account_id
   def get_and_update_settings_file
-
+    @logger.set_api_name(ApiMethods::GET_AND_UPDATE_SETTINGS_FILE)
     if is_opted_out(ApiMethods::GET_AND_UPDATE_SETTINGS_FILE)
       return false
     end
@@ -219,11 +217,11 @@ class VWO
     unless @is_instance_valid
       @logger.log(
         LogLevelEnum::ERROR,
-        format(
-          LogMessageEnum::ErrorMessages::API_CONFIG_CORRUPTED,
-          file: FILE,
-          api_name: ApiMethods.GET_AND_UPDATE_SETTINGS_FILE
-        )
+        'CONFIG_CORRUPTED',
+        {
+          '{file}' => FILE,
+          '{api}' => ApiMethods::GET_AND_UPDATE_SETTINGS_FILE
+        }
       )
       return false
     end
@@ -232,12 +230,12 @@ class VWO
     latest_settings = JSON.parse(latest_settings)
     if latest_settings == @settings_file
       @logger.log(
-        LogLevelEnum::INFO,
-        format(
-          LogMessageEnum::InfoMessages::SETTINGS_NOT_UPDATED,
-          api_name: ApiMethods::GET_AND_UPDATE_SETTINGS_FILE,
-          file: FILE
-        )
+        LogLevelEnum::DEBUG,
+        'SETTINGS_FILE_PROCESSED',
+        {
+          '{file}' => FILE,
+          '{accountId}' => @settings_file['accountId']
+        }
       )
     end
 
@@ -247,12 +245,11 @@ class VWO
   rescue StandardError => e
     @logger.log(
       LogLevelEnum::ERROR,
-      format(
-        LogMessageEnum::ErrorMessages::API_NOT_WORKING,
-        file: FILE,
-        api_name: ApiMethods::GET_AND_UPDATE_SETTINGS_FILE,
-        exception: e
-      )
+      '({file}): {api} API error: ' + e.message,
+      {
+        '{file}' => FILE,
+        '{api}' => ApiMethods::GET_AND_UPDATE_SETTINGS_FILE
+      }
     )
     nil
   end
@@ -275,6 +272,7 @@ class VWO
   #                                               otherwise null in case of user not becoming part
 
   def activate(campaign_key, user_id, options = {})
+    @logger.set_api_name(ApiMethods::ACTIVATE)
     if is_opted_out(ApiMethods::ACTIVATE)
       return nil
     end
@@ -282,11 +280,11 @@ class VWO
     unless @is_instance_valid
       @logger.log(
         LogLevelEnum::ERROR,
-        format(
-          LogMessageEnum::ErrorMessages::API_CONFIG_CORRUPTED,
-          file: FILE,
-          api_name: ApiMethods::ACTIVATE
-        )
+        'CONFIG_CORRUPTED',
+        {
+          '{file}' => FILE,
+          '{api}' => ApiMethods::ACTIVATE
+        }
       )
       return
     end
@@ -301,11 +299,11 @@ class VWO
       (variation_targeting_variables.nil? || valid_hash?(variation_targeting_variables))
       @logger.log(
         LogLevelEnum::ERROR,
-        format(
-          LogMessageEnum::ErrorMessages::ACTIVATE_API_MISSING_PARAMS,
-          api_name: ApiMethods::ACTIVATE,
-          file: FILE
-        )
+        'API_BAD_PARAMETERS',
+        {
+          '{file}' => FILE,
+          '{api}' => ApiMethods::ACTIVATE
+        }
       )
       return
     end
@@ -317,13 +315,13 @@ class VWO
     unless campaign && campaign['status'] == STATUS_RUNNING
       # Log Campaign as invalid
       @logger.log(
-        LogLevelEnum::ERROR,
-        format(
-          LogMessageEnum::ErrorMessages::CAMPAIGN_NOT_RUNNING,
-          file: FILE,
-          campaign_key: campaign_key,
-          api_name: ApiMethods::ACTIVATE
-        )
+        LogLevelEnum::WARNING,
+        'CAMPAIGN_NOT_RUNNING',
+        {
+          '{file}' => FILE,
+          '{campaignKey}' => campaign_key,
+          '{api}' => ApiMethods::ACTIVATE
+        }
       )
       return
     end
@@ -335,14 +333,14 @@ class VWO
     if campaign_type != CampaignTypes::VISUAL_AB
       @logger.log(
         LogLevelEnum::ERROR,
-        format(
-          LogMessageEnum::ErrorMessages::INVALID_API,
-          file: FILE,
-          api_name: ApiMethods::ACTIVATE,
-          user_id: user_id,
-          campaign_key: campaign_key,
-          campaign_type: campaign_type
-        )
+        'API_NOT_APPLICABLE',
+        {
+          '{file}' => FILE,
+          '{api}' => ApiMethods::ACTIVATE,
+          '{userId}' => user_id,
+          '{campaignKey}' => campaign_key,
+          '{campaignType}' => campaign_type,
+        }
       )
       return
     end
@@ -361,15 +359,6 @@ class VWO
 
     # Check if variation_name has been assigned
     if variation.nil?
-      @logger.log(
-        LogLevelEnum::INFO,
-        format(
-          LogMessageEnum::InfoMessages::INVALID_VARIATION_KEY,
-          file: FILE,
-          user_id: user_id,
-          campaign_key: campaign_key
-        )
-      )
       return
     end
 
@@ -401,39 +390,37 @@ class VWO
         if @event_dispatcher.dispatch(impression)
           @logger.log(
             LogLevelEnum::INFO,
-            format(
-              LogMessageEnum::InfoMessages::IMPRESSION_SUCCESS,
-              file: FILE,
-              account_id: @account_id,
-              campaign_id: campaign['id'],
-              variation_id: variation['id'],
-              end_point: EVENTS::TRACK_USER
-            )
+            'IMPRESSION_SUCCESS',
+            {
+              '{file}' => FILE,
+              '{mainKeys}' => JSON.generate({'campaignId' => campaign['id'], 'variationId' => variation['id']}),
+              '{accountId}' => @account_id,
+              '{endPoint}' => EVENTS::TRACK_USER
+            }
           )
         end
       end
     else
       @logger.log(
         LogLevelEnum::INFO,
-        format(
-          LogMessageEnum::InfoMessages::USER_ALREADY_TRACKED,
-          file: FILE,
-          user_id: user_id,
-          campaign_key: campaign_key,
-          api_name: ApiMethods::ACTIVATE
-        )
+        'CAMPAIGN_USER_ALREADY_TRACKED',
+        {
+          '{file}' => FILE,
+          '{userId}' => user_id,
+          '{campaignKey}' => campaign_key,
+          '{api}' => ApiMethods::ACTIVATE
+        }
       )
     end
     variation['name']
   rescue StandardError => e
     @logger.log(
       LogLevelEnum::ERROR,
-      format(
-        LogMessageEnum::ErrorMessages::API_NOT_WORKING,
-        file: FILE,
-        api_name: ApiMethods::ACTIVATE,
-        exception: e
-      )
+      '({file}): {api} API error: ' + e.message,
+      {
+        '{file}' => FILE,
+        '{api}' => ApiMethods::ACTIVATE
+      }
     )
     e
   end
@@ -456,6 +443,7 @@ class VWO
   #                                                       Otherwise null in case of user not becoming part
   #
   def get_variation_name(campaign_key, user_id, options = {})
+    @logger.set_api_name(ApiMethods::GET_VARIATION_NAME)
     if is_opted_out(ApiMethods::GET_VARIATION_NAME)
       return nil
     end
@@ -463,11 +451,11 @@ class VWO
     unless @is_instance_valid
       @logger.log(
         LogLevelEnum::ERROR,
-        format(
-          LogMessageEnum::ErrorMessages::API_CONFIG_CORRUPTED,
-          file: FILE,
-          api_name: ApiMethods::GET_VARIATION_NAME
-        )
+        'CONFIG_CORRUPTED',
+        {
+          '{file}' => FILE,
+          '{api}' => ApiMethods::GET_VARIATION_NAME
+        }
       )
       return
     end
@@ -481,11 +469,11 @@ class VWO
       (variation_targeting_variables.nil? || valid_hash?(variation_targeting_variables))
       @logger.log(
         LogLevelEnum::ERROR,
-        format(
-          LogMessageEnum::ErrorMessages::GET_VARIATION_NAME_API_INVALID_PARAMS,
-          api_name: ApiMethods::GET_VARIATION_NAME,
-          file: FILE
-        )
+        'API_BAD_PARAMETERS',
+        {
+          '{file}' => FILE,
+          '{api}' => ApiMethods::GET_VARIATION_NAME
+        }
       )
       return
     end
@@ -496,13 +484,13 @@ class VWO
     # Validate campaign
     if campaign.nil? || campaign['status'] != STATUS_RUNNING
       @logger.log(
-        LogLevelEnum::ERROR,
-        format(
-          LogMessageEnum::ErrorMessages::CAMPAIGN_NOT_RUNNING,
-          file: FILE,
-          campaign_key: campaign_key,
-          api_name: ApiMethods::GET_VARIATION_NAME
-        )
+        LogLevelEnum::WARNING,
+        'CAMPAIGN_NOT_RUNNING',
+        {
+          '{file}' => FILE,
+          '{campaignKey}' => campaign_key,
+          '{api}' => ApiMethods::GET_VARIATION_NAME
+        }
       )
       return
     end
@@ -512,14 +500,14 @@ class VWO
     if campaign_type == CampaignTypes::FEATURE_ROLLOUT
       @logger.log(
         LogLevelEnum::ERROR,
-        format(
-          LogMessageEnum::ErrorMessages.INVALID_API,
-          file: FILE,
-          api_name: ApiMethods::GET_VARIATION_NAME,
-          user_id: user_id,
-          campaign_key: campaign_key,
-          campaign_type: campaign_type
-        )
+        'API_NOT_APPLICABLE',
+        {
+          '{file}' => FILE,
+          '{api}' => ApiMethods::GET_VARIATION_NAME,
+          '{userId}' => user_id,
+          '{campaignKey}' => campaign_key,
+          '{campaignType}' => campaign_type,
+        }
       )
       return
     end
@@ -528,16 +516,6 @@ class VWO
 
     # Check if variation_name has been assigned
     unless valid_value?(variation)
-      # log invalid variation key
-      @logger.log(
-        LogLevelEnum::INFO,
-        format(
-          LogMessageEnum::InfoMessages::INVALID_VARIATION_KEY,
-          file: FILE,
-          user_id: user_id,
-          campaign_key: campaign_key
-        )
-      )
       return
     end
 
@@ -545,12 +523,11 @@ class VWO
   rescue StandardError => e
     @logger.log(
       LogLevelEnum::ERROR,
-      format(
-        LogMessageEnum::ErrorMessages::API_NOT_WORKING,
-        file: FILE,
-        api_name: ApiMethods::GET_VARIATION_NAME,
-        exception: e
-      )
+      '({file}): {api} API error: ' + e.message,
+      {
+        '{file}' => FILE,
+        '{api}' => ApiMethods::GET_VARIATION_NAME
+      }
     )
     nil
   end
@@ -571,6 +548,7 @@ class VWO
   #
 
   def track(campaign_key, user_id, goal_identifier, options = {})
+    @logger.set_api_name(ApiMethods::TRACK)
     if is_opted_out(ApiMethods::TRACK)
       return false
     end
@@ -578,11 +556,11 @@ class VWO
     unless @is_instance_valid
       @logger.log(
         LogLevelEnum::ERROR,
-        format(
-          LogMessageEnum::ErrorMessages::API_CONFIG_CORRUPTED,
-          file: FILE,
-          api_name: ApiMethods::TRACK
-        )
+        'CONFIG_CORRUPTED',
+        {
+          '{file}' => FILE,
+          '{api}' => ApiMethods::TRACK
+        }
       )
       return false
     end
@@ -599,11 +577,11 @@ class VWO
       # log invalid params
       @logger.log(
         LogLevelEnum::ERROR,
-        format(
-          LogMessageEnum::ErrorMessages::TRACK_API_INVALID_PARAMS,
-          file: FILE,
-          api_name: ApiMethods::TRACK
-        )
+        'API_BAD_PARAMETERS',
+        {
+          '{file}' => FILE,
+          '{api}' => ApiMethods::TRACK
+        }
       )
       return false
     end
@@ -619,6 +597,7 @@ class VWO
     metric_map = {}
     revenue_props = []
     result = {}
+    batch_event_data = {"ev" => []}
     campaigns.each do |campaign|
       begin
         campaign_type = campaign['type']
@@ -626,14 +605,14 @@ class VWO
         if campaign_type == CampaignTypes::FEATURE_ROLLOUT
           @logger.log(
             LogLevelEnum::ERROR,
-            format(
-              LogMessageEnum::ErrorMessages::INVALID_API,
-              file: FILE,
-              api_name: ApiMethods::TRACK,
-              user_id: user_id,
-              campaign_key: campaign['key'],
-              campaign_type: campaign_type
-            )
+            'API_NOT_APPLICABLE',
+            {
+              '{file}' => FILE,
+              '{api}' => ApiMethods::TRACK,
+              '{userId}' => user_id,
+              '{campaignKey}' => campaign_key,
+              '{campaignType}' => campaign_type,
+            }
           )
           result[campaign['key']] = false
           next
@@ -646,28 +625,26 @@ class VWO
           if goal.nil? || !goal["id"]
             @logger.log(
               LogLevelEnum::ERROR,
-              format(
-                LogMessageEnum::ErrorMessages::TRACK_API_GOAL_NOT_FOUND,
-                file: FILE,
-                goal_identifier: goal_identifier,
-                user_id: user_id,
-                campaign_key: campaign['key'],
-                api_name: ApiMethods::TRACK
-              )
+              'TRACK_API_GOAL_NOT_FOUND',
+              {
+                '{file}' => FILE,
+                '{goalIdentifier}' => goal_identifier,
+                '{userId}' => user_id,
+                '{campaignKey}' => campaign['key']
+              }
             )
             result[campaign['key']] = false
             next
           elsif goal['type'] == GoalTypes::REVENUE && !valid_value?(revenue_value)
             @logger.log(
               LogLevelEnum::ERROR,
-              format(
-                LogMessageEnum::ErrorMessages::TRACK_API_REVENUE_NOT_PASSED_FOR_REVENUE_GOAL,
-                file: FILE,
-                user_id: user_id,
-                goal_identifier: goal_identifier,
-                campaign_key: campaign['key'],
-                api_name: ApiMethods::TRACK
-              )
+              'TRACK_API_REVENUE_NOT_PASSED_FOR_REVENUE_GOAL',
+              {
+                '{file}' => FILE,
+                '{userId}' => user_id,
+                '{goalIdentifier}' => goal_identifier,
+                '{campaignKey}' => campaign['key']
+              }
             )
             result[campaign['key']] = false
             next
@@ -690,14 +667,13 @@ class VWO
           else
             @logger.log(
               LogLevelEnum::INFO,
-              format(
-                LogMessageEnum::InfoMessages::GOAL_ALREADY_TRACKED,
-                file: FILE,
-                user_id: user_id,
-                campaign_key: campaign['key'],
-                goal_identifier: goal_identifier,
-                api_name: ApiMethods::TRACK
-              )
+              'CAMPAIGN_GOAL_ALREADY_TRACKED',
+              {
+                '{file}' => FILE,
+                '{userId}' => user_id,
+                '{campaignKey}' => campaign['key'],
+                '{goalIdentifier}' => goal_identifier
+              }
             )
             result[campaign['key']] = false
             next
@@ -718,7 +694,7 @@ class VWO
             if goal['type'] == GoalTypes::REVENUE && !(revenue_props.include? goal['revenueProp'])
               revenue_props << goal['revenueProp']
             end
-          else
+          elsif campaigns.count == 1
             impression = create_impression(
               @settings_file,
               campaign['id'],
@@ -731,26 +707,24 @@ class VWO
             if @event_dispatcher.dispatch(impression)
               @logger.log(
                 LogLevelEnum::INFO,
-                format(
-                  LogMessageEnum::InfoMessages::IMPRESSION_SUCCESS,
-                  file: FILE,
-                  account_id: @account_id,
-                  campaign_id: campaign['id'],
-                  variation_id: variation['id'],
-                  end_point: EVENTS::TRACK_GOAL
-                )
-              )
-              @logger.log(
-                LogLevelEnum::INFO,
-                format(
-                  LogMessageEnum::InfoMessages::MAIN_KEYS_FOR_IMPRESSION,
-                  file: FILE,
-                  campaign_id: impression[:experiment_id],
-                  account_id: impression[:account_id],
-                  variation_id: impression[:combination]
-                )
+                'IMPRESSION_SUCCESS',
+                {
+                  '{file}' => FILE,
+                  '{mainKeys}' => JSON.generate({'campaignId' => campaign['id'], 'variationId' => variation['id'], 'goalId' => goal['id']}),
+                  '{accountId}' => @account_id,
+                  '{endPoint}' => EVENTS::TRACK_GOAL
+                }
               )
             end
+          else
+            batch_event_data["ev"] << create_bulk_event_impression(
+              @settings_file,
+              campaign['id'],
+              variation['id'],
+              user_id,
+              goal['id'],
+              revenue_value
+            )
           end
           result[campaign['key']] = true
           next
@@ -759,22 +733,27 @@ class VWO
       rescue StandardError => e
         @logger.log(
           LogLevelEnum::ERROR,
-          format(
-            e.message,
-            file: FILE,
-            exception: e
-          )
+          '({file}): {api} API error: ' + e.message,
+          {
+            '{file}' => FILE,
+            '{api}' => ApiMethods::TRACK
+          }
         )
       end
     end
 
+    multiple_call_response = false # use for normal call when track multiple goals in single call
     if is_event_arch_enabled
       properties = get_events_base_properties(@settings_file, goal_identifier)
       payload = get_track_goal_payload_data(@settings_file, user_id, goal_identifier, revenue_value, metric_map, revenue_props)
       @event_dispatcher.dispatch_event_arch_post(properties, payload)
+    elsif batch_event_data["ev"].count != 0
+      paramters = get_batch_event_query_params(@settings_file['accountId'], @sdk_key, @usage_stats.usage_stats)
+      batch_events_dispatcher = VWO::Services::BatchEventsDispatcher.new(@is_development_mode)
+      multiple_call_response = batch_events_dispatcher.dispatch(batch_event_data, nil, paramters)
     end
 
-    if result.length() == 0
+    if result.length() == 0 || (batch_event_data["ev"].count != 0 && !multiple_call_response)
       return nil
     end
 
@@ -782,12 +761,11 @@ class VWO
   rescue StandardError => e
     @logger.log(
       LogLevelEnum::ERROR,
-      format(
-        LogMessageEnum::ErrorMessages::API_NOT_WORKING,
-        file: FILE,
-        api_name: ApiMethods::TRACK,
-        exception: e
-      )
+      '({file}): {api} API error: ' + e.message,
+      {
+        '{file}' => FILE,
+        '{api}' => ApiMethods::TRACK
+      }
     )
     false
   end
@@ -806,6 +784,7 @@ class VWO
   # @return[Boolean]  true if user becomes part of feature test/rollout, otherwise false.
 
   def feature_enabled?(campaign_key, user_id, options = {})
+    @logger.set_api_name(ApiMethods::IS_FEATURE_ENABLED)
     if is_opted_out(ApiMethods::IS_FEATURE_ENABLED)
       return false
     end
@@ -813,11 +792,11 @@ class VWO
     unless @is_instance_valid
       @logger.log(
         LogLevelEnum::ERROR,
-        format(
-          LogMessageEnum::ErrorMessages::API_CONFIG_CORRUPTED,
-          file: FILE,
-          api_name: ApiMethods::IS_FEATURE_ENABLED
-        )
+        'CONFIG_CORRUPTED',
+        {
+          '{file}' => FILE,
+          '{api}' => ApiMethods::IS_FEATURE_ENABLED
+        }
       )
       return false
     end
@@ -826,25 +805,17 @@ class VWO
     # Retrieve custom variables
     custom_variables = options[:custom_variables]
     variation_targeting_variables = options[:variation_targeting_variables]
-    @logger.log(
-      LogLevelEnum::INFO,
-      format(
-        LogMessageEnum::InfoMessages::API_CALLED,
-        file: FILE,
-        api_name: ApiMethods::IS_FEATURE_ENABLED,
-        user_id: user_id
-      )
-    )
+
     # Validate input parameters
     unless valid_string?(campaign_key) && valid_string?(user_id) && (custom_variables.nil? || valid_hash?(custom_variables)) &&
       (variation_targeting_variables.nil? || valid_hash?(variation_targeting_variables))
       @logger.log(
         LogLevelEnum::ERROR,
-        format(
-          LogMessageEnum::ErrorMessages::IS_FEATURE_ENABLED_API_INVALID_PARAMS,
-          api_name: ApiMethods::IS_FEATURE_ENABLED,
-          file: FILE
-        )
+        'API_BAD_PARAMETERS',
+        {
+          '{file}' => FILE,
+          '{api}' => ApiMethods::IS_FEATURE_ENABLED
+        }
       )
       return false
     end
@@ -856,13 +827,13 @@ class VWO
     unless campaign && campaign['status'] == STATUS_RUNNING
       # log error
       @logger.log(
-        LogLevelEnum::ERROR,
-        format(
-          LogMessageEnum::ErrorMessages::CAMPAIGN_NOT_RUNNING,
-          file: FILE,
-          campaign_key: campaign_key,
-          api_name: ApiMethods::IS_FEATURE_ENABLED
-        )
+        LogLevelEnum::WARNING,
+        'CAMPAIGN_NOT_RUNNING',
+        {
+          '{file}' => FILE,
+          '{campaignKey}' => campaign_key,
+          '{api}' => ApiMethods::IS_FEATURE_ENABLED
+        }
       )
       return false
     end
@@ -873,14 +844,14 @@ class VWO
     if campaign_type == CampaignTypes::VISUAL_AB
       @logger.log(
         LogLevelEnum::ERROR,
-        format(
-          LogMessageEnum::ErrorMessages::INVALID_API,
-          file: FILE,
-          api_name: ApiMethods::IS_FEATURE_ENABLED,
-          user_id: user_id,
-          campaign_key: campaign_key,
-          campaign_type: campaign_type
-        )
+        'API_NOT_APPLICABLE',
+        {
+          '{file}' => FILE,
+          '{api}' => ApiMethods::IS_FEATURE_ENABLED,
+          '{userId}' => user_id,
+          '{campaignKey}' => campaign_key,
+          '{campaignType}' => campaign_type,
+        }
       )
       return false
     end
@@ -920,27 +891,27 @@ class VWO
 
         @event_dispatcher.dispatch(impression)
         @logger.log(
-          LogLevelEnum::INFO,
-          format(
-            LogMessageEnum::InfoMessages::MAIN_KEYS_FOR_IMPRESSION,
-            file: FILE,
-            campaign_id: impression[:experiment_id],
-            account_id: impression[:account_id],
-            variation_id: impression[:combination]
+            LogLevelEnum::INFO,
+            'IMPRESSION_SUCCESS',
+            {
+              '{file}' => FILE,
+              '{mainKeys}' => JSON.generate({'campaignId' => impression[:experiment_id]}),
+              '{accountId}' => @account_id,
+              '{endPoint}' => EVENTS::TRACK_USER
+            }
           )
-        )
       end
 
     else
       @logger.log(
         LogLevelEnum::INFO,
-        format(
-          LogMessageEnum::InfoMessages::USER_ALREADY_TRACKED,
-          file: FILE,
-          user_id: user_id,
-          campaign_key: campaign_key,
-          api_name: ApiMethods::IS_FEATURE_ENABLED
-        )
+        'CAMPAIGN_USER_ALREADY_TRACKED',
+        {
+          '{file}' => FILE,
+          '{userId}' => user_id,
+          '{campaignKey}' => campaign_key,
+          '{api}' => ApiMethods::IS_FEATURE_ENABLED
+        }
       )
     end
     if campaign_type == CampaignTypes::FEATURE_ROLLOUT
@@ -952,24 +923,24 @@ class VWO
     if result
       @logger.log(
         LogLevelEnum::INFO,
-        format(
-          LogMessageEnum::InfoMessages::FEATURE_ENABLED_FOR_USER,
-          file: FILE,
-          user_id: user_id,
-          feature_key: campaign_key,
-          api_name: ApiMethods::IS_FEATURE_ENABLED
-        )
+        'FEATURE_STATUS',
+        {
+          '{file}' => FILE,
+          '{userId}' => user_id,
+          '{campaignKey}' => campaign_key,
+          '{status}' => 'enabled'
+        }
       )
     else
       @logger.log(
         LogLevelEnum::INFO,
-        format(
-          LogMessageEnum::InfoMessages::FEATURE_NOT_ENABLED_FOR_USER,
-          file: FILE,
-          user_id: user_id,
-          feature_key: campaign_key,
-          api_name: ApiMethods::IS_FEATURE_ENABLED
-        )
+        'FEATURE_STATUS',
+        {
+          '{file}' => FILE,
+          '{userId}' => user_id,
+          '{campaignKey}' => campaign_key,
+          '{status}' => 'disabled'
+        }
       )
     end
 
@@ -977,12 +948,11 @@ class VWO
   rescue StandardError => e
     @logger.log(
       LogLevelEnum::ERROR,
-      format(
-        LogMessageEnum::ErrorMessages::API_NOT_WORKING,
-        file: FILE,
-        api_name: ApiMethods::IS_FEATURE_ENABLED,
-        exception: e
-      )
+      '({file}): {api} API error: ' + e.message,
+      {
+        '{file}' => FILE,
+        '{api}' => ApiMethods::IS_FEATURE_ENABLED
+      }
     )
     false
   end
@@ -1007,6 +977,7 @@ class VWO
   #
 
   def get_feature_variable_value(campaign_key, variable_key, user_id, options = {})
+    @logger.set_api_name(ApiMethods::GET_FEATURE_VARIABLE_VALUE)
     if is_opted_out(ApiMethods::GET_FEATURE_VARIABLE_VALUE)
       return nil
     end
@@ -1014,11 +985,11 @@ class VWO
     unless @is_instance_valid
       @logger.log(
         LogLevelEnum::ERROR,
-        format(
-          LogMessageEnum::ErrorMessages::API_CONFIG_CORRUPTED,
-          file: FILE,
-          api_name: ApiMethods::GET_FEATURE_VARIABLE_VALUE
-        )
+        'CONFIG_CORRUPTED',
+        {
+          '{file}' => FILE,
+          '{api}' => ApiMethods::GET_FEATURE_VARIABLE_VALUE
+        }
       )
       return
     end
@@ -1032,11 +1003,11 @@ class VWO
       (custom_variables.nil? || valid_hash?(custom_variables)) && (variation_targeting_variables.nil? || valid_hash?(variation_targeting_variables))
       @logger.log(
         LogLevelEnum::ERROR,
-        format(
-          LogMessageEnum::ErrorMessages::GET_FEATURE_VARIABLE_VALUE_API_INVALID_PARAMS,
-          file: FILE,
-          api_name: ApiMethods::GET_FEATURE_VARIABLE_VALUE
-        )
+        'API_BAD_PARAMETERS',
+        {
+          '{file}' => FILE,
+          '{api}' => ApiMethods::GET_FEATURE_VARIABLE_VALUE
+        }
       )
       return
     end
@@ -1048,13 +1019,13 @@ class VWO
     unless campaign && campaign['status'] == STATUS_RUNNING
       # log error
       @logger.log(
-        LogLevelEnum::ERROR,
-        format(
-          LogMessageEnum::ErrorMessages::CAMPAIGN_NOT_RUNNING,
-          file: FILE,
-          campaign_key: campaign_key,
-          api_name: ApiMethods::GET_FEATURE_VARIABLE_VALUE
-        )
+        LogLevelEnum::WARNING,
+        'CAMPAIGN_NOT_RUNNING',
+        {
+          '{file}' => FILE,
+          '{campaignKey}' => campaign_key,
+          '{api}' => ApiMethods::GET_FEATURE_VARIABLE_VALUE
+        }
       )
       return
     end
@@ -1064,14 +1035,14 @@ class VWO
     if campaign_type == CampaignTypes::VISUAL_AB
       @logger.log(
         LogLevelEnum::ERROR,
-        format(
-          LogMessageEnum::ErrorMessages::INVALID_API,
-          file: FILE,
-          api_name: ApiMethods::GET_FEATURE_VARIABLE_VALUE,
-          campaign_key: campaign_key,
-          campaign_type: campaign_type,
-          user_id: user_id
-        )
+        'API_NOT_APPLICABLE',
+        {
+          '{file}' => FILE,
+          '{api}' => ApiMethods::GET_FEATURE_VARIABLE_VALUE,
+          '{userId}' => user_id,
+          '{campaignKey}' => campaign_key,
+          '{campaignType}' => campaign_type,
+        }
       )
       return
     end
@@ -1086,27 +1057,27 @@ class VWO
     elsif campaign_type == CampaignTypes::FEATURE_TEST
       if !variation['isFeatureEnabled']
         @logger.log(
-          LogLevelEnum::INFO,
-          format(
-            LogMessageEnum::InfoMessages::FEATURE_NOT_ENABLED_FOR_USER,
-            file: FILE,
-            feature_key: campaign_key,
-            user_id: user_id,
-            api_name: ApiMethods::GET_FEATURE_VARIABLE_VALUE
-          )
-        )
+        LogLevelEnum::INFO,
+        'FEATURE_STATUS',
+        {
+          '{file}' => FILE,
+          '{userId}' => user_id,
+          '{campaignKey}' => campaign_key,
+          '{status}' => 'disabled'
+        }
+      )
         variation = get_control_variation(campaign)
       else
         @logger.log(
-          LogLevelEnum::INFO,
-          format(
-            LogMessageEnum::InfoMessages::FEATURE_ENABLED_FOR_USER,
-            file: FILE,
-            feature_key: campaign_key,
-            user_id: user_id,
-            api_name: ApiMethods::GET_FEATURE_VARIABLE_VALUE
-          )
-        )
+        LogLevelEnum::INFO,
+        'FEATURE_STATUS',
+        {
+          '{file}' => FILE,
+          '{userId}' => user_id,
+          '{campaignKey}' => campaign_key,
+          '{status}' => 'enabled'
+        }
+      )
       end
       variables = variation['variables']
     end
@@ -1115,43 +1086,37 @@ class VWO
     unless variable
       # Log variable not found
       @logger.log(
-        LogLevelEnum::ERROR,
-        format(
-          LogMessageEnum::ErrorMessages::VARIABLE_NOT_FOUND,
-          file: FILE,
-          variable_key: variable_key,
-          campaign_key: campaign_key,
-          campaign_type: campaign_type,
-          user_id: user_id,
-          api_name: ApiMethods::GET_FEATURE_VARIABLE_VALUE
-        )
+        LogLevelEnum::INFO,
+        'FEATURE_VARIABLE_DEFAULT_VALUE',
+        {
+          '{file}' => FILE,
+          '{variableKey}' => variable_key,
+          '{variationName}' => variation['name']
+        }
       )
       return
     end
 
     @logger.log(
       LogLevelEnum::INFO,
-      format(
-        LogMessageEnum::InfoMessages::VARIABLE_FOUND,
-        file: FILE,
-        variable_key: variable_key,
-        variable_value: variable['value'],
-        campaign_key: campaign_key,
-        campaign_type: campaign_type,
-        user_id: user_id,
-        api_name: ApiMethods::GET_FEATURE_VARIABLE_VALUE
-      )
+      'FEATURE_VARIABLE_VALUE',
+      {
+        '{file}' => FILE,
+        '{variableKey}' => variable_key,
+        '{variableValue}' => variable['value'],
+        '{campaignKey}' => campaign_key,
+        '{userId}' => user_id,
+      }
     )
     get_type_casted_feature_value(variable['value'], variable['type'])
   rescue StandardError => e
     @logger.log(
       LogLevelEnum::ERROR,
-      format(
-        LogMessageEnum::ErrorMessages::API_NOT_WORKING,
-        file: FILE,
-        api_name: ApiMethods::GET_FEATURE_VARIABLE_VALUE,
-        exception: e
-      )
+      '({file}): {api} API error: ' + e.message,
+      {
+        '{file}' => FILE,
+        '{api}' => ApiMethods::GET_FEATURE_VARIABLE_VALUE
+      }
     )
     nil
   end
@@ -1165,20 +1130,21 @@ class VWO
   # @return                                       true if call is made successfully, else false
 
   def push(tag_key, tag_value, user_id = nil)
+    @logger.set_api_name(ApiMethods::PUSH)
     if is_opted_out(ApiMethods::PUSH)
-      return false
+      return {}
     end
 
     unless @is_instance_valid
       @logger.log(
         LogLevelEnum::ERROR,
-        format(
-          LogMessageEnum::ErrorMessages::API_CONFIG_CORRUPTED,
-          file: FILE,
-          api_name: ApiMethods::PUSH
-        )
+        'CONFIG_CORRUPTED',
+        {
+          '{file}' => FILE,
+          '{api}' => ApiMethods::PUSH
+        }
       )
-      return false
+      return {}
     end
 
     # Argument reshuffling.
@@ -1190,46 +1156,67 @@ class VWO
       custom_dimension_map[tag_key.to_sym] = tag_value
     end
 
-    unless (valid_string?(tag_key) || valid_hash?(tag_key)) && valid_string?(tag_value) && valid_string?(user_id)
+    unless (valid_string?(tag_key) || valid_hash?(tag_key)) && valid_string?(user_id)
       @logger.log(
         LogLevelEnum::ERROR,
-        format(
-          LogMessageEnum::ErrorMessages::PUSH_API_INVALID_PARAMS,
-          file: FILE,
-          api_name: ApiMethods::PUSH
-        )
+        'API_BAD_PARAMETERS',
+        {
+          '{file}' => FILE,
+          '{api}' => ApiMethods::PUSH
+        }
       )
-      return false
+      return {}
     end
 
+    result = {}
     custom_dimension_map.each do |tag_key, tag_value|
-      if tag_key.length > PushApi::TAG_KEY_LENGTH
-        @logger.log(
-          LogLevelEnum::ERROR,
-          format(
-            LogMessageEnum::ErrorMessages::TAG_KEY_LENGTH_EXCEEDED,
-            file: FILE,
-            user_id: user_id,
-            tag_key: tag_key,
-            api_name: ApiMethods::PUSH
-          )
-        )
-        return false
+      if !tag_key.is_a?(Symbol) || !tag_value.is_a?(String)
+        custom_dimension_map.delete(tag_key)
+        result[tag_key] = false
+        next
       end
 
-      if tag_value.length > PushApi::TAG_VALUE_LENGTH
+      if tag_key.length > PushApi::TAG_KEY_LENGTH || tag_key.length == 0
         @logger.log(
           LogLevelEnum::ERROR,
-          format(
-            LogMessageEnum::ErrorMessages::TAG_VALUE_LENGTH_EXCEEDED,
-            file: FILE,
-            user_id: user_id,
-            tag_value: tag_value,
-            api_name: ApiMethods::PUSH
-          )
+          'TAG_KEY_LENGTH_EXCEEDED',
+          {
+            '{file}' => FILE,
+            '{userId}' => user_id,
+            '{tagKey}' => tag_key
+          }
         )
-        return false
+        custom_dimension_map.delete(tag_key)
+        result[tag_key] = false
+        next
       end
+
+      if tag_value.length > PushApi::TAG_VALUE_LENGTH || tag_value.length == 0
+        @logger.log(
+          LogLevelEnum::ERROR,
+          'TAG_VALUE_LENGTH_EXCEEDED',
+          {
+            '{file}' => FILE,
+            '{userId}' => user_id,
+            '{tagKey}' => tag_key,
+            '{tagValue}' => tag_value
+          }
+        )
+        custom_dimension_map.delete(tag_key)
+        result[tag_key] = false
+      end
+    end
+
+    if custom_dimension_map.count == 0
+      @logger.log(
+        LogLevelEnum::ERROR,
+        'API_BAD_PARAMETERS',
+        {
+          '{file}' => FILE,
+          '{api}' => ApiMethods::PUSH
+        }
+      )
+      return result
     end
 
     if defined?(@batch_events)
@@ -1237,37 +1224,43 @@ class VWO
         impression = get_batch_event_url_params(@settings_file, tag_key, tag_value, user_id)
         @batch_events_queue.enqueue(impression)
       end
+      resp = true
     elsif is_event_arch_enabled
       properties = get_events_base_properties(@settings_file, EventEnum::VWO_SYNC_VISITOR_PROP)
       payload = get_push_payload_data(@settings_file, user_id, EventEnum::VWO_SYNC_VISITOR_PROP, custom_dimension_map)
-      @event_dispatcher.dispatch_event_arch_post(properties, payload)
-    else
+      resp = @event_dispatcher.dispatch_event_arch_post(properties, payload)
+    elsif custom_dimension_map.count == 1
       custom_dimension_map.each do |tag_key, tag_value|
         impression = get_url_params(@settings_file, tag_key, tag_value, user_id, @sdk_key)
-        @event_dispatcher.dispatch(impression)
-
+        result[tag_key] = @event_dispatcher.dispatch(impression)
         @logger.log(
           LogLevelEnum::INFO,
-          format(
-            LogMessageEnum::InfoMessages::MAIN_KEYS_FOR_PUSH_API,
-            file: FILE,
-            u: impression['u'],
-            account_id: impression['account_id'],
-            tags: impression['tags']
-          )
+          'IMPRESSION_SUCCESS',
+          {
+            '{file}' => FILE,
+            '{endPoint}' => ApiMethods::PUSH,
+            '{accountId}' => @settings_file['accountId'],
+            '{mainKeys}' => JSON.generate({'tags' => impression['tags']}),
+          }
         )
       end
+      resp = true
+    else
+      batch_event_data = {"ev" => []}
+      custom_dimension_map.each do |tag_key, tag_value|
+        batch_event_data["ev"] << get_batch_event_url_params(@settings_file, tag_key, tag_value, user_id)
+      end
+      paramters = get_batch_event_query_params(@settings_file['accountId'], @sdk_key, @usage_stats.usage_stats)
+      batch_events_dispatcher = VWO::Services::BatchEventsDispatcher.new(@is_development_mode)
+      resp = batch_events_dispatcher.dispatch(batch_event_data, nil, paramters)
     end
-    true
+
+    return prepare_push_response(custom_dimension_map, resp, result)
   rescue StandardError => e
     @logger.log(
       LogLevelEnum::ERROR,
-      format(
-        LogMessageEnum::ErrorMessages::API_NOT_WORKING,
-        file: FILE,
-        api_name: ApiMethods::PUSH,
-        exception: e
-      )
+      '({file}): push API error: ' + e.message,
+      {'{file}' => FILE}
     )
     false
   end
@@ -1276,7 +1269,10 @@ class VWO
     !@user_storage || !@variation_decider.has_stored_variation
   end
 
+  # Manually flush impression events to VWO which are queued in batch queue as per batchEvents config
+  # @return[bool] 
   def flush_events
+    @logger.set_api_name(ApiMethods::FLUSH_EVENTS)
     if is_opted_out(ApiMethods::FLUSH_EVENTS)
       return false
     end
@@ -1284,11 +1280,11 @@ class VWO
     unless @is_instance_valid
       @logger.log(
         LogLevelEnum::ERROR,
-        format(
-          LogMessageEnum::ErrorMessages::API_CONFIG_CORRUPTED,
-          file: FILE,
-          api_name: ApiMethods::FLUSH_EVENTS
-        )
+        'CONFIG_CORRUPTED',
+        {
+          '{file}' => FILE,
+          '{api}' => ApiMethods::FLUSH_EVENTS
+        }
       )
       return false
     end
@@ -1301,12 +1297,11 @@ class VWO
   rescue StandardError => e
     @logger.log(
       LogLevelEnum::ERROR,
-      format(
-        LogMessageEnum::ErrorMessages::API_NOT_WORKING,
-        file: FILE,
-        api_name: ApiMethods::FLUSH_EVENTS,
-        exception: e
-      )
+      '({file}): {api} API error: ' + e.message,
+      {
+        '{file}' => FILE,
+        '{api}' => ApiMethods::FLUSH_EVENTS
+      }
     )
     false
   end
@@ -1323,12 +1318,15 @@ class VWO
       goal_type_to_track = options[:goal_type_to_track]
     else
       @logger.log(
-        LogLevelEnum::ERROR,
-        format(
-          LogMessageEnum::ErrorMessages::INVALID_GOAL_TYPE,
-          file: FILE
+          LogLevelEnum::ERROR,
+          'CONFIG_PARAMETER_INVALID',
+          {
+            '{file}' => FILE,
+            '{parameter}' => 'goal_type_to_track',
+            '{type}' => 'string(REVENUE, CUSTOM, ALL)',
+            '{api}' => 'init'
+          }
         )
-      )
     end
     goal_type_to_track
   end
@@ -1338,12 +1336,13 @@ class VWO
   # return[bool]
   #
   def set_opt_out
-    @logger.log(
+      @logger.set_api_name(ApiMethods::OPT_OUT)
+      @logger.log(
         LogLevelEnum::INFO,
-        format(
-          LogMessageEnum::InfoMessages::OPT_OUT_API_CALLED,
-          file: FILE
-        )
+        'OPT_OUT_API_CALLED',
+        {
+          '{file}' => FILE
+        }
       )
       if defined?(@batch_events) && !@batch_events_queue.nil?
         @batch_events_queue.flush(manual: true)
@@ -1372,11 +1371,11 @@ class VWO
     if @is_opted_out
       @logger.log(
         LogLevelEnum::INFO,
-        format(
-          LogMessageEnum::InfoMessages::API_NOT_ENABLED,
-          file: FILE,
-          api: api_name
-        )
+        'API_NOT_ENABLED',
+        {
+          '{file}' => FILE,
+          '{api}' => api_name
+        }
       )
     end
     return @is_opted_out

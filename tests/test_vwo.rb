@@ -35,7 +35,7 @@ USER_EXPECTATIONS = JSON.load(File.open(File.join(File.dirname(__FILE__), 'data/
 
 class VWO
   class Logger
-    def log(level, message, disable_logs = false)
+    def log(level, message, params, disable_logs = false)
       # no-op
     end
   end
@@ -662,12 +662,12 @@ class VWOTest < Test::Unit::TestCase
 
   def test_vwo_initialized_with_provided_log_level_DEBUG
     vwo_instance = VWO.new(60781, 'ea87170ad94079aa190bc7c9b85d26fb', nil, nil, true, JSON.generate(SETTINGS_FILE['AB_T_50_W_50_50']), { log_level: Logger::DEBUG })
-    assert_equal(vwo_instance.logger.level, Logger::DEBUG)
+    assert_equal(vwo_instance.logging.level, Logger::DEBUG)
   end
 
   def test_vwo_initialized_with_provided_log_level_WARNING
     vwo_instance = VWO.new(60781, 'ea87170ad94079aa190bc7c9b85d26fb', nil, nil, true, JSON.generate(SETTINGS_FILE['AB_T_50_W_50_50']), { log_level: Logger::WARN })
-    assert_equal(vwo_instance.logger.level, Logger::WARN)
+    assert_equal(vwo_instance.logging.level, Logger::WARN)
   end
 
   # test activate with pre-segmentation
@@ -960,57 +960,77 @@ class VWOTest < Test::Unit::TestCase
 
   def test_push_corrupted_settings_file
     set_up('DUMMY_SETTINGS')
-    assert_equal(false, @vwo.push("1234", '12435t4', '12343'))
+    assert_equal({}, @vwo.push("1234", '12435t4', '12343'))
   end
 
   def test_push_true
     vwo_instance = VWO.new(60781, 'ea87170ad94079aa190bc7c9b85d26fb', nil, nil, true, JSON.generate(SETTINGS_FILE['DUMMY_SETTINGS_FILE']), { log_level: Logger::DEBUG })
-    assert_equal(true, vwo_instance.push('browser', 'chrome', '12345'))
+    assert_equal(true, vwo_instance.push('browser', 'chrome', '12345')[:browser])
   end
 
   def test_push_int_value_false
     vwo_instance = VWO.new(60781, 'ea87170ad94079aa190bc7c9b85d26fb', nil, nil, true, JSON.generate(SETTINGS_FILE['DUMMY_SETTINGS_FILE']), { log_level: Logger::DEBUG })
-    assert_equal(false, vwo_instance.push('browser', 1, '12345'))
+    assert_equal(false, vwo_instance.push('browser', 1, '12345')[:browser])
   end
 
   def test_push_longer_than_255_value_false
     vwo_instance = VWO.new(60781, 'ea87170ad94079aa190bc7c9b85d26fb', nil, nil, true, JSON.generate(SETTINGS_FILE['DUMMY_SETTINGS_FILE']), { log_level: Logger::DEBUG })
-    assert_equal(false, vwo_instance.push('browser', 'a' * 256, '12345'))
+    assert_equal(false, vwo_instance.push('browser', 'a' * 256, '12345')[:browser])
   end
 
   def test_push_exact_255_value_true
     vwo_instance = VWO.new(60781, 'ea87170ad94079aa190bc7c9b85d26fb', nil, nil, true, JSON.generate(SETTINGS_FILE['DUMMY_SETTINGS_FILE']), { log_level: Logger::DEBUG })
-    assert_equal(true, vwo_instance.push('browser', 'a' * 255, '12345'))
+    assert_equal(true, vwo_instance.push('browser', 'a' * 255, '12345')[:browser])
   end
 
   def test_push_longer_than_255_key_false
     vwo_instance = VWO.new(60781, 'ea87170ad94079aa190bc7c9b85d26fb', nil, nil, true, JSON.generate(SETTINGS_FILE['DUMMY_SETTINGS_FILE']), { log_level: Logger::DEBUG })
-    assert_equal(false, vwo_instance.push('a' * 256, 'browser', '12345'))
+    assert_equal(false, vwo_instance.push('a' * 256, 'browser', '12345')[('a' * 256).to_sym])
   end
 
   def test_push_exact_255_key_true
     vwo_instance = VWO.new(60781, 'ea87170ad94079aa190bc7c9b85d26fb', nil, nil, true, JSON.generate(SETTINGS_FILE['DUMMY_SETTINGS_FILE']), { log_level: Logger::DEBUG })
-    assert_equal(true, vwo_instance.push('a' * 255, 'browser', '12345'))
+    assert_equal(true, vwo_instance.push('a' * 255, 'browser', '12345')[('a' * 255).to_sym])
+  end
+
+  def test_push_for_multiple_custom_dimension
+    vwo_instance = VWO.new(60781, 'ea87170ad94079aa190bc7c9b85d26fb', nil, nil, true, JSON.generate(SETTINGS_FILE['DUMMY_SETTINGS_FILE']), { log_level: Logger::DEBUG })
+    custom_dimension_map = {'browser' => 'chrome', 'key' => 'value'}
+    result = vwo_instance.push(custom_dimension_map, '12345')
+    result.each do |tag_key, tag_value|
+      assert_equal(true, tag_value)
+    end
+  end
+
+  def test_push_for_some_invalid_multiple_custom_dimension
+    vwo_instance = VWO.new(60781, 'ea87170ad94079aa190bc7c9b85d26fb', nil, nil, true, JSON.generate(SETTINGS_FILE['DUMMY_SETTINGS_FILE']), { log_level: Logger::DEBUG })
+    custom_dimension_map = {'browser' => 'chrome', "number" => 1243, "a" * 256 => "hello", "hi" => "a" * 256}
+    expected = {'browser' => true, "number" => false, "a" * 256 => false, "hi" => false}
+
+    result = vwo_instance.push(custom_dimension_map, '12345')
+    expected.each do |tag_key, tag_value|
+      assert_equal(tag_value, result[tag_key.to_sym])
+    end
   end
 
   def test_vwo_initialized_with_no_logger_no_log_level
     vwo_instance = VWO.new(60781, 'ea87170ad94079aa190bc7c9b85d26fb', nil, nil, true, JSON.generate(SETTINGS_FILE['AB_T_50_W_50_50']), { log_level: Logger::DEBUG })
-    assert_equal(vwo_instance.logger.level, Logger::DEBUG)
+    assert_equal(vwo_instance.logging.level, Logger::DEBUG)
   end
 
   def test_vwo_initialized_with_logger_as_false
     vwo_instance = VWO.new(60781, 'ea87170ad94079aa190bc7c9b85d26fb', nil, nil, true, JSON.generate(SETTINGS_FILE['AB_T_50_W_50_50']))
-    assert_equal(vwo_instance.logger.level, Logger::DEBUG)
+    assert_equal(vwo_instance.logging.level, Logger::DEBUG)
   end
 
   def test_vwo_initialized_with_loglevel_as_false
     vwo_instance = VWO.new(60781, 'ea87170ad94079aa190bc7c9b85d26fb', nil, nil, true, JSON.generate(SETTINGS_FILE['AB_T_50_W_50_50']), { log_level: false })
-    assert_equal(vwo_instance.logger.level, Logger::DEBUG)
+    assert_equal(vwo_instance.logging.level, Logger::DEBUG)
   end
 
   def test_vwo_initialized_with_loglevel_as_anything_bad
     vwo_instance = VWO.new(60781, 'ea87170ad94079aa190bc7c9b85d26fb', nil, nil, true, JSON.generate(SETTINGS_FILE['AB_T_50_W_50_50']), { log_level: 'bad' })
-    assert_equal(vwo_instance.logger.level, Logger::DEBUG)
+    assert_equal(vwo_instance.logging.level, Logger::DEBUG)
   end
 
   def test_update_settings_file_for_invalid_sdk_key
@@ -1058,7 +1078,7 @@ class VWOTest < Test::Unit::TestCase
 
 
     def get_batch_events_option
-      def flush_callback(events)
+      def flush_callback(message, events)
       end
 
       {
@@ -1087,7 +1107,7 @@ class VWOTest < Test::Unit::TestCase
     # push api when vwo object initialized with batch_events options
     def test_push_true_for_batch_events
       vwo_instance = VWO.new(60781, 'ea87170ad94079aa190bc7c9b85d26fb', nil, nil, true, JSON.generate(SETTINGS_FILE['DUMMY_SETTINGS_FILE']), get_batch_events_option)
-      assert_equal(true, vwo_instance.push('browser', 'chrome', '12345'))
+      assert_equal(true, vwo_instance.push('browser', 'chrome', '12345')[:browser])
     end
 
     def test_without_events_per_request
@@ -1217,7 +1237,7 @@ class VWOTest < Test::Unit::TestCase
       assert_equal(1, additional_data[:eb])
       assert_equal(1, additional_data[:_l])
     end
-    
+
 
     def test_additional_data_for_logging_and_integrations
       def integrations_callback(properties)
@@ -1561,35 +1581,35 @@ class VWOTest < Test::Unit::TestCase
     def test_push_true_with_event_arch
       vwo_instance = VWO.new(60781, 'ea87170ad94079aa190bc7c9b85d26fb', nil, nil, true, JSON.generate(SETTINGS_FILE['DUMMY_SETTINGS_FILE']), { log_level: Logger::DEBUG })
       vwo_instance.get_settings['isEventArchEnabled'] = true
-      assert_equal(true, vwo_instance.push('browser', 'chrome', '12345'))
+      assert_equal(true, vwo_instance.push('browser', 'chrome', '12345')[:browser])
     end
 
     def test_push_int_value_false_with_event_arch
       vwo_instance = VWO.new(60781, 'ea87170ad94079aa190bc7c9b85d26fb', nil, nil, true, JSON.generate(SETTINGS_FILE['DUMMY_SETTINGS_FILE']), { log_level: Logger::DEBUG })
       vwo_instance.get_settings['isEventArchEnabled'] = true
-      assert_equal(false, vwo_instance.push('browser', 1, '12345'))
+      assert_equal(false, vwo_instance.push('browser', 1, '12345')[:browser])
     end
 
     def test_push_true_with_two_arg_and_with_event_arch
       vwo_instance = VWO.new(60781, 'ea87170ad94079aa190bc7c9b85d26fb', nil, nil, true, JSON.generate(SETTINGS_FILE['DUMMY_SETTINGS_FILE']), { log_level: Logger::DEBUG })
       vwo_instance.get_settings['isEventArchEnabled'] = true
-      assert_equal(true, vwo_instance.push({'browser' => 'chrome'}, '12345'))
+      assert_equal(true, vwo_instance.push({'browser' => 'chrome'}, '12345')[:browser])
     end
 
     def test_push_true_with_two_arg
       vwo_instance = VWO.new(60781, 'ea87170ad94079aa190bc7c9b85d26fb', nil, nil, true, JSON.generate(SETTINGS_FILE['DUMMY_SETTINGS_FILE']), { log_level: Logger::DEBUG })
-      assert_equal(true, vwo_instance.push({'browser' => 'chrome'}, '12345'))
+      assert_equal(true, vwo_instance.push({'browser' => 'chrome'}, '12345')[:browser])
     end
 
     def test_push_int_value_false_with_two_arg_and_with_event_arch
       vwo_instance = VWO.new(60781, 'ea87170ad94079aa190bc7c9b85d26fb', nil, nil, true, JSON.generate(SETTINGS_FILE['DUMMY_SETTINGS_FILE']), { log_level: Logger::DEBUG })
       vwo_instance.get_settings['isEventArchEnabled'] = true
-      assert_equal(false, vwo_instance.push({'browser' => 1}, '12345'))
+      assert_equal(false, vwo_instance.push({'browser' => 1}, '12345')[:browser])
     end
 
     def test_push_int_value_false_with_two_arg
       vwo_instance = VWO.new(60781, 'ea87170ad94079aa190bc7c9b85d26fb', nil, nil, true, JSON.generate(SETTINGS_FILE['DUMMY_SETTINGS_FILE']), { log_level: Logger::DEBUG })
-      assert_equal(false, vwo_instance.push({'browser' => 1}, '12345'))
+      assert_equal(false, vwo_instance.push({'browser' => 1}, '12345')[:browser])
     end
 
     def test_get_variation_as_user_hash_passes_whitelisting
@@ -1620,7 +1640,7 @@ class VWOTest < Test::Unit::TestCase
       assert_equal(@vwo.feature_enabled?('T_50_W_50_50_WS', 'Ashley', {}), false)
       assert_equal(@vwo.get_feature_variable_value('FT_T_75_W_10_20_30_40_WS', 'STRING_VARIABLE', 'Ashley', {}), nil)
       assert_equal(@vwo.get_and_update_settings_file, false)
-      assert_equal(@vwo.push('tagKey', 'tagValue', 'Ashley'), false)      
+      assert_equal(@vwo.push('tagKey', 'tagValue', 'Ashley'), {})
       assert_equal(@vwo.flush_events, false)
     end
 
@@ -1644,7 +1664,7 @@ class VWOTest < Test::Unit::TestCase
       assert_equal(vwo_instance.feature_enabled?('T_50_W_50_50_WS', 'Ashley', {}), false)
       assert_equal(vwo_instance.get_feature_variable_value('FT_T_75_W_10_20_30_40_WS', 'STRING_VARIABLE', 'Ashley', {}), nil)
       assert_equal(vwo_instance.get_and_update_settings_file, false)
-      assert_equal(vwo_instance.push('tagKey', 'tagValue', 'Ashley'), false)      
+      assert_equal(vwo_instance.push('tagKey', 'tagValue', 'Ashley'), {})
       assert_equal(vwo_instance.flush_events, false)
     end
 end

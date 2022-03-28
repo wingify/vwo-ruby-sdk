@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+## [1.35.0] - 2022-03-28
+
+### Changed
+
+- Always check targeting conditions
+  - The option `Once` is selected by default in the VWO Application, which means the user segment condition is only checked once and the same variation is served to the user on every subsequent call to the SDK's APIs.
+  - If you choose `Always`, the user is evaluated against the segment condition on every call to the SDK's APIs.
+- Instead of multiple tracking calls in case of global goals, now one single batch call will be made to track different goals of different campaigns having same goal-identifier.
+- Instead of multiple tracking calls in case of pushing more than one custom dimension, now one single batch call will be made to push custom dimension map.
+- Integrated VWO SDK Log Messages repo instead of hardcoding messages in every VWO server-side SDK.
+- Old logs are revamped. New logs that would help in better debugging are added.
+
 ## [1.30.0] - 2022-09-03
 
 ### Changed

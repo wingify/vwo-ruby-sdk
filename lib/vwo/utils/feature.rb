@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require_relative '../logger'
 require_relative '../enums'
 require_relative '../constants'
+require_relative './log_message'
 
 # Utility module for helper math and random functions
 class VWO
@@ -41,15 +41,12 @@ class VWO
 
         return value if variable_type == VariableTypes::JSON
       rescue StandardError => _e
-        VWO::Logger.get_instance.log(
+        Logger.log(
           LogLevelEnum::ERROR,
-          format(
-            LogMessageEnum::ErrorMessages::UNABLE_TO_TYPE_CAST,
-            file: FileNameEnum::FeatureUtil,
-            value: value,
-            variable_type: variable_type,
-            of_type: value.class.name
-          )
+          'unable to type cast variable value: ' + _e.message,
+          {
+            '{file}' => FILE
+          }
         )
         nil
       end

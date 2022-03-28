@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require_relative '../logger'
 require_relative '../enums'
 require_relative '../utils/request'
+require_relative '../utils/log_message'
 
 class VWO
   module Services
@@ -23,7 +23,7 @@ class VWO
 
       def initialize(batch_config, is_development_mode = false)
         @is_development_mode = is_development_mode
-        @logger = VWO::Logger.get_instance
+        @logger = VWO::Utils::Logger
         @queue = []
         @queue_metadata = {}
         @batch_config = batch_config
@@ -33,12 +33,13 @@ class VWO
         else
           @request_time_interval = CONSTANTS::DEFAULT_REQUEST_TIME_INTERVAL
           @logger.log(
-            LogLevelEnum::DEBUG,
-            format(
-              LogMessageEnum::DebugMessages::EVENT_BATCHING_INSUFFICIENT,
-              file: FileNameEnum::BatchEventsQueue,
-              key: 'request_time_interval'
-            )
+            LogLevelEnum::INFO,
+            'EVENT_BATCH_DEFAULTS',
+            {
+              '{file}' => FileNameEnum::BatchEventsQueue,
+              '{parameter}' => 'request_time_interval',
+              '{defaultValue}' => @request_time_interval.to_s + ' ms'
+            }
           )
         end
 
@@ -47,12 +48,13 @@ class VWO
         else
           @events_per_request = CONSTANTS::DEFAULT_EVENTS_PER_REQUEST
           @logger.log(
-            LogLevelEnum::DEBUG,
-            format(
-              LogMessageEnum::DebugMessages::EVENT_BATCHING_INSUFFICIENT,
-              file: FileNameEnum::BatchEventsQueue,
-              key: 'events_per_request'
-            )
+            LogLevelEnum::INFO,
+            'EVENT_BATCH_DEFAULTS',
+            {
+              '{file}' => FileNameEnum::BatchEventsQueue,
+              '{parameter}' => 'events_per_request',
+              '{defaultValue}' => @events_per_request.to_s
+            }
           )
         end
 
@@ -94,36 +96,34 @@ class VWO
         if @queue.length() > 0
           @logger.log(
             LogLevelEnum::DEBUG,
-            format(
-              LogMessageEnum::DebugMessages::BEFORE_FLUSHING,
-              file: FileNameEnum::BatchEventsQueue,
-              manually: manual ? 'manually' : '',
-              length: @queue.length(),
-              timer: manual ? 'Timer will be cleared and registered again,' : '',
-              queue_metadata: @queue_metadata
-            )
+            'EVENT_BATCH_BEFORE_FLUSHING',
+            {
+              '{file}' => FileNameEnum::BatchEventsQueue,
+              '{manually}' => manual ? 'manually' : '',
+              '{length}' => @queue.length(),
+              '{timer}' => manual ? 'Timer will be cleared and registered again,' : '',
+              '{accountId}' => @batch_config[:account_id]
+            }
           )
 
           @dispatcher.call(@queue, @flush_callback)
+
           @logger.log(
             LogLevelEnum::INFO,
-            format(
-              LogMessageEnum::InfoMessages::AFTER_FLUSHING,
-              file: FILE,
-              manually: manual ? 'manually,' : '',
-              length: @queue.length(),
-              queue_metadata: @queue_metadata
-            )
+            'EVENT_BATCH_After_FLUSHING',
+            {
+              '{file}' => FileNameEnum::BatchEventsQueue,
+              '{manually}' => manual ? 'manually,' : '',
+              '{length}' => @queue.length()
+            }
           )
           @queue_metadata = {}
           @queue = []
         else
           @logger.log(
             LogLevelEnum::INFO,
-            format(
-              'Batch queue is empty. Nothing to flush.',
-              file: FILE
-            )
+            'Batch queue is empty. Nothing to flush.',
+            {'{file}' => FILE}
           )
         end
 

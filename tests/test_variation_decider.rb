@@ -20,13 +20,7 @@ require_relative '../lib/vwo/utils/campaign'
 
 VWO_SETTINGS_FILE = JSON.load(File.open(File.join(File.dirname(__FILE__), 'data/settings.json')))
 
-class UserStorage
-  def get(_user_id, _campaign_key); end
-
-  def set(_user_storage_obj); end
-end
-
-class CustomUserStorage
+class CustomUserStorage < VWO::UserStorage
   @@client_db = {}
 
   def get(user_id, campaign_key)
@@ -68,8 +62,9 @@ class VariationDeciderTest < Test::Unit::TestCase
   end
 
   def test_init_with_valid_user_storage
-    variation_decider = VWO::Core::VariationDecider.new(@settings_file, UserStorage.new)
-    assert_equal(variation_decider.user_storage_service.class, UserStorage)
+    variation_decider = VWO::Core::VariationDecider.new(@settings_file, CustomUserStorage.new)
+    assert_equal(variation_decider.user_storage_service.class, CustomUserStorage)
+    assert_equal(variation_decider.user_storage_service.is_a?(VWO::UserStorage), true)
   end
 
   def test_init_with_our_user_storage
@@ -181,7 +176,7 @@ class VariationDeciderTest < Test::Unit::TestCase
   end
 
   def test_get_with_broken_get_in_user_storage
-    variation_decider = VWO::Core::VariationDecider.new(@settings_file, UserStorage.new)
+    variation_decider = VWO::Core::VariationDecider.new(@settings_file, CustomUserStorage.new)
 
     user_id = 'Sarah'
     variation = variation_decider.get_variation(user_id, @dummy_campaign, '', @campaign_key)
@@ -210,5 +205,35 @@ class VariationDeciderTest < Test::Unit::TestCase
     variation = variation_decider.get_variation(user_id, @dummy_campaign, '', @campaign_key)
     assert_equal(variation['id'], '1')
     assert_equal(variation['name'], 'Control')
+  end
+
+  def test_Variation_data_for_real_time_pre_segmentation
+    user_id = 'Sarah'
+    settings_file = VWO_SETTINGS_FILE['REAL_TIME_PRE_SEGEMENTATION']
+    campaign = settings_file['campaigns'][0]
+    campaign_key = campaign['key']
+    set_variation_allocation(campaign)
+    variation_decider = VWO::Core::VariationDecider.new(settings_file)
+    variation = variation_decider.get_variation(user_id, campaign, 'test_cases', campaign_key, {a: 123})
+    assert_equal(variation['name'], 'Control')
+
+    storage =  CustomUserStorage.new
+    new_campaign_user_mapping = {}
+    new_campaign_user_mapping['campaign_key'] = campaign_key
+    new_campaign_user_mapping['user_id'] = user_id
+    new_campaign_user_mapping['variation_name'] = 'Variation-1'
+    # setting variation-1 in storage then we get variation-1 when isAlwaysCheckSegment flag not there
+    storage.set(new_campaign_user_mapping)
+    campaign.delete("isAlwaysCheckSegment")
+    variation_decider = VWO::Core::VariationDecider.new(settings_file, storage)
+    assert_equal(storage.get(user_id, campaign_key)['variation_name'], new_campaign_user_mapping['variation_name'])
+    variation = variation_decider.get_variation(user_id, campaign, 'test_cases', campaign_key, {a: 123})
+    assert_equal(variation['name'], new_campaign_user_mapping['variation_name'])
+
+    # variation-1 is there in storage but we get Control when isAlwaysCheckSegment flag is set
+    campaign["isAlwaysCheckSegment"] = true
+    variation = variation_decider.get_variation(user_id, campaign, 'test_cases', campaign_key, {a: 123})
+    assert_equal(variation['name'], 'Control')
+
   end
 end

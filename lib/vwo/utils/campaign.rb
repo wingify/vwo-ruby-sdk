@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require_relative '../logger'
 require_relative '../enums'
 require_relative '../constants'
+require_relative './log_message'
 
 # Utility module for processing VWO campaigns
 class VWO
@@ -41,18 +41,17 @@ class VWO
             variation['start_variation_allocation'] = -1
             variation['end_variation_allocation'] = -1
           end
-
-          VWO::Logger.get_instance.log(
-            LogLevelEnum::INFO,
-            format(
-              LogMessageEnum::InfoMessages::VARIATION_RANGE_ALLOCATION,
-              file: FileNameEnum::CampaignUtil,
-              campaign_key: campaign['key'],
-              variation_name: variation['name'],
-              variation_weight: variation['weight'],
-              start: variation['start_variation_allocation'],
-              end: variation['end_variation_allocation']
-            )
+          Logger.log(
+            LogLevelEnum::DEBUG,
+            'VARIATION_RANGE_ALLOCATION',
+            {
+              '{file}' => FileNameEnum::CampaignUtil,
+              '{campaignKey}' => campaign['key'],
+              '{variationName}' => variation['name'],
+              '{variationWeight}' => variation['weight'],
+              '{start}' => variation['start_variation_allocation'],
+              '{end}' => variation['end_variation_allocation']
+            }
           )
         end
       end
@@ -183,13 +182,13 @@ class VWO
           end
         end
         if campaigns.length() == 0
-          VWO::Logger.get_instance.log(
+          Utils::Logger.log(
             LogLevelEnum::ERROR,
-            format(
-              LogMessageEnum::ErrorMessages::NO_CAMPAIGN_FOUND,
-              file: FileNameEnum::CampaignUtil,
-              goal_identifier: goal_identifier
-            )
+            'CAMPAIGN_NOT_FOUND_FOR_GOAL',
+            {
+              '{file}' => FileNameEnum::CampaignUtil,
+              '{goalIdentifier}' => goal_identifier
+            }
           )
         end
         return campaigns
@@ -255,14 +254,14 @@ class VWO
       def get_running_campaign(campaign_key, settings_file)
         campaign = get_campaign(settings_file, campaign_key)
         if campaign.nil? || (campaign['status'] != 'RUNNING')
-          @logger.log(
-            LogLevelEnum::ERROR,
-            format(
-              LogMessageEnum::ErrorMessages::CAMPAIGN_NOT_RUNNING,
-              file: FILE,
-              campaign_key: campaign_key,
-              api_name: ApiMethods::TRACK
-            )
+          Utils::Logger.log(
+            LogLevelEnum::WARNING,
+            'CAMPAIGN_NOT_RUNNING',
+            {
+              '{file}' => FILE,
+              '{campaignKey}' => campaign_key,
+              '{api}' => ApiMethods::TRACK
+            }
           )
           nil
         end

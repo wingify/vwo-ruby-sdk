@@ -32,5 +32,5 @@ Gem::Specification.new do |spec|
 
   spec.add_runtime_dependency 'json-schema', '~> 2.8'
   spec.add_runtime_dependency 'murmurhash3', '~> 0.1'
-  spec.add_runtime_dependency 'vwo_log_messages', '~>0.7.1'
+  spec.add_runtime_dependency 'vwo_log_messages', '~>0.7.5'
 end

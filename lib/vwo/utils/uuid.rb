@@ -13,9 +13,9 @@
 # limitations under the License.
 
 require 'digest'
-require_relative '../logger'
 require_relative '../enums'
 require_relative '../constants'
+require_relative './log_message'
 
 # Utility module for generating uuid
 class VWO
@@ -53,10 +53,11 @@ class VWO
       #
       # @param[Integer|String]      :user_id        User identifier
       # @param[Integer|String]      :account_id     Account identifier
+      # @param[Boolean]             :disable_logs   if true, do not log log-message
       #
       # @return[Integer]                            Desired UUID
       #
-      def generator_for(user_id, account_id)
+      def generator_for(user_id, account_id, disable_logs = false)
         user_id = user_id.to_s
         account_id = account_id.to_s
         user_id_namespace = generate(VWO_NAMESPACE, account_id)
@@ -64,15 +65,16 @@ class VWO
 
         desired_uuid = uuid_for_account_user_id.delete('-').upcase
 
-        VWO::Logger.get_instance.log(
+        Logger.log(
           LogLevelEnum::DEBUG,
-          format(
-            LogMessageEnum::DebugMessages::UUID_FOR_USER,
-            file: FileNameEnum::UuidUtil,
-            user_id: user_id,
-            account_id: account_id,
-            desired_uuid: desired_uuid
-          )
+          'USER_UUID',
+          {
+            '{file}' => FILE,
+            '{userId}' => user_id,
+            '{accountId}' => account_id,
+            '{uuid}' => desired_uuid
+          },
+          disable_logs
         )
         desired_uuid
       end

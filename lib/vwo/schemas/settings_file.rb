@@ -102,6 +102,7 @@ class VWO
             },
             isBucketingSeedEnabled: ['boolean'],
             isUserListEnabled: ['boolean'],
+            isAlwaysCheckSegment: ['boolean'],
             minItems: 2
           }
         },

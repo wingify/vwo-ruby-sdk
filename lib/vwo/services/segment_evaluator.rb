@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require_relative '../logger'
 require_relative '../enums'
 require_relative './operand_evaluator'
 require_relative '../utils/function'
 require_relative '../utils/segment'
 require_relative '../utils/validations'
+require_relative '../utils/log_message'
 
 class VWO
   module Services
@@ -29,7 +29,7 @@ class VWO
 
       # Initializes this class with VWOLogger and OperandEvaluator
       def initialize
-        @logger = VWO::Logger.get_instance
+        @logger = VWO::Utils::Logger
         @operand_evaluator = OperandEvaluator.new
       end
 
@@ -73,14 +73,15 @@ class VWO
       rescue StandardError => e
         @logger.log(
           LogLevelEnum::ERROR,
-          format(
-            LogMessageEnum::ErrorMessages::SEGMENTATION_ERROR,
-            file: FileNameEnum::SegmentEvaluator,
-            user_id: user_id,
-            campaign_key: campaign_key,
-            custom_variables: custom_variables,
-            error_message: e
-          ),
+          'SEGMENTATION_ERROR',
+          {
+            '{file}' => FileNameEnum::SegmentEvaluator,
+            '{userId}' => user_id,
+            '{campaignKey}' => campaign_key,
+            '{variation}' => '',
+            '{customVariables}' => custom_variables,
+            '{err}' => e.message
+          },
           disable_logs
         )
         false

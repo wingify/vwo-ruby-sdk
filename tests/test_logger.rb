@@ -21,10 +21,8 @@ $stdout = StringIO.new
 
 class VWO
   class Logger
-    def log(level, message, disable_logs = false)
-      unless disable_logs
+    def log(level, message)
         $stdout.puts(message)
-      end
     end
   end
 end

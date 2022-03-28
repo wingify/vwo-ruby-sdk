@@ -13,11 +13,11 @@
 # limitations under the License.
 
 require 'json'
-require_relative '../logger'
 require_relative '../enums'
 require_relative '../constants'
 require_relative './impression'
 require_relative './utility'
+require_relative './log_message'
 
 # Utility module for helper math and random functions
 class VWO
@@ -36,13 +36,13 @@ class VWO
         params = get_common_properties(user_id, settings_file)
         params.merge!('url' => url, 'tags' => JSON.generate(tag), 'env' => sdk_key)
 
-        VWO::Logger.get_instance.log(
+        Logger.log(
           LogLevelEnum::DEBUG,
-          format(
-            LogMessageEnum::DebugMessages::PARAMS_FOR_PUSH_CALL,
-            file: FileNameEnum::CustomDimensionsUtil,
-            properties: remove_sensitive_properties(params)
-          )
+          'IMPRESSION_FOR_PUSH',
+          {
+            '{file}' => FileNameEnum::CustomDimensionsUtil,
+            '{properties}' => JSON.generate(params)
+          }
         )
         params
       end
@@ -55,17 +55,17 @@ class VWO
         params = {
           'eT' => 3,
           't' => JSON.generate(tag),
-          'u' => generator_for(user_id, account_id),
+          'u' => generator_for(user_id, account_id, true),
           'sId' => get_current_unix_timestamp
         }
 
-        VWO::Logger.get_instance.log(
+        Logger.log(
           LogLevelEnum::DEBUG,
-          format(
-            LogMessageEnum::DebugMessages::PARAMS_FOR_PUSH_CALL,
-            file: FileNameEnum::CustomDimensionsUtil,
-            properties: JSON.generate(params)
-          )
+          'IMPRESSION_FOR_PUSH',
+          {
+            '{file}' => FileNameEnum::CustomDimensionsUtil,
+            '{properties}' => JSON.generate(params)
+          }
         )
         params
       end

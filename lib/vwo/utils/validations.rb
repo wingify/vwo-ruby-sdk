@@ -15,13 +15,14 @@
 require 'json'
 require 'json-schema'
 require_relative '../schemas/settings_file'
-require_relative '../logger'
 require_relative '../enums'
 require_relative '../constants'
+require_relative './log_message'
 
 class VWO
   module Utils
     module Validations
+      include Enums
       # Validates the settings_file
       # @param [Hash]:  JSON object received from VWO server
       #                 must be JSON.
@@ -66,82 +67,89 @@ class VWO
       # Validates if the value passed batch_events has correct data type and values or not.
       #
       # Args: batch_events [Hash]: value to be tested
+      #       api_name     [String]: current api name
       #
       # @return: [Boolean]: True if all conditions are passed else False
-      def is_valid_batch_event_settings(batch_events)
-        logger = VWO::Logger.get_instance
+      def is_valid_batch_event_settings(batch_events, api_name)
         events_per_request = batch_events[:events_per_request]
         request_time_interval = batch_events[:request_time_interval]
 
         unless events_per_request || request_time_interval
-          logger.log(
-            VWO::LogLevelEnum::ERROR,
-            format(
-              VWO::LogMessageEnum::ErrorMessages::EVENT_BATCHING_INSUFFICIENT,
-              file: VWO::FileNameEnum::ValidateUtil
-            )
-          )
+          invalid_config_log('batch_events', 'object', api_name)
           return false
         end
 
         if (request_time_interval && !valid_number?(request_time_interval))
-          logger.log(
-            VWO::LogLevelEnum::ERROR,
-            format(
-              VWO::LogMessageEnum::ErrorMessages::REQUEST_TIME_INTERVAL_INVALID,
-              file: VWO::FileNameEnum::ValidateUtil
-            )
-          )
+          invalid_config_log('batch_events', 'object', api_name)
           return false
         end
 
         if (events_per_request && !valid_number?(events_per_request))
-          logger.log(
-            VWO::LogLevelEnum::ERROR,
-            format(
-              VWO::LogMessageEnum::ErrorMessages::EVENTS_PER_REQUEST_INVALID,
-              file: VWO::FileNameEnum::ValidateUtil
-            )
-          )
+          invalid_config_log('batch_events', 'object', api_name)
           return false
         end
 
         if events_per_request && (events_per_request < VWO::MIN_EVENTS_PER_REQUEST || events_per_request > VWO::MAX_EVENTS_PER_REQUEST)
-          logger.log(
-            VWO::LogLevelEnum::ERROR,
-            format(
-              VWO::LogMessageEnum::ErrorMessages::EVENTS_PER_REQUEST_OUT_OF_BOUNDS,
-              file: VWO::FileNameEnum::ValidateUtil,
-              min_value: VWO::MIN_EVENTS_PER_REQUEST,
-              max_value: VWO::MAX_EVENTS_PER_REQUEST
-            )
-          )
+          invalid_config_log('batch_events', 'object', api_name)
           return false
         end
 
         if request_time_interval && request_time_interval < VWO::MIN_REQUEST_TIME_INTERVAL
-          logger.log(
-            VWO::LogLevelEnum::ERROR,
-            format(
-              VWO::LogMessageEnum::ErrorMessages::REQUEST_TIME_INTERVAL_OUT_OF_BOUNDS,
-              file: VWO::FileNameEnum::ValidateUtil,
-              min_value: VWO::MIN_REQUEST_TIME_INTERVAL
-            )
-          )
+          invalid_config_log('batch_events', 'object', api_name)
           return false
         end
 
         if batch_events.key?(:flushCallback) && !batch_events[:flushCallback].is_a?(Method)
-          logger.log(
-            VWO::LogLevelEnum::ERROR,
-            format(
-              VWO::LogMessageEnum::ErrorMessages::FLUSH_CALLBACK_INVALID,
-              file: VWO::FileNameEnum::ValidateUtil
-            )
-          )
+          invalid_config_log('batch_events', 'object', api_name)
           return false
         end
         true
+      end
+
+      def validate_sdk_config?(user_storage, is_development_mode, api_name)
+        if is_development_mode
+          if [true, false].include? is_development_mode
+            valid_config_log('isDevelopmentMode', 'boolean')
+          else
+            invalid_config_log('isDevelopmentMode', 'boolean', api_name)
+            return false
+          end
+        end
+
+        if user_storage
+          if user_storage.is_a?(UserStorage)
+            valid_config_log('UserStorageService', 'object')
+          else
+            invalid_config_log('UserStorageService', 'object', api_name)
+            return false
+          end
+        end
+        true
+      end
+
+      def valid_config_log(parameter, type)
+        Logger.log(
+          LogLevelEnum::INFO,
+          'CONFIG_PARAMETER_USED',
+          {
+            '{file}' => VWO::FileNameEnum::ValidateUtil,
+            '{parameter}' => parameter,
+            '{type}' => type
+          }
+        )
+      end
+
+      def invalid_config_log(parameter, type, api_name)
+        Logger.log(
+          LogLevelEnum::ERROR,
+          'CONFIG_PARAMETER_INVALID',
+          {
+            '{file}' => VWO::FileNameEnum::ValidateUtil,
+            '{parameter}' => parameter,
+            '{type}' => type,
+            '{api}' => api_name
+          }
+        )
       end
     end
   end

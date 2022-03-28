@@ -1941,5 +1941,69 @@
     ],
     "accountId": 123456,
     "version": 2
+  },
+
+  "REAL_TIME_PRE_SEGEMENTATION": {
+    "sdkKey": "some_unique_key",
+    "campaigns": [
+      {
+        "percentTraffic": 100,
+        "goals": [
+          {
+            "identifier": "ddd",
+            "id": 453,
+            "type": "CUSTOM_GOAL"
+          }
+        ],
+        "variations": [
+          {
+            "id": 1,
+            "name": "Control",
+            "changes": {
+
+            },
+            "weight": 50
+          },
+          {
+            "id": 2,
+            "name": "Variation-1",
+            "changes": {
+
+            },
+            "weight": 50
+          }
+        ],
+        "id": 174,
+        "name": "Campaign-174",
+        "segments": {
+          "or": [
+            {
+              "or": [
+                {
+                  "custom_variable": {
+                    "a": "wildcard(*123*)"
+                  }
+                }
+              ]
+            },
+            {
+              "or": [
+                {
+                  "custom_variable": {
+                    "hello": "regex(world)"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        "isAlwaysCheckSegment":true,
+        "key": "REAL_TIME_PRE_SEGEMENTATION",
+        "status": "RUNNING",
+        "type": "VISUAL_AB"
+      }
+    ],
+    "accountId": 88888888,
+    "version": 1
   }
 }

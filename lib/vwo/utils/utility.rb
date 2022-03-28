@@ -50,6 +50,13 @@ class VWO
             def get_url(endpoint)
                 return DataLocationManager.get_instance().get_data_location + endpoint
             end
+
+            def prepare_push_response(custom_dimension_map, resp, result)
+                custom_dimension_map.each do |tag_key, tag_value|
+                    result[tag_key] = resp
+                end
+                result
+            end
         end
     end
 end

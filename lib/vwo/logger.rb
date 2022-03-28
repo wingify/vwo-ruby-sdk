@@ -12,10 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-require 'logger'
+require 'vwo'
 
 class VWO
   class Logger
+
+    DEBUG = ::Logger::DEBUG
+    INFO = ::Logger::INFO
+    ERROR = ::Logger::ERROR
+    WARN = ::Logger::WARN
+
     @logger = nil
     @logger_instance = nil
 
@@ -28,10 +34,8 @@ class VWO
     end
 
     # Override this method to handle logs in a custom manner
-    def log(level, message, disable_logs = false)
-      unless disable_logs
+    def log(level, message)
         @@logger_instance.log(level, message)
-      end
     end
 
     def instance
