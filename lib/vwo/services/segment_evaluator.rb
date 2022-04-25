@@ -43,15 +43,16 @@ class VWO
       #
       def evaluate_util(dsl, custom_variables)
         operator, sub_dsl = get_key_value(dsl)
-        if operator == OperatorTypes::NOT
+        case operator
+        when OperatorTypes::NOT
           !evaluate_util(sub_dsl, custom_variables)
-        elsif operator == OperatorTypes::AND
+        when OperatorTypes::AND
           sub_dsl.all? { |y| evaluate_util(y, custom_variables) }
-        elsif operator == OperatorTypes::OR
+        when OperatorTypes::OR
           sub_dsl.any? { |y| evaluate_util(y, custom_variables) }
-        elsif operator == OperandTypes::CUSTOM_VARIABLE
+        when OperandTypes::CUSTOM_VARIABLE
           @operand_evaluator.evaluate_custom_variable?(sub_dsl, custom_variables)
-        elsif operator == OperandTypes::USER
+        when OperandTypes::USER
           @operand_evaluator.evaluate_user?(sub_dsl, custom_variables)
         end
       end
@@ -75,7 +76,7 @@ class VWO
           LogLevelEnum::ERROR,
           'SEGMENTATION_ERROR',
           {
-            '{file}' => FileNameEnum::SegmentEvaluator,
+            '{file}' => FileNameEnum::SEGMENT_EVALUATOR,
             '{userId}' => user_id,
             '{campaignKey}' => campaign_key,
             '{variation}' => '',

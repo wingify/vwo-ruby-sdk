@@ -40,7 +40,7 @@ class VWO
           LogLevelEnum::DEBUG,
           'IMPRESSION_FOR_PUSH',
           {
-            '{file}' => FileNameEnum::CustomDimensionsUtil,
+            '{file}' => FileNameEnum::CUSTOM_DIMENSTIONS_UTIL,
             '{properties}' => JSON.generate(params)
           }
         )
@@ -63,7 +63,7 @@ class VWO
           LogLevelEnum::DEBUG,
           'IMPRESSION_FOR_PUSH',
           {
-            '{file}' => FileNameEnum::CustomDimensionsUtil,
+            '{file}' => FileNameEnum::CUSTOM_DIMENSTIONS_UTIL,
             '{properties}' => JSON.generate(params)
           }
         )

@@ -40,10 +40,10 @@ class VWO
         return !value || value == 0 ? false : true if variable_type == VariableTypes.BOOLEAN
 
         return value if variable_type == VariableTypes::JSON
-      rescue StandardError => _e
+      rescue StandardError => e
         Logger.log(
           LogLevelEnum::ERROR,
-          'unable to type cast variable value: ' + _e.message,
+          "unable to type cast variable value: #{e.message}",
           {
             '{file}' => FILE
           }

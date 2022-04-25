@@ -101,7 +101,7 @@ class BucketerTest < Test::Unit::TestCase
     assert_equal(result['name'], 'Control')
   end
 
-  def test_bucket_user_to_variation_return_varitaion_1
+  def test_bucket_user_to_variation_return_varitaion1
     user_id = 'Varun'
     # Varun, with above campaign settings, will get hashValue:69650962 and
     # bucketValue:326. So, MUST be a part of Variation-1, as per campaign
@@ -113,47 +113,47 @@ class BucketerTest < Test::Unit::TestCase
   def test_get_variation_return_none
     campaign = ::SETTINGS_FILE_1['AB_T_50_W_50_50']['campaigns'][0]
     set_variation_allocation(campaign)
-    result = @bucketer.send(:get_variation, campaign['variations'], 10001)
+    result = @bucketer.send(:get_variation, campaign['variations'], 10_001)
     assert_equal(result, nil)
   end
 
   def test_get_bucket_value_for_user_25_someonemailcom
-      campaign = {'id' => 1, 'isBucketingSeedEnabled' => true}
-      bucket_value = @bucketer.get_bucket_value_for_user("someone@mail.com", campaign)
-      assert_equal(bucket_value, 25)
+    campaign = { 'id' => 1, 'isBucketingSeedEnabled' => true }
+    bucket_value = @bucketer.get_bucket_value_for_user('someone@mail.com', campaign)
+    assert_equal(bucket_value, 25)
 
-      campaign['isBucketingSeedEnabled'] = false
-      bucket_value = @bucketer.get_bucket_value_for_user("someone@mail.com", campaign)
-      assert_equal(bucket_value, 64)
-    end
+    campaign['isBucketingSeedEnabled'] = false
+    bucket_value = @bucketer.get_bucket_value_for_user('someone@mail.com', campaign)
+    assert_equal(bucket_value, 64)
+  end
 
-    def test_get_bucket_value_for_user_1111111111111111
-      campaign = {'id' => 1, 'isBucketingSeedEnabled' => true}
-      bucket_value = @bucketer.get_bucket_value_for_user("1111111111111111", campaign)
-      assert_equal(bucket_value, 82)
-      
-      campaign['isBucketingSeedEnabled'] = false
-      bucket_value = @bucketer.get_bucket_value_for_user("1111111111111111", campaign)
-      assert_equal(bucket_value, 50)
-    end
+  def test_get_bucket_value_for_user1111111111111111
+    campaign = { 'id' => 1, 'isBucketingSeedEnabled' => true }
+    bucket_value = @bucketer.get_bucket_value_for_user('1111111111111111', campaign)
+    assert_equal(bucket_value, 82)
 
-    def test_get_bucket_value_for_user_25_someonemailcom_when_bucketing_seed_passed_as_symbol
-      campaign = {'id' => 1, isBucketingSeedEnabled: true}
-      bucket_value = @bucketer.get_bucket_value_for_user("someone@mail.com", campaign)
-      assert_equal(bucket_value, 64)
+    campaign['isBucketingSeedEnabled'] = false
+    bucket_value = @bucketer.get_bucket_value_for_user('1111111111111111', campaign)
+    assert_equal(bucket_value, 50)
+  end
 
-      campaign[:isBucketingSeedEnabled] = false
-      bucket_value = @bucketer.get_bucket_value_for_user("someone@mail.com", campaign)
-      assert_equal(bucket_value, 64)
-    end
+  def test_get_bucket_value_for_user_25_someonemailcom_when_bucketing_seed_passed_as_symbol
+    campaign = { 'id' => 1, isBucketingSeedEnabled: true }
+    bucket_value = @bucketer.get_bucket_value_for_user('someone@mail.com', campaign)
+    assert_equal(bucket_value, 64)
 
-    def test_get_bucket_value_for_user_1111111111111111_when_bucketing_seed_passed_as_symbol
-      campaign = {'id' => 1, isBucketingSeedEnabled: true}
-      bucket_value = @bucketer.get_bucket_value_for_user("1111111111111111", campaign)
-      assert_equal(bucket_value, 50)
-      
-      campaign[:isBucketingSeedEnabled] = false
-      bucket_value = @bucketer.get_bucket_value_for_user("1111111111111111", campaign)
-      assert_equal(bucket_value, 50)
-    end
+    campaign[:isBucketingSeedEnabled] = false
+    bucket_value = @bucketer.get_bucket_value_for_user('someone@mail.com', campaign)
+    assert_equal(bucket_value, 64)
+  end
+
+  def test_get_bucket_value_for_user_1111111111111111_when_bucketing_seed_passed_as_symbol
+    campaign = { 'id' => 1, isBucketingSeedEnabled: true }
+    bucket_value = @bucketer.get_bucket_value_for_user('1111111111111111', campaign)
+    assert_equal(bucket_value, 50)
+
+    campaign[:isBucketingSeedEnabled] = false
+    bucket_value = @bucketer.get_bucket_value_for_user('1111111111111111', campaign)
+    assert_equal(bucket_value, 50)
+  end
 end

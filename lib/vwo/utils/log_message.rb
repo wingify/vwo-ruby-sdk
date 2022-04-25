@@ -19,7 +19,6 @@ require_relative '../logger'
 class VWO
   module Utils
     class Logger
-
       DEBUG = ::Logger::DEBUG
       INFO = ::Logger::INFO
       ERROR = ::Logger::ERROR
@@ -32,43 +31,37 @@ class VWO
         @@api_name = api_name
       end
 
-      def self.get_log_message(logsType, message_type)
-        if @@logs.nil?
-          @@logs = VwoLogMessages.getMessage
-        end
+      def self.get_log_message(logs_type, message_type)
+        @@logs = VwoLogMessages.getMessage if @@logs.nil?
 
-        if !@@logs[logsType].key?(message_type)
-          return message_type
-        end
-        return @@logs[logsType][message_type]
+        return message_type unless @@logs[logs_type].key?(message_type)
+
+        @@logs[logs_type][message_type]
       end
 
       def self.log(level, message_type, params, disable_logs = false)
-        if disable_logs
-          return
-        end
-        if level == DEBUG
-          message = get_log_message('debug_logs', message_type)
-        elsif level == INFO
-          message = get_log_message('info_logs', message_type)
-        elsif level == ERROR
-          message = get_log_message('error_logs', message_type)
-        elsif level == WARN
-          message = get_log_message('warning_logs', message_type)
-        else
-          message = ""
-        end
+        return if disable_logs
+
+        message = case level
+                  when DEBUG
+                    get_log_message('debug_logs', message_type)
+                  when INFO
+                    get_log_message('info_logs', message_type)
+                  when ERROR
+                    get_log_message('error_logs', message_type)
+                  when WARN
+                    get_log_message('warning_logs', message_type)
+                  else
+                    ''
+                  end
         message = message.dup
 
         if message && !message.empty?
-          params.each {
-            |key, value|
-            if message.include? key
-              message[key.to_s]= value.to_s
-            end
-          }
+          params.each do |key, value|
+            message[key.to_s] = value.to_s if message.include? key
+          end
         end
-        message = '[' + @@api_name + '] ' + message
+        message = "[#{@@api_name}] #{message}"
         VWO::Logger.get_instance.log(level, message)
       end
     end

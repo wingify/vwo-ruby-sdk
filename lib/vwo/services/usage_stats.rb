@@ -16,13 +16,14 @@ class VWO
   module Services
     class UsageStats
       attr_reader :usage_stats
+
       # Initialize the UsageStats
       def initialize(stats, is_development_mode = false)
         @usage_stats = {}
-        unless is_development_mode
-          @usage_stats = stats
-          @usage_stats[:_l] = 1 if @usage_stats.length > 0
-        end
+        return if is_development_mode
+
+        @usage_stats = stats
+        @usage_stats[:_l] = 1 if @usage_stats.length > 0
       end
     end
   end

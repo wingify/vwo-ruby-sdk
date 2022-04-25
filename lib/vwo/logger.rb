@@ -16,7 +16,6 @@ require 'logger'
 
 class VWO
   class Logger
-
     DEBUG = ::Logger::DEBUG
     INFO = ::Logger::INFO
     ERROR = ::Logger::ERROR
@@ -30,12 +29,12 @@ class VWO
     end
 
     def initialize(logger_instance)
-      @@logger_instance = logger_instance || ::Logger.new(STDOUT)
+      @@logger_instance = logger_instance || ::Logger.new($stdout)
     end
 
     # Override this method to handle logs in a custom manner
     def log(level, message)
-        @@logger_instance.log(level, message)
+      @@logger_instance.log(level, message)
     end
 
     def instance

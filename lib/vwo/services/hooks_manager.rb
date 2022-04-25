@@ -15,22 +15,18 @@
 class VWO
   module Services
     class HooksManager
-     # Hooks Manager is responsible for triggering callbacks useful to the end-user based on certain lifecycle events.
-     # Possible use with integrations when the user intends to send an event when a visitor is part of the experiment.
+      # Hooks Manager is responsible for triggering callbacks useful to the end-user based on certain lifecycle events.
+      # Possible use with integrations when the user intends to send an event when a visitor is part of the experiment.
       def initialize(config)
         @logger = VWO::Logger.get_instance
-        if config.key?(:integrations) && config[:integrations].key?(:callback) && config[:integrations][:callback].is_a?(Method)
-          @callback = config[:integrations][:callback]
-        end
+        @callback = config[:integrations][:callback] if config.key?(:integrations) && config[:integrations].key?(:callback) && config[:integrations][:callback].is_a?(Method)
       end
 
-     # Executes the callback
-     # @param[Hash] properties Properties from the callback
-     def execute(properties)
-       if @callback
-         @callback.call(properties)
-       end
-     end
+      # Executes the callback
+      # @param[Hash] properties Properties from the callback
+      def execute(properties)
+        @callback&.call(properties)
+      end
     end
   end
 end

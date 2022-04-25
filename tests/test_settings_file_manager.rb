@@ -17,6 +17,7 @@ require_relative '../lib/vwo/services/settings_file_manager'
 
 class GetDummyResponse
   attr_reader :code, :body
+
   def initialize(code, body)
     @code = code
     @body = body
@@ -29,14 +30,14 @@ class DummyErrorResponse
   end
 end
 
-ACCOUNT_ID = 60781
+ACCOUNT_ID = 60_781
 SDK_KEY = 'ea87170ad94079aa190bc7c9b85d26fb'
 
 class SettingsFileManagerTest < Test::Unit::TestCase
   # Test that VWO::GetSettings.new fires off requests call with provided account_id and sdk_key.
   def test_get_settings_fires_request
     Net::HTTP.class_eval do
-      def self.get_response(*args)
+      def self.get_response(*_args)
         GetDummyResponse.new('200', 'dummy_setting_file')
       end
     end
@@ -58,7 +59,7 @@ class SettingsFileManagerTest < Test::Unit::TestCase
   # Test that VWO::GetSettings.new returns nil if status_code != 200.
   def test_get_settings_error_status_code
     Net::HTTP.class_eval do
-      def self.get_response(*args)
+      def self.get_response(*_args) # rubocop:todo Lint/DuplicateMethods
         GetDummyResponse.new('400', 'dummy_setting_file')
       end
     end
@@ -68,7 +69,7 @@ class SettingsFileManagerTest < Test::Unit::TestCase
 
   def test_get_settings_with_exception
     Net::HTTP.class_eval do
-      def self.get_response(*args)
+      def self.get_response(*_args) # rubocop:todo Lint/DuplicateMethods
         DummyErrorResponse.new
       end
     end

@@ -28,8 +28,8 @@ class CustomUserStorage < VWO::UserStorage
   end
 
   def set(user_storage_obj)
-   @@client_db[user_storage_obj['user_id']] = {}
-   @@client_db[user_storage_obj['user_id']][user_storage_obj['campaign_key']] = user_storage_obj
+    @@client_db[user_storage_obj['user_id']] = {}
+    @@client_db[user_storage_obj['user_id']][user_storage_obj['campaign_key']] = user_storage_obj
   end
 
   def remove(user_id)
@@ -41,7 +41,7 @@ class BrokenUserStorage
   @@client_db = {}
 
   def get(user_id, campaign_key)
-    return @@client_db[user_id][campaign_key]
+    @@client_db[user_id][campaign_key]
   end
 
   def set(_user_storage_obj)
@@ -113,7 +113,7 @@ class VariationDeciderTest < Test::Unit::TestCase
     assert_nil(variation)
   end
 
-  def test_get_variation_of_campaign_for_user_should_return_Control
+  def test_get_variation_of_campaign_for_user_should_return_control
     user_id = 'Sarah'
     # Sarah, with above campaign settings, will get hashValue:69650962
     # and bucketValue:326. So, MUST be a part of Control, as per campaign
@@ -123,7 +123,7 @@ class VariationDeciderTest < Test::Unit::TestCase
     assert_equal(variation['name'], 'Control')
   end
 
-  def test_get_variation_of_campaign_for_user_should_return_Variation
+  def test_get_variation_of_campaign_for_user_should_return_variation
     user_id = 'Varun'
     # Varun, with above campaign settings, will get hashValue:2025462540
     # and bucketValue:9433. So, MUST be a part of Variation, as per campaign
@@ -138,7 +138,7 @@ class VariationDeciderTest < Test::Unit::TestCase
   end
 
   def test_get_none_campaign_passed
-    variation = @variation_decider.get_variation(@user_id, nil, '',  @campaign_key)
+    variation = @variation_decider.get_variation(@user_id, nil, '', @campaign_key)
     assert_nil(variation)
   end
 
@@ -207,33 +207,32 @@ class VariationDeciderTest < Test::Unit::TestCase
     assert_equal(variation['name'], 'Control')
   end
 
-  def test_Variation_data_for_real_time_pre_segmentation
+  def test_variation_data_for_real_time_pre_segmentation
     user_id = 'Sarah'
     settings_file = VWO_SETTINGS_FILE['REAL_TIME_PRE_SEGEMENTATION']
     campaign = settings_file['campaigns'][0]
     campaign_key = campaign['key']
     set_variation_allocation(campaign)
     variation_decider = VWO::Core::VariationDecider.new(settings_file)
-    variation = variation_decider.get_variation(user_id, campaign, 'test_cases', campaign_key, {a: 123})
+    variation = variation_decider.get_variation(user_id, campaign, 'test_cases', campaign_key, { a: 123 })
     assert_equal(variation['name'], 'Control')
 
-    storage =  CustomUserStorage.new
+    storage = CustomUserStorage.new
     new_campaign_user_mapping = {}
     new_campaign_user_mapping['campaign_key'] = campaign_key
     new_campaign_user_mapping['user_id'] = user_id
     new_campaign_user_mapping['variation_name'] = 'Variation-1'
     # setting variation-1 in storage then we get variation-1 when isAlwaysCheckSegment flag not there
     storage.set(new_campaign_user_mapping)
-    campaign.delete("isAlwaysCheckSegment")
+    campaign.delete('isAlwaysCheckSegment')
     variation_decider = VWO::Core::VariationDecider.new(settings_file, storage)
     assert_equal(storage.get(user_id, campaign_key)['variation_name'], new_campaign_user_mapping['variation_name'])
-    variation = variation_decider.get_variation(user_id, campaign, 'test_cases', campaign_key, {a: 123})
+    variation = variation_decider.get_variation(user_id, campaign, 'test_cases', campaign_key, { a: 123 })
     assert_equal(variation['name'], new_campaign_user_mapping['variation_name'])
 
     # variation-1 is there in storage but we get Control when isAlwaysCheckSegment flag is set
-    campaign["isAlwaysCheckSegment"] = true
-    variation = variation_decider.get_variation(user_id, campaign, 'test_cases', campaign_key, {a: 123})
+    campaign['isAlwaysCheckSegment'] = true
+    variation = variation_decider.get_variation(user_id, campaign, 'test_cases', campaign_key, { a: 123 })
     assert_equal(variation['name'], 'Control')
-
   end
 end

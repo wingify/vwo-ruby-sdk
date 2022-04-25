@@ -61,12 +61,12 @@ class VWO
             weight: {
               type: %w[number string]
             },
-           variables: {
-             type: 'array',
-             items: {
-               '$ref' => '#/definitions/variables_schema'
-             }
-           }
+            variables: {
+              type: 'array',
+              items: {
+                '$ref' => '#/definitions/variables_schema'
+              }
+            }
           },
           required: %w[id name weight]
         },

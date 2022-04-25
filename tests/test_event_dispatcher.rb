@@ -18,14 +18,11 @@ require_relative '../lib/vwo/services/event_dispatcher'
 require 'net/http'
 
 class DummyResponse
-
   def initialize(code)
     @code = code
   end
 
-  def code
-    @code
-  end
+  attr_reader :code
 end
 
 class EventDispatcherTest < Test::Unit::TestCase
@@ -36,27 +33,27 @@ class EventDispatcherTest < Test::Unit::TestCase
   # Test that dispatch event fires off requests call with provided URL and params.
   def test_dispatch_fires_request
     Net::HTTP.class_eval do
-      def self.get_response(*args)
-        return DummyResponse.new('200')
+      def self.get_response(*_args)
+        DummyResponse.new('200')
       end
     end
 
     properties = {
       'env' => 'dummyKey',
       'combination' => 1,
-      'url' =>  'https://dev.visualwebsiteoptimizer.com/server-side/track-user',
+      'url' => 'https://dev.visualwebsiteoptimizer.com/server-side/track-user',
       'ed' => '{"p": "server"}',
       'random' => 0.7382938446947298,
       'ap' => 'server',
       'u' => '09CD6107E42B51F9BFC3DD97EA900990',
       'experiment_id' => 229,
-      'sId' => 1565949670,
+      'sId' => 1_565_949_670,
       'sdk-v' => '1.0.2',
       'sdk' => 'python',
-      'account_id' => 60781,
+      'account_id' => 60_781
     }
 
-    result = @dispatcher.dispatch(properties)
+    result = @dispatcher.dispatch(properties, {}, 'end_point')
     assert_equal(result, true)
 
     properties['url']
@@ -67,35 +64,34 @@ class EventDispatcherTest < Test::Unit::TestCase
   # Test that dispatch returns false if status_code != 200
   def test_dispatch_error_status_code
     Net::HTTP.class_eval do
-      def self.get_response(*args)
-        return DummyResponse.new('503')
+      def self.get_response(*_args) # rubocop:todo Lint/DuplicateMethods
+        DummyResponse.new('503')
       end
     end
 
     properties = {
       'env' => 'dummyKey',
       'combination' => 1,
-      'url' => 'https://dev.visualwebsiteoptimizer.com/server-side/track-user',  # noqa: E501
+      'url' => 'https://dev.visualwebsiteoptimizer.com/server-side/track-user', # noqa: E501
       'ed' => '{"p": "server"}',
       'random' => 0.7382938446947298,
       'ap' => 'server',
       'u' => '09CD6107E42B51F9BFC3DD97EA900990',
       'experiment_id' => 229,
-      'sId' => 1565949670,
+      'sId' => 1_565_949_670,
       'sdk-v' => '1.0.2',
       'sdk' => 'python',
-      'account_id' => 60781,
+      'account_id' => 60_781
     }
 
-    result = @dispatcher.dispatch(properties)
+    result = @dispatcher.dispatch(properties, {}, 'end_point')
     assert_equal(result, false)
   end
 
   # Test that dispatch returns False if exception occurs.
   def test_dispatch_with_exception
-
     Net::HTTP.class_eval do
-      def self.get_response(*args)
+      def self.get_response(*_args) # rubocop:todo Lint/DuplicateMethods
         raise
       end
     end
@@ -109,13 +105,13 @@ class EventDispatcherTest < Test::Unit::TestCase
       'ap' => 'server',
       'u' => '09CD6107E42B51F9BFC3DD97EA900990',
       'experiment_id' => 229,
-      'sId' => 1565949670,
+      'sId' => 1_565_949_670,
       'sdk-v' => '1.0.2',
       'sdk' => 'python',
-      'account_id' => 60781,
+      'account_id' => 60_781
     }
 
-    result = @dispatcher.dispatch(properties)
+    result = @dispatcher.dispatch(properties, {}, 'end_point')
     assert_equal(result, false)
   end
 end

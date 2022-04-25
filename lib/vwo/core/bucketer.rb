@@ -31,7 +31,7 @@ class VWO
       # Source - https://stackoverflow.com/a/20766900/2494535
       U_MAX_32_BIT = 0xFFFFFFFF
       MAX_HASH_VALUE = 2**32
-      FILE = FileNameEnum::Bucketer
+      FILE = FileNameEnum::BUCKETER
 
       def initialize
         @logger = VWO::Utils::Logger
@@ -49,16 +49,14 @@ class VWO
             LogLevelEnum::ERROR,
             'USER_ID_INVALID',
             {
-            '{file}' => FILE,
-            '{userId}' => user_id
+              '{file}' => FILE,
+              '{userId}' => user_id
             }
           )
           return false
         end
 
-        if campaign.nil?
-          return false
-        end
+        return false if campaign.nil?
 
         traffic_allocation = campaign['percentTraffic']
         value_assigned_to_user = get_bucket_value_for_user(user_id, campaign, nil, disable_logs)
@@ -92,21 +90,17 @@ class VWO
             LogLevelEnum::ERROR,
             'USER_ID_INVALID',
             {
-            '{file}' => FILE,
-            '{userId}' => user_id
+              '{file}' => FILE,
+              '{userId}' => user_id
             }
           )
           return
         end
 
-        unless campaign
-          return
-        end
+        return unless campaign
 
         user_id_for_hash_value = user_id
-        if campaign['isBucketingSeedEnabled']
-          user_id_for_hash_value = campaign['id'].to_s + "_" + user_id
-        end
+        user_id_for_hash_value = "#{campaign['id']}_#{user_id}" if campaign['isBucketingSeedEnabled']
         hash_value = MurmurHash3::V32.str_hash(user_id_for_hash_value, SEED_VALUE) & U_MAX_32_BIT
         normalize = MAX_TRAFFIC_VALUE.to_f / campaign['percentTraffic']
         multiplier = normalize / 100
@@ -120,12 +114,12 @@ class VWO
           LogLevelEnum::DEBUG,
           'USER_CAMPAIGN_BUCKET_VALUES',
           {
-              '{file}' => FILE,
-              '{campaignKey}' => campaign['key'],
-              '{userId}' => user_id,
-              '{percentTraffic}' => campaign['percentTraffic'],
-              '{hashValue}' => hash_value,
-              '{bucketValue}' => bucket_value,
+            '{file}' => FILE,
+            '{campaignKey}' => campaign['key'],
+            '{userId}' => user_id,
+            '{percentTraffic}' => campaign['percentTraffic'],
+            '{hashValue}' => hash_value,
+            '{bucketValue}' => bucket_value
           },
           disable_logs
         )
@@ -156,9 +150,9 @@ class VWO
       def get_bucket_value_for_user(user_id, campaign = {}, group_id = nil, disable_logs = false)
         user_id_for_hash_value = user_id
         if group_id
-          user_id_for_hash_value = group_id.to_s + "_" + user_id
+          user_id_for_hash_value = "#{group_id}_#{user_id}"
         elsif campaign['isBucketingSeedEnabled']
-          user_id_for_hash_value = campaign['id'].to_s + "_" + user_id
+          user_id_for_hash_value = "#{campaign['id']}_#{user_id}"
         end
         hash_value = MurmurHash3::V32.str_hash(user_id_for_hash_value, SEED_VALUE) & U_MAX_32_BIT
         bucket_value = get_bucket_value(hash_value, MAX_TRAFFIC_PERCENT)
@@ -198,11 +192,9 @@ class VWO
       # @return[Hash|nil]
       #
       def get_campaign_using_range(range_for_campaigns, campaigns)
-        range_for_campaigns = range_for_campaigns * 100
+        range_for_campaigns *= 100
         campaigns.each do |campaign|
-          if campaign["max_range"] && campaign["max_range"] >= range_for_campaigns && campaign["min_range"] <= range_for_campaigns
-            return campaign
-          end
+          return campaign if campaign['max_range'] && campaign['max_range'] >= range_for_campaigns && campaign['min_range'] <= range_for_campaigns
         end
         nil
       end

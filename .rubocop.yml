@@ -10,10 +10,15 @@ Metrics/AbcSize:
   Max: 100
 Metrics/ParameterLists:
   Max: 10
+  MaxOptionalParameters: 5
 Metrics/CyclomaticComplexity:
   Max: 30
 Metrics/PerceivedComplexity:
   Max: 30
+Metrics/ModuleLength:
+  Max: 225
+Style/RedundantBegin:
+  Enabled: false
 Style/Documentation:
   Enabled: false
 Style/ZeroLengthPredicate:
@@ -29,4 +34,12 @@ Style/PercentLiteralDelimiters:
 Style/MutableConstant:
   Enabled: false
 Style/FrozenStringLiteralComment:
+  Enabled: false
+Style/OptionalBooleanParameter:
+  AllowedMethods: ['initialize', 'get_variation_if_whitelisting_passed', 'whitelisting_or_storage_for_grouped_campaigns?', 'presegmentation?', 'get_variation_allotted', 'save_user_storage', 'get_stored_variation', 'get_variation_of_campaign_for_user', 'get_user_storage', 'evaluate_whitelisting', 'flush', 'log', 'generator_for', 'evaluate', 'get_settings_file', 'user_part_of_campaign?', 'bucket_user_to_variation', 'get_bucket_value_for_user']
+Style/DoubleNegation:
+  Enabled: false
+Style/CombinableLoops:
+  Enabled: false
+Security/JSONLoad:
   Enabled: false

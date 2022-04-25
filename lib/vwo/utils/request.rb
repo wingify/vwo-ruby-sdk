@@ -31,12 +31,11 @@ class VWO
         http.use_ssl = true
         uri.query = URI.encode_www_form(params)
         headers = {
-          'Authorization'=>params[:env],
-          'Content-Type' =>'application/json',
-          'Accept'=>'application/json'
+          'Authorization' => params[:env],
+          'Content-Type' => 'application/json',
+          'Accept' => 'application/json'
         }
-        response = http.post(uri, post_data.to_json, headers)
-        response
+        http.post(uri, post_data.to_json, headers)
       end
 
       def self.event_post(url, params, post_data, user_agent_value)
@@ -46,11 +45,10 @@ class VWO
         uri.query = URI.encode_www_form(params)
         headers = {
           'User-Agent' => user_agent_value,
-          'Content-Type' =>'application/json',
-          'Accept'=>'application/json'
+          'Content-Type' => 'application/json',
+          'Accept' => 'application/json'
         }
-        response = http.post(uri, post_data.to_json, headers)
-        response
+        http.post(uri, post_data.to_json, headers)
       end
     end
   end

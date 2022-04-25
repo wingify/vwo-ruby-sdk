@@ -67,8 +67,6 @@ class VWO
 
         impression = usage_stats.merge(impression)
 
-        logger = VWO::Logger.get_instance
-
         if is_track_user_api
           impression['ed'] = JSON.generate(p: 'server')
           impression['url'] = HTTPS_PROTOCOL + get_url(ENDPOINTS::TRACK_USER)
@@ -76,7 +74,7 @@ class VWO
             LogLevelEnum::DEBUG,
             'IMPRESSION_FOR_TRACK_USER',
             {
-              '{file}' => FileNameEnum::ImpressionUtil,
+              '{file}' => FileNameEnum::IMPRESSION_UTIL,
               '{properties}' => remove_sensitive_properties(impression)
             }
           )
@@ -88,7 +86,7 @@ class VWO
             LogLevelEnum::DEBUG,
             'IMPRESSION_FOR_TRACK_GOAL',
             {
-              '{file}' => FileNameEnum::ImpressionUtil,
+              '{file}' => FileNameEnum::IMPRESSION_UTIL,
               '{properties}' => JSON.generate(impression)
             }
           )
@@ -129,6 +127,7 @@ class VWO
       #                                                             Else Properties(dict)
       def create_bulk_event_impression(settings_file, campaign_id, variation_id, user_id, goal_id = nil, revenue = nil)
         return unless valid_number?(campaign_id) && valid_string?(user_id)
+
         is_track_user_api = true
         is_track_user_api = false unless goal_id.nil?
         account_id = settings_file['accountId']
@@ -139,13 +138,13 @@ class VWO
           u: generator_for(user_id, account_id, true),
           sId: get_current_unix_timestamp
         }
-        logger = VWO::Logger.get_instance
+
         if is_track_user_api
           Logger.log(
             LogLevelEnum::DEBUG,
             'IMPRESSION_FOR_TRACK_USER',
             {
-              '{file}' => FileNameEnum::ImpressionUtil,
+              '{file}' => FileNameEnum::IMPRESSION_UTIL,
               '{properties}' => remove_sensitive_properties(impression)
             }
           )
@@ -156,7 +155,7 @@ class VWO
             LogLevelEnum::DEBUG,
             'IMPRESSION_FOR_TRACK_GOAL',
             {
-              '{file}' => FileNameEnum::ImpressionUtil,
+              '{file}' => FileNameEnum::IMPRESSION_UTIL,
               '{properties}' => JSON.generate(impression)
             }
           )
@@ -179,12 +178,10 @@ class VWO
           env: settings_file['sdkKey'],
           eTime: get_current_unix_timestamp_in_millis,
           random: get_random_number,
-          p: "FS"
+          p: 'FS'
         }
 
-        if event_name == EventEnum::VWO_VARIATION_SHOWN
-          properties = properties.merge(usage_stats)
-        end
+        properties = properties.merge(usage_stats) if event_name == EventEnum::VWO_VARIATION_SHOWN
         properties
       end
 
@@ -193,10 +190,10 @@ class VWO
       # @param[Hash]                   :settings_file
       # @param[String]                 :user_id
       # @param[String]                 :event_name
-      # @param[Hash]                   :usage_stats
+      # @param[Hash]                   :_usage_stats
       # @return[Hash]                  :properties
       #
-      def get_event_base_payload(settings_file, user_id, event_name, usage_stats = {})
+      def get_event_base_payload(settings_file, user_id, event_name, _usage_stats = {})
         uuid = generator_for(user_id, (settings_file['accountId']), true)
         sdk_key = settings_file['sdkKey']
 
@@ -211,12 +208,12 @@ class VWO
         }
 
         # if usage_stats
-        #   props = props.merge(usage_stats)
+        #   props = props.merge(_usage_stats)
         # end
 
-        properties = {
+        {
           d: {
-            msgId: uuid + '_' + Time.now.to_i.to_s,
+            msgId: "#{uuid} + '_' + #{Time.now.to_i}",
             visId: uuid,
             sessionId: Time.now.to_i,
             event: {
@@ -231,8 +228,6 @@ class VWO
             }
           }
         }
-
-        properties
       end
 
       # Builds payload to track the visitor.
@@ -242,27 +237,26 @@ class VWO
       # @param[String]                 :event_name
       # @param[Integer]                :campaign_id
       # @param[Integer]                :variation_id
-      # @param[Hash]                   :usage_stats
+      # @param[Hash]                   :_usage_stats
       # @return[Hash]                  :properties
       #
-      def get_track_user_payload_data(settings_file, user_id, event_name, campaign_id, variation_id, usage_stats = {})
+      def get_track_user_payload_data(settings_file, user_id, event_name, campaign_id, variation_id, _usage_stats = {})
         properties = get_event_base_payload(settings_file, user_id, event_name)
         properties[:d][:event][:props][:id] = campaign_id
         properties[:d][:event][:props][:variation] = variation_id
 
-        #this is currently required by data-layer team, we can make changes on DACDN and remove it from here
+        # this is currently required by data-layer team, we can make changes on DACDN and remove it from here
         properties[:d][:event][:props][:isFirst] = 1
 
-        logger = VWO::Logger.get_instance
         Logger.log(
-            LogLevelEnum::DEBUG,
-            'IMPRESSION_FOR_EVENT_ARCH_TRACK_USER',
-            {
-              '{file}' => FileNameEnum::ImpressionUtil,
-              '{accountId}' => settings_file['accountId'],
-              '{userId}' => user_id,
-              '{campaignId}' => campaign_id.to_s
-            }
+          LogLevelEnum::DEBUG,
+          'IMPRESSION_FOR_EVENT_ARCH_TRACK_USER',
+          {
+            '{file}' => FileNameEnum::IMPRESSION_UTIL,
+            '{accountId}' => settings_file['accountId'],
+            '{userId}' => user_id,
+            '{campaignId}' => campaign_id.to_s
+          }
         )
         properties
       end
@@ -281,15 +275,14 @@ class VWO
       def get_track_goal_payload_data(settings_file, user_id, event_name, revenue_value, metric_map, revenue_props = [])
         properties = get_event_base_payload(settings_file, user_id, event_name)
 
-        logger = VWO::Logger.get_instance
         metric = {}
         metric_map.each do |campaign_id, goal_id|
-          metric[('id_' + campaign_id.to_s).to_sym] = ['g_' + goal_id.to_s]
+          metric["id_#{campaign_id}".to_sym] = ["g_#{goal_id}"]
           Logger.log(
             LogLevelEnum::DEBUG,
             'IMPRESSION_FOR_EVENT_ARCH_TRACK_GOAL',
             {
-              '{file}' => FileNameEnum::ImpressionUtil,
+              '{file}' => FileNameEnum::IMPRESSION_UTIL,
               '{accountId}' => settings_file['accountId'],
               '{goalName}' => event_name,
               '{userId}' => user_id,
@@ -302,7 +295,7 @@ class VWO
           metric: metric
         }
 
-        if revenue_props.length() != 0 && revenue_value
+        if revenue_props.length != 0 && revenue_value
           revenue_props.each do |revenue_prop|
             properties[:d][:event][:props][:vwoMeta][revenue_prop.to_sym] = revenue_value
           end
@@ -330,12 +323,11 @@ class VWO
           properties[:d][:visitor][:props][tag_key] = tag_value
         end
 
-        logger = VWO::Logger.get_instance
         Logger.log(
           LogLevelEnum::DEBUG,
           'IMPRESSION_FOR_EVENT_ARCH_PUSH',
           {
-            '{file}' => FileNameEnum::ImpressionUtil,
+            '{file}' => FileNameEnum::IMPRESSION_UTIL,
             '{accountId}' => settings_file['accountId'],
             '{userId}' => user_id,
             '{property}' => JSON.generate(custom_dimension_map)
@@ -345,7 +337,7 @@ class VWO
       end
 
       def get_batch_event_query_params(account_id, sdk_key, usage_stats = {})
-        return {
+        {
           a: account_id,
           sd: SDK_NAME,
           sv: SDK_VERSION,

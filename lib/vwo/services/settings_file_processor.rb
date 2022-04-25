@@ -41,7 +41,7 @@ class VWO
           LogLevelEnum::DEBUG,
           'SETTINGS_FILE_PROCESSED',
           {
-            '{file}' => FileNameEnum::SettingsFileProcessor,
+            '{file}' => FileNameEnum::SETTINGS_FILE_PROCESSOR,
             '{accountId}' => @settings_file['accountId']
           }
         )

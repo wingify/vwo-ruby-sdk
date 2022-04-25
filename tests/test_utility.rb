@@ -23,36 +23,35 @@ class UtilityTest < Test::Unit::TestCase
   include VWO::CONSTANTS
 
   def test_convert_to_symbol_hash_with_valid_hash
-    hashObject = { 'name': 'CUSTOM' }
+    hash_object = { 'name': 'CUSTOM' }
     expectation = { name: 'CUSTOM' }
-    result = convert_to_symbol_hash(hashObject)
+    result = convert_to_symbol_hash(hash_object)
     assert_equal(expectation, result)
   end
 
   def test_convert_to_symbol_hash_with_empty_hash
-    hashObject = {}
+    hash_object = {}
     expectation = {}
-    result = convert_to_symbol_hash(hashObject)
+    result = convert_to_symbol_hash(hash_object)
     assert_equal(expectation, result)
   end
 
   def test_convert_to_symbol_hash_with_nil
-    hashObject = nil
+    hash_object = nil
     expectation = {}
-    result = convert_to_symbol_hash(hashObject)
+    result = convert_to_symbol_hash(hash_object)
     assert_equal(expectation, result)
   end
 
   def test_get_url_without
     settings = {}
-    DataLocationManager.get_instance().set_settings(settings)
+    DataLocationManager.get_instance.set_settings(settings)
     assert_equal(ENDPOINTS::BASE_URL, get_url(''))
   end
 
   def test_get_url_with_data
-    settings = {"collectionPrefix" => "eu"}
-    DataLocationManager.get_instance().set_settings(settings)
-    assert_equal(ENDPOINTS::BASE_URL+"/eu", get_url(''))
+    settings = { 'collectionPrefix' => 'eu' }
+    DataLocationManager.get_instance.set_settings(settings)
+    assert_equal("#{ENDPOINTS::BASE_URL}/eu", get_url(''))
   end
-
 end

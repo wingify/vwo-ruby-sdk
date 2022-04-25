@@ -45,7 +45,7 @@ class VWO
             LogLevelEnum::DEBUG,
             'VARIATION_RANGE_ALLOCATION',
             {
-              '{file}' => FileNameEnum::CampaignUtil,
+              '{file}' => FileNameEnum::CAMPAIGN_UTIL,
               '{campaignKey}' => campaign['key'],
               '{variationName}' => variation['name'],
               '{variationWeight}' => variation['weight'],
@@ -177,21 +177,19 @@ class VWO
           campaigns = get_campaigns_from_campaign_keys(campaign_key, settings_file, goal_identifier, goal_type_to_track)
         elsif campaign_key.is_a?(String)
           campaign = get_campaign_for_campaign_key_and_goal(campaign_key, settings_file, goal_identifier, goal_type_to_track)
-          if campaign
-            campaigns = [campaign]
-          end
+          campaigns = [campaign] if campaign
         end
-        if campaigns.length() == 0
+        if campaigns.length == 0
           Utils::Logger.log(
             LogLevelEnum::ERROR,
             'CAMPAIGN_NOT_FOUND_FOR_GOAL',
             {
-              '{file}' => FileNameEnum::CampaignUtil,
+              '{file}' => FileNameEnum::CAMPAIGN_UTIL,
               '{goalIdentifier}' => goal_identifier
             }
           )
         end
-        return campaigns
+        campaigns
       end
 
       # fetch all running campaigns (having goal identifier goal_type_to_track and goal type CUSTOM|REVENUE|ALL) from settings
@@ -204,38 +202,31 @@ class VWO
         campaigns = []
         if settings_file
           settings_file['campaigns'].each do |campaign|
-            if campaign.key?(:status) && campaign[:status] != 'RUNNING'
-              next
-            end
+            next if campaign.key?(:status) && campaign[:status] != 'RUNNING'
+
             goal = get_campaign_goal(campaign, goal_identifier)
-            if validate_goal(goal, goal_type_to_track)
-              campaigns.push(campaign)
-            end
+            campaigns.push(campaign) if validate_goal(goal, goal_type_to_track)
           end
         end
         campaigns
       end
 
       def validate_goal(goal, goal_type_to_track)
-        result = goal && (
+        goal && (
           goal_type_to_track == 'ALL' ||
             (
-              GOAL_TYPES.has_value?(goal['type']) &&
+              GOAL_TYPES.value?(goal['type']) &&
                 (GOAL_TYPES.key? goal_type_to_track) &&
                 goal['type'] == GOAL_TYPES[goal_type_to_track]
             )
         )
-        return result
       end
 
       def get_campaigns_from_campaign_keys(campaign_keys, settings_file, goal_identifier, goal_type_to_track = 'ALL')
         campaigns = []
         campaign_keys.each do |campaign_key|
-
           campaign = get_campaign_for_campaign_key_and_goal(campaign_key, settings_file, goal_identifier, goal_type_to_track)
-          if campaign
-            campaigns.push(campaign)
-          end
+          campaigns.push(campaign) if campaign
         end
         campaigns
       end
@@ -244,9 +235,7 @@ class VWO
         campaign = get_running_campaign(campaign_key, settings_file)
         if campaign
           goal = get_campaign_goal(campaign, goal_identifier)
-          if validate_goal(goal, goal_type_to_track)
-            return campaign
-          end
+          return campaign if validate_goal(goal, goal_type_to_track)
         end
         nil
       end
@@ -265,7 +254,7 @@ class VWO
           )
           nil
         end
-        return campaign
+        campaign
       end
 
       # Checks whether a campaign is part of a group.
@@ -273,10 +262,9 @@ class VWO
       #  @param[Hash]       :settings_file          Settings file for the project
       #  @param[Integer]     :campaign_id            Id of campaign which is to be checked
       #  @return[Boolean]
-      def is_part_of_group(settings_file, campaign_id)
-        if settings_file["campaignGroups"] && (settings_file["campaignGroups"].has_key?(campaign_id.to_s))
-          return true
-        end
+      def part_of_group?(settings_file, campaign_id)
+        return true if settings_file['campaignGroups']&.key?(campaign_id.to_s)
+
         false
       end
 
@@ -288,24 +276,34 @@ class VWO
       def get_group_campaigns(settings_file, group_id)
         group_campaign_ids = []
         group_campaigns = []
-        groups = settings_file["groups"]
+        groups = settings_file['groups']
 
-        if groups && groups.has_key?(group_id.to_s)
-          group_campaign_ids = groups[group_id.to_s]["campaigns"]
-        end
+        group_campaign_ids = groups[group_id.to_s]['campaigns'] if groups&.key?(group_id.to_s)
 
-        if group_campaign_ids
-          group_campaign_ids.each do |campaign_id|
-            settings_file["campaigns"].each do |campaign|
-              if campaign["id"] == campaign_id && campaign["status"] == STATUS_RUNNING
-                group_campaigns.push(campaign)
-              end
-            end
+        group_campaign_ids&.each do |campaign_id|
+          settings_file['campaigns'].each do |campaign|
+            group_campaigns.push(campaign) if campaign['id'] == campaign_id && campaign['status'] == STATUS_RUNNING
           end
         end
         group_campaigns
       end
 
+      def campaign_goal_already_tracked?(user_id, campaign, identifiers, goal_identifier)
+        if identifiers.include? goal_identifier
+          @logger.log(
+            LogLevelEnum::INFO,
+            'CAMPAIGN_GOAL_ALREADY_TRACKED',
+            {
+              '{file}' => FILE,
+              '{userId}' => user_id,
+              '{campaignKey}' => campaign['key'],
+              '{goalIdentifier}' => goal_identifier
+            }
+          )
+          return true
+        end
+        false
+      end
     end
   end
 end

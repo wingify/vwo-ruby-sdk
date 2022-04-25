@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# rubocop:disable Metrics/LineLength
-
 require 'logger'
 
 class VWO
@@ -64,23 +62,23 @@ class VWO
       VWO_PATH = 'vwo'
       UTIL_PATH = 'vwo/utils'
 
-      VWO = VWO_PATH + '/vwo'
-      Bucketer = VWO_PATH + '/core/bucketer'
-      VariationDecider = VWO_PATH + '/core/variation_decider'
-      EventDispatcher = VWO_PATH + '/services/event_dispatcher'
-      SegmentEvaluator = VWO_PATH + '/services/segment_evaluator'
-      Logger = VWO_PATH + '/logger'
-      SettingsFileProcessor = VWO_PATH + '/services/settings_file_processor'
-      BatchEventsQueue = VWO_PATH + '/services/batch_events_queue'
-      BatchEventsDispatcher = VWO_PATH + '/services/batch_events_dispatcher'
+      VWO = "#{VWO_PATH}/vwo"
+      BUCKETER = "#{VWO_PATH}/core/bucketer"
+      VARIATION_DECIDER = "#{VWO_PATH}/core/variation_decider"
+      EVENT_DISPATCHER = "#{VWO_PATH}/services/event_dispatcher"
+      SEGMENT_EVALUATOR = "#{VWO_PATH}/services/segment_evaluator"
+      LOGGER = "#{VWO_PATH}/logger"
+      SETTINGS_FILE_PROCESSOR = "#{VWO_PATH}/services/settings_file_processor"
+      BATCH_EVENTS_QUEUE = "#{VWO_PATH}/services/batch_events_queue"
+      BATCH_EVENTS_DISPATCHER = "#{VWO_PATH}/services/batch_events_dispatcher"
 
-      CampaignUtil = UTIL_PATH + '/campaign'
-      FunctionUtil = UTIL_PATH + '/function'
-      FeatureUtil = UTIL_PATH + '/feature'
-      ImpressionUtil = UTIL_PATH + '/impression'
-      UuidUtil = UTIL_PATH + '/uuid'
-      ValidateUtil = UTIL_PATH + '/validations'
-      CustomDimensionsUtil = UTIL_PATH + '/custom_dimensions_util'
+      CAMPAIGN_UTIL = "#{UTIL_PATH}/campaign"
+      FUNCTION_UTIL = "#{UTIL_PATH}/function"
+      FEATURE_UTIL = "#{UTIL_PATH}/feature"
+      IMPRESSION_UTIL = "#{UTIL_PATH}/impression"
+      UUID_UTIL = "#{UTIL_PATH}/uuid"
+      VALIDATE_UTIL = "#{UTIL_PATH}/validations"
+      CUSTOM_DIMENSTIONS_UTIL = "#{UTIL_PATH}/custom_dimensions_util"
     end
 
     module LogLevelEnum
@@ -91,4 +89,3 @@ class VWO
     end
   end
 end
-# rubocop:enable Metrics/LineLength

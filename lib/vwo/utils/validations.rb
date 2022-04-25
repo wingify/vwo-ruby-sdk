@@ -23,6 +23,7 @@ class VWO
   module Utils
     module Validations
       include Enums
+      include CONSTANTS
       # Validates the settings_file
       # @param [Hash]:  JSON object received from VWO server
       #                 must be JSON.
@@ -70,7 +71,7 @@ class VWO
       #       api_name     [String]: current api name
       #
       # @return: [Boolean]: True if all conditions are passed else False
-      def is_valid_batch_event_settings(batch_events, api_name)
+      def valid_batch_event_settings(batch_events, api_name)
         events_per_request = batch_events[:events_per_request]
         request_time_interval = batch_events[:request_time_interval]
 
@@ -79,12 +80,12 @@ class VWO
           return false
         end
 
-        if (request_time_interval && !valid_number?(request_time_interval))
+        if request_time_interval && !valid_number?(request_time_interval)
           invalid_config_log('batch_events', 'object', api_name)
           return false
         end
 
-        if (events_per_request && !valid_number?(events_per_request))
+        if events_per_request && !valid_number?(events_per_request)
           invalid_config_log('batch_events', 'object', api_name)
           return false
         end
@@ -132,7 +133,7 @@ class VWO
           LogLevelEnum::INFO,
           'CONFIG_PARAMETER_USED',
           {
-            '{file}' => VWO::FileNameEnum::ValidateUtil,
+            '{file}' => VWO::FileNameEnum::VALIDATE_UTIL,
             '{parameter}' => parameter,
             '{type}' => type
           }
@@ -144,13 +145,79 @@ class VWO
           LogLevelEnum::ERROR,
           'CONFIG_PARAMETER_INVALID',
           {
-            '{file}' => VWO::FileNameEnum::ValidateUtil,
+            '{file}' => VWO::FileNameEnum::VALIDATE_UTIL,
             '{parameter}' => parameter,
             '{type}' => type,
             '{api}' => api_name
           }
         )
       end
+
+      def valid_goal?(goal, campaign, user_id, goal_identifier, revenue_value)
+        if goal.nil? || !goal['id']
+          Logger.log(
+            LogLevelEnum::ERROR,
+            'TRACK_API_GOAL_NOT_FOUND',
+            {
+              '{file}' => FILE,
+              '{goalIdentifier}' => goal_identifier,
+              '{userId}' => user_id,
+              '{campaignKey}' => campaign['key']
+            }
+          )
+          return false
+        elsif goal['type'] == GoalTypes::REVENUE && !valid_value?(revenue_value)
+          Logger.log(
+            LogLevelEnum::ERROR,
+            'TRACK_API_REVENUE_NOT_PASSED_FOR_REVENUE_GOAL',
+            {
+              '{file}' => FILE,
+              '{userId}' => user_id,
+              '{goalIdentifier}' => goal_identifier,
+              '{campaignKey}' => campaign['key']
+            }
+          )
+          return false
+        end
+        true
+      end
+    end
+
+    def valid_campaign_for_track_api?(user_id, campaign_key, campaign_type)
+      if campaign_type == CONSTANTS::CampaignTypes::FEATURE_ROLLOUT
+        Logger.log(
+          LogLevelEnum::ERROR,
+          'API_NOT_APPLICABLE',
+          {
+            '{file}' => FILE,
+            '{api}' => ApiMethods::TRACK,
+            '{userId}' => user_id,
+            '{campaignKey}' => campaign_key,
+            '{campaignType}' => campaign_type
+          }
+        )
+        return false
+      end
+      true
+    end
+
+    def valid_track_api_params?(user_id, campaign_key, custom_variables, variation_targeting_variables, goal_type_to_track, goal_identifier)
+      unless (valid_string?(campaign_key) || campaign_key.is_a?(Array) || campaign_key.nil?) &&
+             valid_string?(user_id) && valid_string?(goal_identifier) &&
+             (custom_variables.nil? || valid_hash?(custom_variables)) &&
+             (variation_targeting_variables.nil? || valid_hash?(variation_targeting_variables)) && CONSTANTS::GOAL_TYPES.key?(goal_type_to_track)
+        # log invalid params
+        Logger.log(
+          LogLevelEnum::ERROR,
+          'API_BAD_PARAMETERS',
+          {
+            '{file}' => FILE,
+            '{api}' => ApiMethods::TRACK
+          }
+        )
+        return false
+      end
+      true
     end
   end
 end

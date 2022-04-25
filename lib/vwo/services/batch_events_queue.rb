@@ -36,9 +36,9 @@ class VWO
             LogLevelEnum::INFO,
             'EVENT_BATCH_DEFAULTS',
             {
-              '{file}' => FileNameEnum::BatchEventsQueue,
+              '{file}' => FileNameEnum::BATCH_EVENTS_QUEUE,
               '{parameter}' => 'request_time_interval',
-              '{defaultValue}' => @request_time_interval.to_s + ' ms'
+              '{defaultValue}' => "#{@request_time_interval} ms"
             }
           )
         end
@@ -51,7 +51,7 @@ class VWO
             LogLevelEnum::INFO,
             'EVENT_BATCH_DEFAULTS',
             {
-              '{file}' => FileNameEnum::BatchEventsQueue,
+              '{file}' => FileNameEnum::BATCH_EVENTS_QUEUE,
               '{parameter}' => 'events_per_request',
               '{defaultValue}' => @events_per_request.to_s
             }
@@ -59,9 +59,7 @@ class VWO
         end
 
         @flush_callback = nil
-        if batch_config.key?(:flushCallback) && batch_config[:flushCallback].is_a?(Method)
-          @flush_callback = batch_config[:flushCallback]
-        end
+        @flush_callback = batch_config[:flushCallback] if batch_config.key?(:flushCallback) && batch_config[:flushCallback].is_a?(Method)
 
         @dispatcher = batch_config[:dispatcher]
       end
@@ -72,35 +70,34 @@ class VWO
 
       def enqueue(event)
         return true if @is_development_mode
+
         @queue.push(event)
         update_queue_metadata(event)
         unless @timer
           create_new_batch_timer
-          @thread = Thread.new{flush_when_request_times_up}
+          @thread = Thread.new { flush_when_request_times_up }
         end
-        if @events_per_request === @queue.length()
-          flush
-          kill_old_thread
-        end
+        return unless @events_per_request == @queue.length
+
+        flush
+        kill_old_thread
       end
 
       def flush_when_request_times_up
-        while @timer > Time.now
-          sleep(1)
-        end
+        sleep(1) while @timer > Time.now
         flush
         kill_old_thread
       end
 
       def flush(manual = false)
-        if @queue.length() > 0
+        if @queue.length > 0
           @logger.log(
             LogLevelEnum::DEBUG,
             'EVENT_BATCH_BEFORE_FLUSHING',
             {
-              '{file}' => FileNameEnum::BatchEventsQueue,
+              '{file}' => FileNameEnum::BATCH_EVENTS_QUEUE,
               '{manually}' => manual ? 'manually' : '',
-              '{length}' => @queue.length(),
+              '{length}' => @queue.length,
               '{timer}' => manual ? 'Timer will be cleared and registered again,' : '',
               '{accountId}' => @batch_config[:account_id]
             }
@@ -112,9 +109,9 @@ class VWO
             LogLevelEnum::INFO,
             'EVENT_BATCH_After_FLUSHING',
             {
-              '{file}' => FileNameEnum::BatchEventsQueue,
+              '{file}' => FileNameEnum::BATCH_EVENTS_QUEUE,
               '{manually}' => manual ? 'manually,' : '',
-              '{length}' => @queue.length()
+              '{length}' => @queue.length
             }
           )
           @queue_metadata = {}
@@ -123,16 +120,12 @@ class VWO
           @logger.log(
             LogLevelEnum::INFO,
             'Batch queue is empty. Nothing to flush.',
-            {'{file}' => FILE}
+            { '{file}' => FILE }
           )
         end
 
         clear_request_timer
-        unless manual
-          if @thread
-            @old_thread = @thread
-          end
-        end
+        @old_thread = @thread if !manual && @thread
         true
       end
 
@@ -141,32 +134,23 @@ class VWO
       end
 
       def kill_thread
-        if @thread
-          @thread.kill
-        end
+        @thread&.kill
       end
 
       def kill_old_thread
-        if @old_thread
-          @old_thread.kill
-        end
+        @old_thread&.kill
       end
 
       def update_queue_metadata(event)
-        if event[:eT] == 1
-          unless @queue_metadata.key?(VWO::EVENTS::TRACK_USER)
-            @queue_metadata[VWO::EVENTS::TRACK_USER] = 0
-          end
+        case event[:eT]
+        when 1
+          @queue_metadata[VWO::EVENTS::TRACK_USER] = 0 unless @queue_metadata.key?(VWO::EVENTS::TRACK_USER)
           @queue_metadata[VWO::EVENTS::TRACK_USER] = @queue_metadata[VWO::EVENTS::TRACK_USER] + 1
-        elsif event[:eT] == 2
-          unless @queue_metadata.key?(VWO::EVENTS::TRACK_GOAL)
-            @queue_metadata[VWO::EVENTS::TRACK_GOAL] = 0
-          end
+        when 2
+          @queue_metadata[VWO::EVENTS::TRACK_GOAL] = 0 unless @queue_metadata.key?(VWO::EVENTS::TRACK_GOAL)
           @queue_metadata[VWO::EVENTS::TRACK_GOAL] = @queue_metadata[VWO::EVENTS::TRACK_GOAL] + 1
-        elsif event[:eT] == 3
-          unless @queue_metadata.key?(VWO::EVENTS::PUSH)
-            @queue_metadata[VWO::EVENTS::PUSH] = 0
-          end
+        when 3
+          @queue_metadata[VWO::EVENTS::PUSH] = 0 unless @queue_metadata.key?(VWO::EVENTS::PUSH)
           @queue_metadata[VWO::EVENTS::PUSH] = @queue_metadata[VWO::EVENTS::PUSH] + 1
         end
       end

@@ -43,7 +43,7 @@ class VWO
       #                                       the request to be dispatched to the VWO server
       # @return[Boolean]
       #
-      def dispatch(impression)
+      def dispatch(impression, main_keys, end_point)
         return true if @is_development_mode
 
         modified_event = impression.reject do |key, _value|
@@ -52,13 +52,23 @@ class VWO
 
         resp = VWO::Utils::Request.get(impression['url'], modified_event)
         if resp.code == '200'
+          @logger.log(
+            LogLevelEnum::INFO,
+            'IMPRESSION_SUCCESS',
+            {
+              '{file}' => FILE,
+              '{endPoint}' => end_point,
+              '{accountId}' => impression['account_id'] || impression[:account_id],
+              '{mainKeys}' => JSON.generate(main_keys)
+            }
+          )
           true
         else
           @logger.log(
             LogLevelEnum::ERROR,
             'IMPRESSION_FAILED',
             {
-              '{file}' => FileNameEnum::BatchEventsDispatcher,
+              '{file}' => FileNameEnum::BATCH_EVENTS_DISPATCHER,
               '{err}' => resp.message,
               '{endPoint}' => impression['url']
             }
@@ -67,14 +77,14 @@ class VWO
         end
       rescue StandardError => e
         @logger.log(
-            LogLevelEnum::ERROR,
-            'IMPRESSION_FAILED',
-            {
-              '{file}' => FileNameEnum::BatchEventsDispatcher,
-              '{err}' => e.message,
-              '{endPoint}' => impression['url']
-            }
-          )
+          LogLevelEnum::ERROR,
+          'IMPRESSION_FAILED',
+          {
+            '{file}' => FileNameEnum::BATCH_EVENTS_DISPATCHER,
+            '{err}' => e.message,
+            '{endPoint}' => impression['url']
+          }
+        )
         false
       end
 
@@ -88,8 +98,8 @@ class VWO
             LogLevelEnum::INFO,
             'IMPRESSION_SUCCESS_FOR_EVENT_ARCH',
             {
-              '{file}' => FileNameEnum::BatchEventsDispatcher,
-              '{event}' => 'visitor property:' + JSON.generate(post_data[:d][:visitor][:props]),
+              '{file}' => FileNameEnum::BATCH_EVENTS_DISPATCHER,
+              '{event}' => "visitor property:#{JSON.generate(post_data[:d][:visitor][:props])}",
               '{endPoint}' => url,
               '{accountId}' => params[:a]
             }
@@ -100,7 +110,7 @@ class VWO
             LogLevelEnum::ERROR,
             'IMPRESSION_FAILED',
             {
-              '{file}' => FileNameEnum::EventDispatcher,
+              '{file}' => FileNameEnum::EVENT_DISPATCHER,
               '{err}' => resp.message,
               '{endPoint}' => url
             }
@@ -109,14 +119,14 @@ class VWO
         end
       rescue StandardError => e
         @logger.log(
-            LogLevelEnum::ERROR,
-            'IMPRESSION_FAILED',
-            {
-              '{file}' => FileNameEnum::EventDispatcher,
-              '{err}' => e.message,
-              '{endPoint}' => url
-            }
-          )
+          LogLevelEnum::ERROR,
+          'IMPRESSION_FAILED',
+          {
+            '{file}' => FileNameEnum::EVENT_DISPATCHER,
+            '{err}' => e.message,
+            '{endPoint}' => url
+          }
+        )
         false
       end
     end

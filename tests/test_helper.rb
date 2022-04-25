@@ -20,4 +20,4 @@
 # SimpleCov.formatter = SimpleCov::Formatter::Codecov
 
 require 'test/unit'
-$LOAD_PATH.unshift File.expand_path('../lib', __FILE__)
+$LOAD_PATH.unshift File.expand_path('lib', __dir__)

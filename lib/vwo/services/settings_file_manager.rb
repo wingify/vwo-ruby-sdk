@@ -47,11 +47,11 @@ class VWO
           return '{}'
         end
 
-        if is_via_webhook
-          path = ::VWO::CONSTANTS::ENDPOINTS::WEBHOOK_SETTINGS_URL
-        else
-          path = ::VWO::CONSTANTS::ENDPOINTS::SETTINGS_URL
-        end
+        path = if is_via_webhook
+                 ::VWO::CONSTANTS::ENDPOINTS::WEBHOOK_SETTINGS_URL
+               else
+                 ::VWO::CONSTANTS::ENDPOINTS::SETTINGS_URL
+               end
         vwo_server_url = "#{PROTOCOL}://#{HOSTNAME}#{path}"
 
         settings_file_response = ::VWO::Utils::Request.get(vwo_server_url, params)

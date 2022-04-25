@@ -21,14 +21,13 @@ $stdout = StringIO.new
 
 class VWO
   class Logger
-    def log(level, message)
-        $stdout.puts(message)
+    def log(_level, message)
+      $stdout.puts(message)
     end
   end
 end
 
 class LoggerTest < Test::Unit::TestCase
-
   def setup
     @logger_instance = VWO::Logger.get_instance
   end
