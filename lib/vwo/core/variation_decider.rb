@@ -196,8 +196,6 @@ class VWO
         variation ||= get_variation_if_presegmentation_applied(is_presegmentation, campaign, user_id, goal_identifier, decision)
         return unless variation
 
-        decision = add_variation_to_decision_properties(decision, campaign, variation)
-        @hooks_manager.execute(decision)
         variation
       end
 
@@ -277,7 +275,6 @@ class VWO
           variation_targeting_variables: variation_targeting_variables,
           is_user_whitelisted: false,
           from_user_storage_service: false,
-          is_feature_enabled: true,
           # VWO generated UUID based on passed UserId and Account ID
           vwo_user_id: generator_for(user_id, @settings_file['accountId'])
         }
