@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.40.0] - 2024-04-08
+
+### Added
+
+- Support for user IP Address and browser user agent to help with bot elimination, IP specific opt out and more options for post segmentation
+- Support for `event_properties` for Data360 enabled accounts
+
 ## [1.38.0] - 2022-27-07
 
 ### Changed

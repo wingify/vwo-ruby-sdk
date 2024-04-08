@@ -38,16 +38,11 @@ class ImpressionTest < Test::Unit::TestCase
         sessionId: 123,
         event: {
           props: {
-            sdkName: 'string',
-            sdkVersion: 'string',
+            vwo_sdkName: 'string',
+            vwo_sdkVersion: 'string',
             id: 12,
             isFirst: 1233,
             variation: 2,
-            '$visitor': {
-              props: {
-                vwo_fs_environment: 'string'
-              }
-            }
           },
           name: 'string',
           time: 12_345
@@ -78,7 +73,7 @@ class ImpressionTest < Test::Unit::TestCase
     }
     dummy_revenue_property = %w[dummyRevenueProperty1 dummyRevenueProperty2]
     query_params = get_events_base_properties(config, goal_identifier)
-    properties = get_track_goal_payload_data(config, 'Ashley', goal_identifier, 12, metric_map, dummy_revenue_property)
+    properties = get_track_goal_payload_data(config, 'Ashley', goal_identifier, 12, metric_map, dummy_revenue_property, {})
 
     expected_properties = {
       d: {
@@ -87,8 +82,8 @@ class ImpressionTest < Test::Unit::TestCase
         sessionId: 123,
         event: {
           props: {
-            sdkName: 'string',
-            sdkVersion: 'string',
+            vwo_sdkName: 'string',
+            vwo_sdkVersion: 'string',
             vwoMeta: {
               metric: {
                 'id_1'.to_sym => ['g_10'],
@@ -99,11 +94,6 @@ class ImpressionTest < Test::Unit::TestCase
               dummyRevenueProperty2: 12
             },
             isCustomEvent: true,
-            '$visitor': {
-              props: {
-                vwo_fs_environment: 'string'
-              }
-            }
           },
           name: 'string',
           time: 12_345
@@ -136,16 +126,9 @@ class ImpressionTest < Test::Unit::TestCase
         sessionId: 123,
         event: {
           props: {
-            sdkName: 'string',
-            sdkVersion: 'string',
+            vwo_sdkName: 'string',
+            vwo_sdkVersion: 'string',
             isCustomEvent: true,
-            '$visitor': {
-              props: {
-                vwo_fs_environment: 'string',
-                tagKey1: 'tagValue1',
-                tagKey2: 'tagValue2'
-              }
-            }
           },
           name: 'string',
           time: 12_345

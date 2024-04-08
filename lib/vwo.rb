@@ -365,13 +365,14 @@ class VWO
           @settings_file,
           campaign['id'],
           variation['id'],
-          user_id
+          user_id, nil, nil, nil,
+          options
         )
         @batch_events_queue.enqueue(impression)
       elsif event_arch_enabled?
         properties = get_events_base_properties(@settings_file, EventEnum::VWO_VARIATION_SHOWN, @usage_stats.usage_stats)
         payload = get_track_user_payload_data(@settings_file, user_id, EventEnum::VWO_VARIATION_SHOWN, campaign['id'], variation['id'])
-        @event_dispatcher.dispatch_event_arch_post(properties, payload)
+        @event_dispatcher.dispatch_event_arch_post(properties, payload, options)
       else
         # Variation found, dispatch it to server
         impression = create_impression(
@@ -565,6 +566,7 @@ class VWO
     revenue_value = options[:revenue_value]
     custom_variables = options[:custom_variables]
     variation_targeting_variables = options[:variation_targeting_variables]
+    event_properties = options[:event_properties]
     goal_type_to_track = get_goal_type_to_track(options)
 
     # Check for valid args
@@ -591,7 +593,7 @@ class VWO
 
         if variation
           goal = get_campaign_goal(campaign, goal_identifier)
-          next unless valid_goal?(goal, campaign, user_id, goal_identifier, revenue_value)
+          next unless valid_goal?(goal, campaign, user_id, goal_identifier, revenue_value, event_arch_enabled?)
 
           revenue_value = nil if goal['type'] == GoalTypes::CUSTOM
           identifiers = get_variation_identifiers(variation)
@@ -601,8 +603,55 @@ class VWO
           @variation_decider.update_goal_identifier(user_id, campaign, variation, goal_identifier)
           # set variation at user storage
 
+          if goal['type'] == GoalTypes::REVENUE && revenue_value.nil?
+            # mca implementation
+            if event_arch_enabled?
+              if goal['mca'] != -1
+                # Check if eventProperties contain revenueProp for mca != -1
+                if event_properties.nil?
+                # Log error if revenueProp is not found in eventProperties
+                  @logger.log(
+                    LogLevelEnum::ERROR,
+                    'Revenue property not found in event properties for revenue goal',
+                    {
+                      '{file}' => FILE,
+                      '{api}' => ApiMethods::TRACK,
+                      '{userId}' => user_id,
+                      '{goalIdentifier}' => goal_identifier,
+                      '{campaignKey}' => campaign['key']
+                    }
+                  )
+                  result[campaign['key']] = false
+                  next
+                end
+              elsif goal['type'] == GoalTypes::REVENUE && goal['mca'] == -1
+                # Check if revenueProp is defined but not found in eventProperties
+                if goal['revenueProp'] && event_properties.nil?
+                  # Log error if revenueProp is defined but not found in eventProperties
+                  @logger.log(
+                    LogLevelEnum::ERROR,
+                    'Revenue property defined but not found in event properties for revenue goal',
+                    {
+                      '{file}' => FILE,
+                      '{api}' => ApiMethods::TRACK,
+                      '{userId}' => user_id,
+                      '{goalIdentifier}' => goal_identifier,
+                      '{campaignKey}' => campaign['key']
+                    }
+                  )
+                  result[campaign['key']] = false
+                  next
+                end
+              end
+            end
+          end
           if defined?(@batch_events)
-            impression = create_bulk_event_impression(@settings_file, campaign['id'], variation['id'], user_id, goal['id'], revenue_value)
+            if event_arch_enabled?
+              if goal['type'] == GoalTypes::REVENUE && goal['revenueProp'] && event_properties && event_properties.key?(goal['revenueProp'])
+                revenue_value = event_properties[goal['revenueProp']]
+              end
+            end
+            impression = create_bulk_event_impression(@settings_file, campaign['id'], variation['id'], user_id, goal['id'], revenue_value, event_properties, options)
             @batch_events_queue.enqueue(impression)
           elsif event_arch_enabled?
             metric_map[campaign['id']] = goal['id']
@@ -612,7 +661,7 @@ class VWO
             main_keys = { 'campaignId' => campaign['id'], 'variationId' => variation['id'], 'goalId' => goal['id'] }
             @event_dispatcher.dispatch(impression, main_keys, EVENTS::TRACK_GOAL)
           else
-            batch_event_data['ev'] << create_bulk_event_impression(@settings_file, campaign['id'], variation['id'], user_id, goal['id'], revenue_value)
+            batch_event_data['ev'] << create_bulk_event_impression(@settings_file, campaign['id'], variation['id'], user_id, goal['id'], revenue_value, nil, options)
           end
           result[campaign['key']] = true
           next
@@ -631,8 +680,8 @@ class VWO
 
     if event_arch_enabled?
       properties = get_events_base_properties(@settings_file, goal_identifier)
-      payload = get_track_goal_payload_data(@settings_file, user_id, goal_identifier, revenue_value, metric_map, revenue_props)
-      @event_dispatcher.dispatch_event_arch_post(properties, payload)
+      payload = get_track_goal_payload_data(@settings_file, user_id, goal_identifier, revenue_value, metric_map, revenue_props, event_properties)
+      @event_dispatcher.dispatch_event_arch_post(properties, payload, options)
     elsif batch_event_data['ev'].count != 0
       paramters = get_batch_event_query_params(@settings_file['accountId'], @sdk_key, @usage_stats.usage_stats)
       batch_events_dispatcher = VWO::Services::BatchEventsDispatcher.new(@is_development_mode)
@@ -751,13 +800,14 @@ class VWO
           @settings_file,
           campaign['id'],
           variation['id'],
-          user_id
+          user_id, nil, nil, nil,
+          options
         )
         @batch_events_queue.enqueue(impression)
       elsif event_arch_enabled?
         properties = get_events_base_properties(@settings_file, EventEnum::VWO_VARIATION_SHOWN, @usage_stats.usage_stats)
         payload = get_track_user_payload_data(@settings_file, user_id, EventEnum::VWO_VARIATION_SHOWN, campaign['id'], variation['id'])
-        @event_dispatcher.dispatch_event_arch_post(properties, payload)
+        @event_dispatcher.dispatch_event_arch_post(properties, payload, options)
       else
         impression = create_impression(
           @settings_file,

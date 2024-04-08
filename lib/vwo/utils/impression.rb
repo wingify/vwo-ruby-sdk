@@ -125,7 +125,7 @@ class VWO
       #
       # @return[nil|Hash]                                           None if campaign ID or variation ID is invalid,
       #                                                             Else Properties(dict)
-      def create_bulk_event_impression(settings_file, campaign_id, variation_id, user_id, goal_id = nil, revenue = nil)
+      def create_bulk_event_impression(settings_file, campaign_id, variation_id, user_id, goal_id = nil, revenue = nil, event_properties = {} ,options = {})
         return unless valid_number?(campaign_id) && valid_string?(user_id)
 
         is_track_user_api = true
@@ -139,6 +139,15 @@ class VWO
           sId: get_current_unix_timestamp
         }
 
+        # Check if user_agent is provided
+        if options[:user_agent]
+          impression['visitor_ua'] = options[:user_agent]
+        end
+        # Check if user_ip_address is provided
+        if options[:user_ip_address]
+          impression['visitor_ip'] = options[:user_ip_address]
+        end
+
         if is_track_user_api
           Logger.log(
             LogLevelEnum::DEBUG,
@@ -151,6 +160,11 @@ class VWO
         else
           impression['g'] = goal_id
           impression['r'] = revenue if revenue
+
+          if settings_file.key?('isEventArchEnabled') && settings_file['isEventArchEnabled']
+            impression['eventProps'] = event_properties
+          end
+
           Logger.log(
             LogLevelEnum::DEBUG,
             'IMPRESSION_FOR_TRACK_GOAL',
@@ -198,13 +212,9 @@ class VWO
         sdk_key = settings_file['sdkKey']
 
         props = {
-          sdkName: SDK_NAME,
-          sdkVersion: SDK_VERSION,
-          '$visitor': {
-            props: {
-              vwo_fs_environment: sdk_key
-            }
-          }
+          vwo_sdkName: SDK_NAME,
+          vwo_sdkVersion: SDK_VERSION,
+
         }
 
         # if usage_stats
@@ -213,7 +223,7 @@ class VWO
 
         {
           d: {
-            msgId: "#{uuid} + '_' + #{Time.now.to_i}",
+            msgId: "#{uuid}-#{get_current_unix_timestamp_in_millis}",
             visId: uuid,
             sessionId: Time.now.to_i,
             event: {
@@ -269,10 +279,11 @@ class VWO
       # @param[Integer]                :revenue_value
       # @param[Hash]                   :metric_map
       # @param[Array]                  :revenue_props
+      # @param[Hash] :properties associated with the event.
       #
       # @return[Hash]                  :properties
       #
-      def get_track_goal_payload_data(settings_file, user_id, event_name, revenue_value, metric_map, revenue_props = [])
+      def get_track_goal_payload_data(settings_file, user_id, event_name, revenue_value, metric_map, revenue_props = [], event_properties)
         properties = get_event_base_payload(settings_file, user_id, event_name)
 
         metric = {}
@@ -302,6 +313,13 @@ class VWO
         end
 
         properties[:d][:event][:props][:isCustomEvent] = true
+
+        if event_properties && event_properties.any?
+          event_properties.each do |prop, value|
+            properties[:d][:event][:props][prop] = value
+          end
+        end
+
         properties
       end
 
@@ -319,7 +337,7 @@ class VWO
         properties[:d][:event][:props][:isCustomEvent] = true
 
         custom_dimension_map.each do |tag_key, tag_value|
-          properties[:d][:event][:props][('$visitor'.to_sym)][:props][tag_key] = tag_value
+          properties[:d][:event][:props][tag_key] = tag_value
           properties[:d][:visitor][:props][tag_key] = tag_value
         end
 

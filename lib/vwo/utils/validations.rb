@@ -153,7 +153,7 @@ class VWO
         )
       end
 
-      def valid_goal?(goal, campaign, user_id, goal_identifier, revenue_value)
+      def valid_goal?(goal, campaign, user_id, goal_identifier, revenue_value, is_event_arch_enabled)
         if goal.nil? || !goal['id']
           Logger.log(
             LogLevelEnum::ERROR,
@@ -166,7 +166,7 @@ class VWO
             }
           )
           return false
-        elsif goal['type'] == GoalTypes::REVENUE && !valid_value?(revenue_value)
+        elsif goal['type'] == GoalTypes::REVENUE && !valid_value?(revenue_value) && !is_event_arch_enabled
           Logger.log(
             LogLevelEnum::ERROR,
             'TRACK_API_REVENUE_NOT_PASSED_FOR_REVENUE_GOAL',

@@ -88,11 +88,11 @@ class VWO
         false
       end
 
-      def dispatch_event_arch_post(params, post_data)
+      def dispatch_event_arch_post(params, post_data, options = {})
         return true if @is_development_mode
 
         url = HTTPS_PROTOCOL + get_url(ENDPOINTS::EVENTS)
-        resp = VWO::Utils::Request.event_post(url, params, post_data, SDK_NAME)
+        resp = VWO::Utils::Request.event_post(url, params, post_data, SDK_NAME, options)
         if resp.code == '200'
           @logger.log(
             LogLevelEnum::INFO,
