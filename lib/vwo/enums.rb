@@ -21,6 +21,10 @@ class VWO
       WILDCARD = 'wildcard'
       LOWER = 'lower'
       EQUALS = 'equals'
+      GREATER_THAN="gt"
+      LESS_THAN="lt"
+      GREATER_THAN_EQUAL_TO="gte"
+      LESS_THAN_EQUAL_TO="lte"
     end
 
     module OperandValueTypes
@@ -30,6 +34,10 @@ class VWO
       ENDS_WITH = 'ends_with'
       REGEX = 'regex'
       EQUALS = 'equals'
+      LESS_THAN = 'less_than'
+      GREATER_THAN = 'greater_than'
+      LESS_THAN_EQUAL_TO = 'less_than_equal_to'
+      GREATER_THAN_EQUAL_TO = 'greater_than_equal_to'
     end
 
     module OperatorTypes

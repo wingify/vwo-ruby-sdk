@@ -101,6 +101,14 @@ class VWO
             else
               OperandValueTypes::EQUALS
             end
+        elsif operand_type_name == OperandValueTypesName::GREATER_THAN
+          operand_type = OperandValueTypes::GREATER_THAN
+        elsif operand_type_name == OperandValueTypesName::LESS_THAN
+          operand_type = OperandValueTypes::LESS_THAN
+        elsif operand_type_name == OperandValueTypesName::GREATER_THAN_EQUAL_TO
+          operand_type = OperandValueTypes::GREATER_THAN_EQUAL_TO
+        elsif operand_type_name == OperandValueTypesName::LESS_THAN_EQUAL_TO
+          operand_type = OperandValueTypes::LESS_THAN_EQUAL_TO
         end
 
         # In case there is an abnormal patter, it would have passed all the above if cases, which means it

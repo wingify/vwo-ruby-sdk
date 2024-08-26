@@ -83,6 +83,43 @@ class VWO
         custom_variables_value == operand_value
       end
 
+       # Checks if custom_variables_value matches the regex specified by operand_value
+      #
+      # @param [String] operand_value Leaf value from the segments
+      # @param [Numeric] custom_variables_value Value from the custom_variables
+      # @return [Boolean] True or False
+      def less_than?(operand_value, custom_variables_value)
+        custom_variables_value.to_f < operand_value.to_f
+      end
+
+      # Checks if custom_variable_value is greater than operand_value
+      #
+      # @param [String] operand_value Leaf value from the segments
+      # @param [Numeric] custom_variables_value Value from the custom_variables
+      # @return [Boolean] True or False
+      def greater_than?(operand_value, custom_variables_value)
+        custom_variables_value.to_f > operand_value.to_f
+      end
+
+      # Checks if custom_variable_value is less than or equal to operand_value
+      #
+      # @param [String] operand_value Leaf value from the segments
+      # @param [Numeric] custom_variables_value Value from the custom_variables
+      # @return [Boolean] True or False
+      def less_than_equal_to?(operand_value, custom_variables_value)
+        custom_variables_value.to_f <= operand_value.to_f
+      end
+
+      # Checks if custom_variable_value is greater than or equal to operand_value
+      #
+      # @param [String] operand_value Leaf value from the segments
+      # @param [Numeric] custom_variables_value Value from the custom_variables
+      # @return [Boolean] True or False
+      def greater_than_equal_to?(operand_value, custom_variables_value)
+        custom_variables_value.to_f >= operand_value.to_f
+      end
+
+
       # Identifies the condition stated in the leaf node and evaluates the result
       #
       # @param [String] :operand_value            Leaf value from the segments
