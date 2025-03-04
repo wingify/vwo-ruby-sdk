@@ -17,6 +17,7 @@ require_relative '../enums'
 require_relative '../utils/validations'
 require_relative '../utils/log_message'
 require_relative '../constants'
+require_relative '../utils/get_account_flags'
 
 class VWO
   module Core
@@ -99,11 +100,29 @@ class VWO
 
         return unless campaign
 
+        isNBv2 = VWO::Utils::GetAccountFlags.get_instance.get_isNbv2_flag
+        isNB = VWO::Utils::GetAccountFlags.get_instance.get_isNB_flag
+        account_id = VWO::Utils::GetAccountFlags.get_instance.get_account_id
+
         user_id_for_hash_value = user_id
-        user_id_for_hash_value = "#{campaign['id']}_#{user_id}" if campaign['isBucketingSeedEnabled']
+        multiplier = MAX_TRAFFIC_VALUE.to_f / campaign['percentTraffic'] / 100
+
+        if ((!isNB && !isNBv2) || (isNB && campaign['isOB'])) && campaign['percentTraffic']
+          # Old bucketing logic if feature flag is OFF or
+          # Feature flag is ON and campaign is old i.e. created before feature flag was turned ON
+          user_id_for_hash_value = "#{campaign['id']}_#{user_id}" if campaign['isBucketingSeedEnabled']
+          multiplier = MAX_TRAFFIC_VALUE.to_f / campaign['percentTraffic'] / 100
+        elsif ((isNB && !campaign['isOB'] && !isNBv2) || (isNBv2 && campaign['isOBv2']))
+          # New bucketing logic if feature flag is ON and campaign is new i.e. created after feature flag was turned ON
+          user_id_for_hash_value = user_id
+          multiplier = 1
+        else
+          # new bucketing V2 Logic
+          user_id_for_hash_value = "#{campaign['id']}_#{account_id}_#{user_id}"
+          multiplier = 1
+        end
+
         hash_value = MurmurHash3::V32.str_hash(user_id_for_hash_value, SEED_VALUE) & U_MAX_32_BIT
-        normalize = MAX_TRAFFIC_VALUE.to_f / campaign['percentTraffic']
-        multiplier = normalize / 100
         bucket_value = get_bucket_value(
           hash_value,
           MAX_TRAFFIC_VALUE,
@@ -154,6 +173,14 @@ class VWO
         elsif campaign['isBucketingSeedEnabled']
           user_id_for_hash_value = "#{campaign['id']}_#{user_id}"
         end
+
+        isNBv2 = VWO::Utils::GetAccountFlags.get_instance.get_isNbv2_flag
+        isNB = VWO::Utils::GetAccountFlags.get_instance.get_isNB_flag
+
+        if isNBv2 || isNB || campaign['isBucketingSeedEnabled'] 
+          user_id_for_hash_value = "#{campaign['id']}_#{user_id}"
+        end
+
         hash_value = MurmurHash3::V32.str_hash(user_id_for_hash_value, SEED_VALUE) & U_MAX_32_BIT
         bucket_value = get_bucket_value(hash_value, MAX_TRAFFIC_PERCENT)
 

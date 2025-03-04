@@ -133,7 +133,7 @@ class VWO
     @config.process_settings_file
     @settings_file = @config.get_settings_file
     DataLocationManager.get_instance.set_settings(@settings_file)
-
+    GetAccountFlags.get_instance.set_settings(@settings_file)
     @usage_stats = VWO::Services::UsageStats.new(usage_stats, @is_development_mode)
 
     if options.key?(:batch_events)
