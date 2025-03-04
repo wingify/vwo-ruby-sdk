@@ -193,11 +193,6 @@ ruby tests/test_all_tests.rb
 
 Refer [third-party-attributions.txt](https://github.com/wingify/vwo-ruby-sdk/blob/master/third-party-attributions.txt)
 
-## Authors
-
-* Main Contributor - [Abbas Khaliq](https://github.com/Abbas-khaliq)
-* Repo health maintainer - [Varun Malhotra](https://github.com/softvar)([@s0ftvar](https://twitter.com/s0ftvar))
-
 ## Changelog
 
 Refer [CHANGELOG.md](https://github.com/wingify/vwo-ruby-sdk/blob/master/CHANGELOG.md)
@@ -214,4 +209,4 @@ Please go through our [contributing guidelines](https://github.com/wingify/vwo-r
 
 [Apache License, Version 2.0](https://github.com/wingify/vwo-ruby-sdk/blob/master/LICENSE)
 
-Copyright 2019-2022 Wingify Software Pvt. Ltd.
+Copyright 2019-2025 Wingify Software Pvt. Ltd.

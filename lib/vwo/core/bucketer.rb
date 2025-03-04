@@ -1,4 +1,4 @@
-# Copyright 2019-2022 Wingify Software Pvt. Ltd.
+# Copyright 2019-2025 Wingify Software Pvt. Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -177,7 +177,7 @@ class VWO
         isNBv2 = VWO::Utils::GetAccountFlags.get_instance.get_isNbv2_flag
         isNB = VWO::Utils::GetAccountFlags.get_instance.get_isNB_flag
 
-        if isNBv2 || isNB || campaign['isBucketingSeedEnabled'] 
+        if isNBv2 || isNB || campaign['isBucketingSeedEnabled']
           user_id_for_hash_value = "#{campaign['id']}_#{user_id}"
         end
 

@@ -1,4 +1,4 @@
-# Copyright 2019-2022 Wingify Software Pvt. Ltd.
+# Copyright 2019-2025 Wingify Software Pvt. Ltd.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -188,40 +188,40 @@ class BucketerTest < Test::Unit::TestCase
     VWO::Utils::GetAccountFlags.get_instance.set_settings({'isNB' => false})
     campaign = SETTINGS_FILE_2['settingsWithSeedAndWithoutisOB']['campaigns'][0]
     set_variation_allocation(campaign)
-  
+
     TestUtil.get_users.each_with_index do |user_id, index|
       result = @bucketer.bucket_user_to_variation(user_id, campaign)
       assert_equal(result['name'], USER_EXPECTATIONS['BUCKET_ALGO_WITH_SEED'][index]['variation'])
     end
   end
-  
+
   def test_should_return_variation_with_seed_isNB_true_isOB_true
     VWO::Utils::GetAccountFlags.get_instance.set_settings({'isNB' => true})
     campaign = SETTINGS_FILE_2['settingsWithisNBAndWithisOB']['campaigns'][0]
     set_variation_allocation(campaign)
-  
+
     TestUtil.get_users.each_with_index do |user_id, index|
       result = @bucketer.bucket_user_to_variation(user_id, campaign)
       assert_equal(result['name'], USER_EXPECTATIONS['BUCKET_ALGO_WITH_SEED_WITH_isNB_WITH_isOB'][index]['variation'])
     end
   end
-  
+
   def test_should_return_variation_with_isNB_true_isOB_not_present_with_new_logic
     VWO::Utils::GetAccountFlags.get_instance.set_settings({'isNB' => true})
     campaign = SETTINGS_FILE_2['settingsWithisNBAndWithoutisOB']['campaigns'][0]
     set_variation_allocation(campaign)
-  
+
     TestUtil.get_users.each_with_index do |user_id, index|
       result = @bucketer.bucket_user_to_variation(user_id, campaign)
       assert_equal(result['name'], USER_EXPECTATIONS['BUCKET_ALGO_WITH_SEED_WITH_isNB_WITHOUT_isOB'][index]['variation'])
     end
   end
-  
+
   def test_should_return_variation_with_isNB_true_isOB_not_present_without_seed_flag
     VWO::Utils::GetAccountFlags.get_instance.set_settings({'isNB' => true})
     campaign = SETTINGS_FILE_2['settingsWithisNBAndWithoutisOBAndWithoutSeedFlag']['campaigns'][0]
     set_variation_allocation(campaign)
-  
+
     TestUtil.get_users.each_with_index do |user_id, index|
       result = @bucketer.bucket_user_to_variation(user_id, campaign)
       assert_equal(result['name'], USER_EXPECTATIONS['BUCKET_ALGO_WITH_SEED_WITH_isNB_WITHOUT_isOB'][index]['variation'])
@@ -235,17 +235,17 @@ class BucketerTest < Test::Unit::TestCase
       SETTINGS_FILE_2['settingsWithisNBAndWithoutisOB']['campaigns'][1],
       SETTINGS_FILE_2['settingsWithisNBAndWithoutisOB']['campaigns'][2]
     ]
-  
+
     3.times do |i|
       set_variation_allocation(SETTINGS_FILE_2['settingsWithisNBAndWithoutisOB']['campaigns'][i])
       result = @bucketer.bucket_user_to_variation('Ashley', campaign_list[i])
       assert_equal(result['name'], 'Control')
     end
   end
-  
+
   def test_should_return_different_variation_for_multiple_campaigns_with_isNBv2_true
     VWO::Utils::GetAccountFlags.get_instance.set_settings({'isNB' => true, 'isNBv2' => true, 'accountId' => SETTINGS_FILE_2['settingsWithisNBAndisNBv2']['accountId']})
-  
+
     3.times do |i|
       set_variation_allocation(SETTINGS_FILE_2['settingsWithisNBAndisNBv2']['campaigns'][i])
       result = @bucketer.bucket_user_to_variation(
@@ -255,5 +255,5 @@ class BucketerTest < Test::Unit::TestCase
       assert_equal(result['name'], USER_EXPECTATIONS['SETTINGS_WITH_ISNB_WITH_ISNBv2'][i]['variation'])
     end
   end
-  
+
 end
